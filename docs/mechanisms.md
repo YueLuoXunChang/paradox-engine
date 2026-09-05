@@ -17,7 +17,7 @@
 | 文件 | 一句话 | 状态 |
 |---|---|---|
 | engine/classical/propositional.py | 命题逻辑：真假/有效性/可满足性/重言式（经典二值） | ✅ 自测8+正式15 |
-| engine/classical/first_order.py | 一阶谓词：量词/关系/归结推理（规划） | ⏳ |
+| engine/classical/first_order.py | 一阶谓词：量词/关系/逻辑后承（有限论域展开法，可判） | ✅ 自测7+正式11 |
 | engine/classical/ltl.py | 时序 LTL：G/F/U 路径判定（规划） | ⏳ |
 | engine/classical/modal.py | 模态 K：□/◇ 可能世界（规划） | ⏳ |
 

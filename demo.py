@@ -4,11 +4,12 @@ demo.py — paradox-engine · 2 分钟上手演示
 ==========================================
 运行：python demo.py
 
-演示四件事：
+演示五件事：
   1) 悖论测度：矛盾有多尖锐 → 一个数 μ ∈ [0,1]；
   2) 悖论注解：矛盾拿一张 8 字段"身份证" + 分级（P-A/P-B/P-C）；
   3) 收敛判定：一个迭代过程会不会停下来；
-  4) 经典逻辑地基：命题推理（有效性/反例/重言式）——第 1 层。
+  4) 经典逻辑地基：命题推理（有效性/反例/重言式）——第 1 层；
+  5) 一阶谓词：量词推理（∀/∃ 展开判定）——第 1 层。
 """
 
 import os
@@ -66,11 +67,24 @@ def main():
     print(f"  → 反例示范：P∨Q ⊢ P 无效，反例 = {r4b['counterexample']}")
     r4c = pl({'formula': 'P∨¬P'})
     print(f"  → 排中律 P∨¬P = {r4c['verdict']}（恒真）")
-    print("  经典层做地基（别人一看就懂），悖论层做发动机（独特的在下一层）。")
+
+    banner("⑤ 一阶谓词：量词推理（第 1 层）")
+    print("场景：带量词的推理——所有人会死，苏格拉底是人 → 苏格拉底会死。")
+    from engine.classical.first_order import run as fol
+    r5 = fol({'facts': ['人(苏格拉底)'],
+              'rules': ['∀x(人(x)→会死(x))'],
+              'query': '会死(苏格拉底)'})
+    print(f"  → 结论 = {r5['verdict']}（∀ 规则在论域上展开判定）")
+    r5b = fol({'facts': ['鸟(企鹅)'],
+               'rules': ['∀x(鸟(x)→会飞(x))'],
+               'query': '会飞(老鹰)'})
+    print(f"  → 反例示范：⊢会飞(老鹰) = {r5b['verdict']}（老鹰不在鸟集合）")
+    print(f"     反例模型（节选）= {r5b['counterexample_model'][:3] if r5b['counterexample_model'] else None}")
+    print("  经典能算的算清（命题→谓词），算不清的矛盾留给下一层。")
 
     print("\n" + "=" * 62)
     print("paradox-engine 的分层主张：")
-    print("  第 1 层经典逻辑：能算的先算清（有效/真假/推理）")
+    print("  第 1 层经典逻辑：能算的先算清（命题/谓词/推理）")
     print("  第 2 层悖论：算不清的当第一公民（测量→注解→报告）")
     print("  只诊断不决策：把判断留给使用它的人。")
     print("更多：见 README.md + docs/ROADMAP.md")
