@@ -1,21 +1,33 @@
-# 机制目录（paradox-engine）
+# paradox-engine · 能力目录
 
-> 本仓库就做这三个核心机制（悖论/矛盾检测），不再扩展。
-> 每个机制文件自包含：`python engine/mechanisms/<名>.py` 直接跑自测。
+> 分层：第 0 层骨架（规划）· 第 1 层经典逻辑（建设中）· 第 2 层悖论（已有）·
+> 第 3 层冷门（规划）· 第 4 层 AI 挂载（规划）。见 docs/ROADMAP.md。
+> 每个文件自包含：`python <文件>` 直接跑自测。
 
-## 收录机制（3 个）
+## 第 2 层 · 悖论（核心三件套，已收）
 
-| 机制 | 一句话 | 输入要点 | 输出要点 | 状态 |
-|---|---|---|---|---|
-| paradox_measure | 悖论强度 μ ∈ [0,1]（四分支） | mode + wA/wNotA（mu1）；或自指/层级/熵输入 | mu, branch | ✅ 核心 |
-| paradox_annotate | 悖论注解（8 字段卡 + P-A/B/C） | paradox 对象 + source/impact/eliminable | annotation, grade | ✅ 核心 |
-| converge_check | 收敛判定（压缩/有限步/渐进/振荡） | branch + f + err_fn + x0 | verdict, converges, rate, detail | ✅ 核心 |
+| 文件 | 一句话 | 状态 |
+|---|---|---|
+| engine/mechanisms/paradox_measure.py | 悖论强度 μ ∈ [0,1]（四分支） | ✅ |
+| engine/mechanisms/paradox_annotate.py | 悖论注解（8 字段卡 + P-A/B/C） | ✅ |
+| engine/mechanisms/converge_check.py | 收敛判定（压缩/有限步/渐进/振荡） | ✅ |
 
-## 为什么是这三个
+## 第 1 层 · 经典逻辑（建设中）
 
-它们合起来正好讲清"矛盾当第一公民"的完整主张：
-1. **测量**（paradox_measure）：矛盾有多尖锐 → 一个数 μ；
-2. **注解**（paradox_annotate）：矛盾是什么、哪一层、影响多大 → 一张卡；
-3. **判定**（converge_check）：一个迭代过程会不会停下来 → 一个结论。
+| 文件 | 一句话 | 状态 |
+|---|---|---|
+| engine/classical/propositional.py | 命题逻辑：真假/有效性/可满足性/重言式（经典二值） | ✅ 自测8+正式15 |
+| engine/classical/first_order.py | 一阶谓词：量词/关系/归结推理（规划） | ⏳ |
+| engine/classical/ltl.py | 时序 LTL：G/F/U 路径判定（规划） | ⏳ |
+| engine/classical/modal.py | 模态 K：□/◇ 可能世界（规划） | ⏳ |
 
-体系本体的其余机制不在本仓库（也不打算并入）。
+## 为什么分层
+
+- **第 1 层经典逻辑**：别人一看就懂、可靠（经典共识）——证明"这不是玄学"；
+- **第 2 层悖论**：独特的在下一层——矛盾当第一公民（测量→注解→报告）；
+- 只诊断不决策：把判断留给使用它的人。
+
+## 规划中（见 docs/ROADMAP.md）
+
+撞墙处理管线（无限递归收敛三态/边界悖论/悖论全程自反）· MT-MP-TL 骨架 ·
+冷门逻辑（Dung/次协调）· 对位创生 · AI 挂载层。
