@@ -4,10 +4,11 @@ demo.py — paradox-engine · 2 分钟上手演示
 ==========================================
 运行：python demo.py
 
-演示三件事：
+演示四件事：
   1) 悖论测度：矛盾有多尖锐 → 一个数 μ ∈ [0,1]；
   2) 悖论注解：矛盾拿一张 8 字段"身份证" + 分级（P-A/P-B/P-C）；
-  3) 收敛判定：一个迭代过程会不会停下来。
+  3) 收敛判定：一个迭代过程会不会停下来；
+  4) 经典逻辑地基：命题推理（有效性/反例/重言式）——第 1 层。
 """
 
 import os
@@ -55,11 +56,24 @@ def main():
     if r3.get('detail') and r3['detail'].get('finite_steps'):
         print(f"  → 有限步数 = {r3['detail']['finite_steps']}")
 
+    banner("④ 经典逻辑地基：命题推理（第 1 层）")
+    print("场景：经典三段论——所有人会死，苏格拉底是人。")
+    from engine.classical.propositional import run as pl
+    r4 = pl({'premises': ['人→会死', '人'], 'conclusion': '会死',
+             'mode': 'validity'})
+    print(f"  → 推理有效性 = {r4['verdict']}（经典逻辑：有效）")
+    r4b = pl({'premises': ['P∨Q'], 'conclusion': 'P', 'mode': 'validity'})
+    print(f"  → 反例示范：P∨Q ⊢ P 无效，反例 = {r4b['counterexample']}")
+    r4c = pl({'formula': 'P∨¬P'})
+    print(f"  → 排中律 P∨¬P = {r4c['verdict']}（恒真）")
+    print("  经典层做地基（别人一看就懂），悖论层做发动机（独特的在下一层）。")
+
     print("\n" + "=" * 62)
-    print("paradox-engine 的核心主张：")
-    print("  矛盾当第一公民：测量它（μ）→ 注解它（卡）→ 报告它（白箱）")
+    print("paradox-engine 的分层主张：")
+    print("  第 1 层经典逻辑：能算的先算清（有效/真假/推理）")
+    print("  第 2 层悖论：算不清的当第一公民（测量→注解→报告）")
     print("  只诊断不决策：把判断留给使用它的人。")
-    print("更多：见 README.md")
+    print("更多：见 README.md + docs/ROADMAP.md")
     print("=" * 62)
 
 
