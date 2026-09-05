@@ -4,12 +4,13 @@ demo.py — paradox-engine · 2 分钟上手演示
 ==========================================
 运行：python demo.py
 
-演示五件事：
+演示六件事：
   1) 悖论测度：矛盾有多尖锐 → 一个数 μ ∈ [0,1]；
   2) 悖论注解：矛盾拿一张 8 字段"身份证" + 分级（P-A/P-B/P-C）；
   3) 收敛判定：一个迭代过程会不会停下来；
   4) 经典逻辑地基：命题推理（有效性/反例/重言式）——第 1 层；
-  5) 一阶谓词：量词推理（∀/∃ 展开判定）——第 1 层。
+  5) 一阶谓词：量词推理（∀/∃ 展开判定）——第 1 层；
+  6) 时序 LTL：演化性质（G 一直/F 最终/U 直到）——第 1 层。
 """
 
 import os
@@ -82,9 +83,20 @@ def main():
     print(f"     反例模型（节选）= {r5b['counterexample_model'][:3] if r5b['counterexample_model'] else None}")
     print("  经典能算的算清（命题→谓词），算不清的矛盾留给下一层。")
 
+    banner("⑥ 时序 LTL：事情会怎样发展（第 1 层）")
+    print("场景：系统状态序列 [正常运行 → 故障 → 恢复]——满足什么性质？")
+    from engine.classical.ltl import run as ltl
+    path = [{'正常'}, {'down'}, {'恢复'}, {'正常'}]
+    r6a = ltl({'path': path, 'formula': 'G(¬down)'})
+    print(f"  → G(¬down)（一直不出故障）= {r6a['verdict']}"
+          f"{'，位置 ' + str(r6a['violation_index']) + ' 违约' if r6a['violation_index'] is not None else ''}")
+    r6b = ltl({'path': path, 'formula': 'F(恢复)'})
+    print(f"  → F(恢复)（最终恢复）= {r6b['verdict']}")
+    print("  LTL 把'演化'变成可判定的性质——'会不会恢复''会不会一直坏'有了明确答案。")
+
     print("\n" + "=" * 62)
     print("paradox-engine 的分层主张：")
-    print("  第 1 层经典逻辑：能算的先算清（命题/谓词/推理）")
+    print("  第 1 层经典逻辑：能算的先算清（命题/谓词/时序）")
     print("  第 2 层悖论：算不清的当第一公民（测量→注解→报告）")
     print("  只诊断不决策：把判断留给使用它的人。")
     print("更多：见 README.md + docs/ROADMAP.md")
