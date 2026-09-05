@@ -4,13 +4,14 @@ demo.py — paradox-engine · 2 分钟上手演示
 ==========================================
 运行：python demo.py
 
-演示六件事：
+演示七件事：
   1) 悖论测度：矛盾有多尖锐 → 一个数 μ ∈ [0,1]；
   2) 悖论注解：矛盾拿一张 8 字段"身份证" + 分级（P-A/P-B/P-C）；
   3) 收敛判定：一个迭代过程会不会停下来；
   4) 经典逻辑地基：命题推理（有效性/反例/重言式）——第 1 层；
   5) 一阶谓词：量词推理（∀/∃ 展开判定）——第 1 层；
-  6) 时序 LTL：演化性质（G 一直/F 最终/U 直到）——第 1 层。
+  6) 时序 LTL：演化性质（G 一直/F 最终/U 直到）——第 1 层；
+  7) 模态逻辑：必然/可能（□/◇，系统 K/T）——第 1 层。
 """
 
 import os
@@ -94,9 +95,20 @@ def main():
     print(f"  → F(恢复)（最终恢复）= {r6b['verdict']}")
     print("  LTL 把'演化'变成可判定的性质——'会不会恢复''会不会一直坏'有了明确答案。")
 
+    banner("⑦ 模态逻辑：必然与可能（第 1 层）")
+    print("场景：□p→◇p（必然蕴含可能）——在 K 与 T 系统下结论不同。")
+    from engine.classical.modal import run as modal
+    r7a = modal({'worlds': ['w0'], 'access': {'w0': []}, 'system': 'K',
+                 'assign': {}, 'formula': '□p→◇p', 'world': 'w0'})
+    print(f"  → 系统 K（无可达世界）：{r7a['verdict']}")
+    r7b = modal({'worlds': ['w0'], 'access': {'w0': ['w0']}, 'system': 'T',
+                 'assign': {'p': ['w0']}, 'formula': '□p→◇p', 'world': 'w0'})
+    print(f"  → 系统 T（自反）：{r7b['verdict']}")
+    print("  结论绑定系统假设——输出永远标注'在哪个系统下成立'（白箱纪律）。")
+
     print("\n" + "=" * 62)
     print("paradox-engine 的分层主张：")
-    print("  第 1 层经典逻辑：能算的先算清（命题/谓词/时序）")
+    print("  第 1 层经典逻辑：能算的先算清（命题/谓词/时序/模态）")
     print("  第 2 层悖论：算不清的当第一公民（测量→注解→报告）")
     print("  只诊断不决策：把判断留给使用它的人。")
     print("更多：见 README.md + docs/ROADMAP.md")
