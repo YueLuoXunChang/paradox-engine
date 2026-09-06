@@ -12,7 +12,8 @@ demo.py — paradox-engine · 2 分钟上手演示
   5) 一阶谓词：量词推理（∀/∃ 展开判定）——第 1 层；
   6) 时序 LTL：演化性质（G 一直/F 最终/U 直到）——第 1 层；
   7) 模态逻辑：必然/可能（□/◇，系统 K/T）——第 1 层；
-  8) λ 演算：自指计算形态（β 归约/Y 不动点/邱奇编码）——第 1 层。
+  8) λ 演算：自指计算形态（β 归约/Y 不动点/邱奇编码）——第 1 层；
+  9) 图灵机：模拟 + 停机问题不可判定的诚实答案——第 1 层。
 """
 
 import os
@@ -123,6 +124,22 @@ def main():
     print("\n" + "=" * 62)
     print("paradox-engine 的分层主张：")
     print("  第 1 层经典逻辑：能算的先算清（命题/谓词/时序/模态/λ）")
+
+    banner("⑨ 图灵机：停机问题的诚实答案（第 1 层）")
+    print("场景：图灵机模拟 + 停机问题不可判定——引擎怎么回答'这墙能不能过'。")
+    from engine.classical.turing_machine import run as tm
+    from engine.classical.turing_machine import parity_machine, loop_machine
+    r9a = tm({'program': parity_machine(), 'input': '000', 'steps_limit': 100})
+    print(f"  → 模拟奇偶机 '000' → {r9a['verdict']}")
+    r9b = tm({'program': loop_machine(), 'input': '01', 'steps_limit': 50})
+    print(f"  → 模拟永不停止的机 → {r9b['verdict']}（诚实：不假装判停机）")
+    r9c = tm({'mode': 'halting_demo'})
+    print(f"  → 停机问题 → {r9c['verdict']}（数学定理的可演示版）")
+    print("  引擎不宣称绕过停机问题——它把'不可判定'变成可注解的标本（收编为原料）。")
+
+    print("\n" + "=" * 62)
+    print("paradox-engine 的分层主张：")
+    print("  第 1 层经典逻辑：能算的先算清（命题/谓词/时序/模态/λ/图灵机）")
     print("  第 2 层悖论：算不清的当第一公民（测量→注解→报告）")
     print("  只诊断不决策：把判断留给使用它的人。")
     print("更多：见 README.md + docs/ROADMAP.md")
