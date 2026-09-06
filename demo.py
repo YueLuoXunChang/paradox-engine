@@ -16,7 +16,8 @@ demo.py — paradox-engine · 2 分钟上手演示
   9) 图灵机：模拟 + 停机问题不可判定的诚实答案——第 1 层；
  10) STLC 类型：拦自应用（类型正确 ⇒ 终止）——与 ⑧ 对照——第 1 层；
  11) 撞墙管线：说谎者句 → 五选一诊断——第 2 层（核心卖点）；
- 12) 总控五步：一段中文 → 判类→复杂度→切路→执行→判输出——引擎大脑。
+ 12) 总控五步：一段中文 → 判类→复杂度→切路→执行→判输出——引擎大脑；
+ 13) MT-MP-TL 骨架：多线程并行→汇合（点/线程/拓扑/操作）——第 0 层。
 """
 
 import os
@@ -184,9 +185,31 @@ def main():
     print(r12['report'])
     print("  五查：完整性/一致性/置信度/边界性/充分度——只诊断不决策，判断留给使用者。")
 
+    banner("⑬ MT-MP-TL 骨架：多线程并行→汇合（第 0 层）")
+    print("场景：多线程并行推进，撞到汇合点合并——骨架层只表达结构，不掺判定。")
+    from engine.skeleton.mtmp import run as skel
+    # 两条并行线程在 b 汇合
+    r13a = skel({'mode': 'thread', 'action': 'create', 'threads': [
+        {'id': 't1', 'points': ['a1', 'b', 'c'], 'speed': 1},
+        {'id': 't2', 'points': ['a2', 'b', 'd'], 'speed': 1}]})
+    print(f"  → 建 2 线程：{r13a['detail']['threads']}")
+    r13b = skel({'mode': 'thread', 'threads': [
+        {'id': 't1', 'points': ['a1', 'b', 'c']},
+        {'id': 't2', 'points': ['a2', 'b', 'd']}],
+        'action': 'converge', 'tid': 't1', 'tid2': 't2', 'point': 'b'})
+    print(f"  → 汇合：{r13b['detail']['note']} → 合并后 "
+          f"{r13b['detail']['merged_points']}")
+    r13c = skel({'mode': 'topology', 'points': ['中心', '甲', '乙', '丙'],
+                 'edges': [('中心', '甲'), ('中心', '乙'), ('中心', '丙')],
+                 'action': 'classify'})
+    print(f"  → 拓扑分类：{r13c['detail']['kind']}"
+          f"（{r13c['detail']['note']}）")
+    print("  骨架层纪律：只做结构表达——判真假归第 1 层、判悖论归第 2 层。")
+
     print("\n" + "=" * 62)
     print("paradox-engine 的分层主张：")
     print("  总控：判类→判复杂度→切路→执行→判输出（最小充分：简单问题绝不复杂化）")
+    print("  第 0 层骨架：点/线程/拓扑/操作——结构表达（12 形态，不掺判定）")
     print("  第 1 层经典逻辑：能算的先算清（命题/谓词/时序/模态/λ/图灵机/类型）")
     print("  第 2 层悖论：算不清的当第一公民（测量→注解→钻墙五选一→创生）")
     print("  只诊断不决策：把判断留给使用它的人。")
