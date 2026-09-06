@@ -12,7 +12,7 @@
 | engine/mechanisms/paradox_annotate.py | 悖论注解（8 字段卡 + P-A/B/C） | ✅ |
 | engine/mechanisms/converge_check.py | 收敛判定（压缩/有限步/渐进/振荡） | ✅ |
 
-## 第 1 层 · 经典逻辑（建设中）
+## 第 1 层 · 经典逻辑学基础
 
 | 文件 | 一句话 | 状态 |
 |---|---|---|
@@ -20,8 +20,14 @@
 | engine/classical/first_order.py | 一阶谓词：量词/关系/逻辑后承（有限论域展开法，可判） | ✅ 自测7+正式11 |
 | engine/classical/ltl.py | 时序 LTL：G/F/X/U 沿路径判定（含违约定位） | ✅ 自测8+正式14 |
 | engine/classical/modal.py | 模态逻辑：□/◇ Kripke 语义（K/T/S4/S5，框架自检） | ✅ 自测7+正式14 |
-| engine/classical/ltl.py | 时序 LTL：G/F/U 路径判定（规划） | ⏳ |
-| engine/classical/modal.py | 模态 K：□/◇ 可能世界（规划） | ⏳ |
+| engine/classical/lambda_calculus.py | λ 演算：β 归约/邱奇编码/Y 不动点（自指计算版） | ✅ 自测5+正式16 |
+| nd_propositional.py | 命题自然演绎 ND（规划） | ⏳ |
+| resolution.py | 一阶归结：Skolem+合一（规划） | ⏳ |
+| equality_tableau.py | 等词 + 表列法 tableau（规划） | ⏳ |
+| turing_machine.py | 图灵机：模拟/UTM 自模拟/停机演示（规划） | ⏳ |
+| stlc.py | 简单类型 λ 演算 STLC（规划，后补） | ⏳ |
+
+> 每构件完整规格见任务指标《39_逻辑建模引擎_经典逻辑层详规》v2。
 
 ## 为什么分层
 
