@@ -187,6 +187,27 @@ def _builders():
                 'f': d['f'], 'err_fn': d['err_fn'],
                 'x0': d.get('x0', 0.0)}, None
 
+    def b_belnap(struct):
+        d, hint = need(struct, ['formula'], '需 formula 命题公式（四值求值）')
+        if d is None:
+            return None, hint
+        return {'formula': d['formula'], 'assign': d.get('assign') or {}}, None
+
+    def b_dung(struct):
+        d, hint = need(struct, ['arguments', 'attacks'],
+                       '需 arguments/attacks（论证+攻击图）')
+        if d is None:
+            return None, hint
+        return {'arguments': d['arguments'], 'attacks': d['attacks']}, None
+
+    def b_mtmp(struct):
+        d, hint = need(struct, ['mode'], '骨架需 mode（point/thread/'
+                       'topology/op）')
+        if d is None:
+            return None, hint
+        base = dict(d)
+        return base, None
+
     builders.update({
         'propositional.validity': ('classical.propositional',
                                    b_prop_validity),
@@ -205,6 +226,10 @@ def _builders():
         'wall_pipeline': ('mechanisms.wall_pipeline', b_wall),
         'converge_check': ('mechanisms.converge_check', b_converge),
         'converge_check.finite': ('mechanisms.converge_check', b_converge),
+        'belnap_four': ('cold.belnap_four', b_belnap),
+        'dung': ('cold.dung_framework', b_dung),
+        'skeleton': ('skeleton.mtmp', b_mtmp),
+        'mtmp': ('skeleton.mtmp', b_mtmp),
     })
     return builders, get
 
