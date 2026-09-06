@@ -23,11 +23,9 @@
 | engine/classical/lambda_calculus.py | λ 演算：β 归约/邱奇编码/Y 不动点（自指计算版） | ✅ 自测5+正式16 |
 | engine/classical/turing_machine.py | 图灵机：模拟/UTM 自模拟/停机不可判定演示 | ✅ 自测6+正式14 |
 | engine/classical/nd_propositional.py | 命题自然演绎 ND（证明树/经典 vs 直觉主义） | ✅ 自测8+正式16 |
-| nd_propositional.py | 命题自然演绎 ND（规划） | ⏳ |
-| resolution.py | 一阶归结：Skolem+合一（规划） | ⏳ |
-| equality_tableau.py | 等词 + 表列法 tableau（规划） | ⏳ |
-| turing_machine.py | 图灵机：模拟/UTM 自模拟/停机演示（规划） | ⏳ |
-| stlc.py | 简单类型 λ 演算 STLC（规划，后补） | ⏳ |
+| engine/classical/resolution.py | 一阶归结（Skolem+合一+归结链，常量≠变量） | ✅ 自测6+正式10 |
+| equality_tableau.py | 等词 + 表列法 tableau | ⏳ 进行中 |
+| stlc.py | 简单类型 λ 演算 STLC | ⏳ 后补 |
 
 > 每构件完整规格见任务指标《39_逻辑建模引擎_经典逻辑层详规》v2。
 
