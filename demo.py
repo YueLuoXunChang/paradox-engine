@@ -17,7 +17,8 @@ demo.py — paradox-engine · 2 分钟上手演示
  10) STLC 类型：拦自应用（类型正确 ⇒ 终止）——与 ⑧ 对照——第 1 层；
  11) 撞墙管线：说谎者句 → 五选一诊断——第 2 层（核心卖点）；
  12) 总控五步：一段中文 → 判类→复杂度→切路→执行→判输出——引擎大脑；
- 13) MT-MP-TL 骨架：多线程并行→汇合（点/线程/拓扑/操作）——第 0 层。
+ 13) MT-MP-TL 骨架：多线程并行→汇合（点/线程/拓扑/操作）——第 0 层；
+ 14) 冷门逻辑：矛盾取"两者"（Belnap 四值）+ 立场分析（Dung）——第 3 层。
 """
 
 import os
@@ -206,12 +207,31 @@ def main():
           f"（{r13c['detail']['note']}）")
     print("  骨架层纪律：只做结构表达——判真假归第 1 层、判悖论归第 2 层。")
 
+    banner("⑭ 冷门逻辑：矛盾取'两者' + 立场分析（第 3 层）")
+    print("场景：经典逻辑见矛盾就爆炸；第 3 层给矛盾两个出口——")
+    print("      Belnap 四值（矛盾=两者，非无解）与 Dung（哪些立场顶得住攻击）。")
+    from engine.cold.belnap_four import run as belnap
+    r14a = belnap({'demo': True})
+    row_b = [row for row in r14a['rows']
+             if row.get('A') == 'B' and 'A∧¬A' in row][0]
+    print(f"  → Belnap 四值：A∧¬A 在 A=两者(B) → 值={row_b['A∧¬A']}"
+          f"（矛盾是信息态，不爆炸——给第 2 层共振带一个语义地基）")
+    print(f"    demo 表：{[(r.get('A'), r.get('A∧¬A')) for r in r14a['rows'][4:]]}")
+    from engine.cold.dung_framework import run as dung
+    r14b = dung({'arguments': ['方案A省钱', '方案B全面', '方案C快速'],
+                 'attacks': [('方案A省钱', '方案B全面'),
+                             ('方案B全面', '方案C快速')]})
+    print(f"  → Dung：grounded（站得住）= {r14b['grounded']}，"
+          f"preferred = {r14b['preferred']}")
+    print("  第 3 层纪律：外部共识（Belnap 1977 / Dung 1995）——借鉴区，标注来源不混原创。")
+
     print("\n" + "=" * 62)
     print("paradox-engine 的分层主张：")
     print("  总控：判类→判复杂度→切路→执行→判输出（最小充分：简单问题绝不复杂化）")
     print("  第 0 层骨架：点/线程/拓扑/操作——结构表达（12 形态，不掺判定）")
     print("  第 1 层经典逻辑：能算的先算清（命题/谓词/时序/模态/λ/图灵机/类型）")
     print("  第 2 层悖论：算不清的当第一公民（测量→注解→钻墙五选一→创生）")
+    print("  第 3 层冷门：矛盾该共存（四值）/立场谁站得住（Dung）——按痛点选")
     print("  只诊断不决策：把判断留给使用它的人。")
     print("更多：见 README.md + docs/ROADMAP.md")
     print("=" * 62)
