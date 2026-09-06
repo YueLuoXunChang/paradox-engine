@@ -14,7 +14,8 @@ demo.py — paradox-engine · 2 分钟上手演示
   7) 模态逻辑：必然/可能（□/◇，系统 K/T）——第 1 层；
   8) λ 演算：自指计算形态（β 归约/Y 不动点/邱奇编码）——第 1 层；
   9) 图灵机：模拟 + 停机问题不可判定的诚实答案——第 1 层；
- 10) STLC 类型：拦自应用（类型正确 ⇒ 终止）——与 ⑧ 对照——第 1 层。
+ 10) STLC 类型：拦自应用（类型正确 ⇒ 终止）——与 ⑧ 对照——第 1 层；
+ 11) 撞墙管线：说谎者句 → 五选一诊断——第 2 层（核心卖点）。
 """
 
 import os
@@ -150,10 +151,31 @@ def main():
     print("  双视角：1.6 无类型 λ 能写 Y（自指）但会不停机；1.9 类型拦自应用，")
     print("  类型正确 ⇒ 必然终止——代价是写不了 Y。表达力 × 终止性，经典权衡。")
 
+    banner("⑪ 撞墙管线：说谎者句 → 五选一诊断（第 2 层 · 核心卖点）")
+    print("场景：经典逻辑对说谎者句只能说'判定不了'——撞墙管线把它变成")
+    print("      五选一诊断（测墙→钻墙→看墙→旁路→创生）。")
+    from engine.mechanisms.wall_pipeline import run as wall
+    r11 = wall({'wall': '这句话是假的', 'thesis': '要快', 'antithesis': '要稳'})
+    print(f"  → 五选一诊断 = {r11['verdict']}")
+    print(f"  → {r11['diagnosis']['label']}")
+    print(f"  → 注解卡 LV = {r11['annotation'].get('LV')}（结构性 P-A）")
+    print("  各步白箱：")
+    for s in r11['steps']:
+        st = s['status']
+        if st == 'run':
+            d = s['detail']
+            brief = {k: v for k, v in d.items()
+                     if k in ('mu', 'grade', 'verdict', 'period', 'tension',
+                              'coupling', 'main_ran', 'findings')}
+            print(f"      [{s['step']}] {brief}")
+        else:
+            print(f"      [{s['step']}] skip（{s['detail'].get('reason', '可选步未给输入')}）")
+    print("  立场：不是'判定了说谎者真值'——是把它从'死'变成可诊断的一格（只诊断不决策）。")
+
     print("\n" + "=" * 62)
     print("paradox-engine 的分层主张：")
     print("  第 1 层经典逻辑：能算的先算清（命题/谓词/时序/模态/λ/图灵机/类型）")
-    print("  第 2 层悖论：算不清的当第一公民（测量→注解→报告）")
+    print("  第 2 层悖论：算不清的当第一公民（测量→注解→钻墙五选一→创生）")
     print("  只诊断不决策：把判断留给使用它的人。")
     print("更多：见 README.md + docs/ROADMAP.md")
     print("=" * 62)
