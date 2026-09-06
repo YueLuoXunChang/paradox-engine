@@ -153,8 +153,17 @@ def run(inputs):
             rate: 收敛速率（分支1 λ、分支4 q_T；分支2/3 无压缩比为 None）
             detail: 分支详细结果（q_est/r_est/L/finite_steps/q_T/err_tail 等）
     """
-    f = inputs["f"]
-    err_fn = inputs["err_fn"]
+    f = inputs.get("f")
+    err_fn = inputs.get("err_fn")
+    # 缺参诚实拦截（2026-09-06 AI 挂载审计：缺 f/err_fn 裸 KeyError →
+    # 显式返回，与全库 *_pending 纪律一致，不裸抛）
+    if f is None or err_fn is None:
+        return {'branch': inputs.get('branch', 'compression'),
+                'verdict': 'input_pending',
+                'converges': None, 'rate': None,
+                'detail': {'reason': '需 f（修正函数）与 err_fn（误差函数）'
+                                     '——诚实：缺参不硬判'},
+                'boundary': '缺 f/err_fn 不硬判（诚实拦截）。'}
     x0 = inputs.get("x0", 0.0)
 
     # 分支选择：支持直接分支名或场景名（公式卡 §1 选择规则）

@@ -18,7 +18,8 @@ demo.py — paradox-engine · 2 分钟上手演示
  11) 撞墙管线：说谎者句 → 五选一诊断——第 2 层（核心卖点）；
  12) 总控五步：一段中文 → 判类→复杂度→切路→执行→判输出——引擎大脑；
  13) MT-MP-TL 骨架：多线程并行→汇合（点/线程/拓扑/操作）——第 0 层；
- 14) 冷门逻辑：矛盾取"两者"（Belnap 四值）+ 立场分析（Dung）——第 3 层。
+ 14) 冷门逻辑：矛盾取"两者"（Belnap 四值）+ 立场分析（Dung）——第 3 层；
+ 15) AI 挂载：23 个引擎函数 = AI 可调用工具（function-calling）——挂载层。
 """
 
 import os
@@ -225,6 +226,29 @@ def main():
           f"preferred = {r14b['preferred']}")
     print("  第 3 层纪律：外部共识（Belnap 1977 / Dung 1995）——借鉴区，标注来源不混原创。")
 
+    banner("⑮ AI 挂载：23 个引擎函数 = AI 可调用工具")
+    print("场景：把引擎全部构件封装成 function-calling 工具——AI（或任何")
+    print("      调用客户端）看 schema 就知道能干什么、要什么参数。")
+    from engine.ai.tools import tools as ai_tools
+    from engine.ai.tools import call_tool
+    tl = ai_tools()
+    print(f"  → 工具清单 {len(tl)} 件（schema 从各构件 PORTS 自动生成）")
+    for t in tl[:5]:
+        fn = t['function']
+        print(f"      · {fn['name']}：{fn['description']}")
+    print(f"      · …（共 {len(tl)} 件，覆盖悖论/经典/骨架/冷门/总控全层）")
+    r15 = call_tool('controller', {
+        'text': '销售坚持三周内必须上线抢占市场，研发坚持合规审查十二周'
+                '一步不能少——既要抢占市场，又要完整合规',
+        'structured': {'A': '抢占市场(3周)', 'B': '完整合规(12周)',
+                       'wA': 5, 'wNotA': 5}})
+    mt = r15['result']['classification']['main_type']
+    print(f"  → call_tool('controller', …) → {mt}，"
+          f"路由 {r15['result']['classification']['route']['route_id']}")
+    print("  → 真实场景端到端：python engine/ai/ai_scenarios.py")
+    print("    （场景1 论证矛盾检查 / 场景2 学科建模——AI 决策工具链）")
+    print("  AI 挂载层纪律：schema 与 PORTS 一致；缺参由构件诚实拦截，挂载层不伪造输入。")
+
     print("\n" + "=" * 62)
     print("paradox-engine 的分层主张：")
     print("  总控：判类→判复杂度→切路→执行→判输出（最小充分：简单问题绝不复杂化）")
@@ -232,6 +256,7 @@ def main():
     print("  第 1 层经典逻辑：能算的先算清（命题/谓词/时序/模态/λ/图灵机/类型）")
     print("  第 2 层悖论：算不清的当第一公民（测量→注解→钻墙五选一→创生）")
     print("  第 3 层冷门：矛盾该共存（四值）/立场谁站得住（Dung）——按痛点选")
+    print("  AI 挂载：引擎 = 23 个可调用工具——诊断留给使用者（只诊断不决策）")
     print("  只诊断不决策：把判断留给使用它的人。")
     print("更多：见 README.md + docs/ROADMAP.md")
     print("=" * 62)
