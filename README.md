@@ -29,7 +29,7 @@
 python demo.py
 ```
 
-`demo.py` 演示十四件事（①②③ 悖论三件套 → ④-⑩ 经典逻辑地基 → ⑪ 撞墙管线 → ⑫ 总控五步 → ⑬ MT-MP-TL 骨架 → ⑭ 冷门逻辑）：
+`demo.py` 演示十五件事（①②③ 悖论三件套 → ④-⑩ 经典逻辑地基 → ⑪ 撞墙管线 → ⑫ 总控五步 → ⑬ MT-MP-TL 骨架 → ⑭ 冷门逻辑 → ⑮ AI 挂载）：
 
 | 步骤 | 演示 | 层 |
 |---|---|---|
@@ -47,6 +47,7 @@ python demo.py
 | ⑫ 总控五步 | 一段中文 → 判类→复杂度→切路→执行→判输出（中文诊断报告） | 总控 |
 | ⑬ MT-MP-TL 骨架 | 多线程并行→汇合 + 拓扑分类（结构表达，不掺判定） | 第 0 层 |
 | ⑭ 冷门逻辑 | 矛盾取"两者"（Belnap 四值）+ 立场分析（Dung 论证框架） | 第 3 层 |
+| ⑮ AI 挂载 | 23 个引擎函数 = AI 可调用工具（function-calling schema 自动生成） | 挂载 |
 
 也可以直接调机制：
 
@@ -74,6 +75,9 @@ print(r['verdict'])   # valid
 ```
 paradox-engine/
 ├── engine/
+│   ├── ai/                     ← AI 挂载（引擎函数 = function-calling 工具集）
+│   │   ├── tools.py              23 构件 schema 自动生成 + call_tool 分派
+│   │   └── ai_scenarios.py       两真实场景端到端演示（论证矛盾/学科建模）
 │   ├── control/               ← 总控（引擎大脑：判类/复杂度/路由/五步流水线）
 │   │   ├── classifier.py        12 题型判类 + L1/L2/L3 复杂度 + ROUTE 36 键
 │   │   └── controller.py        总控五步：判类→复杂度→切路→执行→判输出
@@ -103,7 +107,7 @@ paradox-engine/
 │       ├── turing_machine.py     图灵机（模拟 + UTM 自模拟 + 停机演示）
 │       └── stlc.py               简单类型 λ（类型检查，拦自应用）
 │       （每个构件配 test_*.py 正式测试 + 公式卡）
-├── demo.py                  ← 2 分钟上手演示（十四步）
+├── demo.py                  ← 2 分钟上手演示（十五步）
 ├── docs/
 │   ├── mechanisms.md            分层能力总表（每构件：自测N+正式M）
 │   ├── ROADMAP.md               分层路线（7 阶段）
@@ -190,10 +194,14 @@ run(inputs: dict) -> dict
   "矛盾当第一公民"从主张变成可跑管线；
 - **第 3 层 · 冷门逻辑（首期两件）**：Belnap 四值（矛盾取"两者"不爆炸——
   次协调语义地基）+ Dung 论证框架（grounded/preferred——冲突场哪些立场
-  站得住）——按痛点选，外部共识标注来源归借鉴区。
+  站得住）——按痛点选，外部共识标注来源归借鉴区；
+- **AI 挂载层**：全部 23 构件封装为 function-calling 工具（schema 从
+  PORTS 自动生成，零手工漂移）+ call_tool 统一分派——AI 拿到工具清单
+  即可调用整个引擎；两真实场景端到端（论证矛盾检查 / 学科建模）。
 
-**建设中（见 docs/ROADMAP.md）**：AI 挂载层（阶段 6：function-calling
-封装 + 真实场景端到端 demo）→ 冷门扩展（AGM 非单调/相干，按痛点）。
+**扩展中（见 docs/ROADMAP.md）**：阶段 7 冷门/边界按需（Kleene 递归定理、
+Gupta-Belnap 真值修正、算术层级——借数学底座标注来源）→ AGM 非单调/
+相干逻辑（按真实痛点接入）。
 
 - 纯 Python 标准库，无第三方依赖；
 - 体系本体（落落逻辑体系：完整机制库、文档库）**不在此仓库**；这里只放
