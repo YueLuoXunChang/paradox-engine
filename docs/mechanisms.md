@@ -24,6 +24,7 @@
 | engine/classical/turing_machine.py | 图灵机：模拟/UTM 自模拟/停机不可判定演示 | ✅ 自测6+正式14 |
 | engine/classical/nd_propositional.py | 命题自然演绎 ND（证明树/经典 vs 直觉主义） | ✅ 自测8+正式16 |
 | engine/classical/resolution.py | 一阶归结（Skolem+合一+归结链，常量≠变量） | ✅ 自测6+正式10 |
+| engine/classical/equality_tableau.py | 等词替换 + 命题 tableau（反例模型） | ✅ 自测6+正式14 |
 | equality_tableau.py | 等词 + 表列法 tableau | ⏳ 进行中 |
 | stlc.py | 简单类型 λ 演算 STLC | ⏳ 后补 |
 
