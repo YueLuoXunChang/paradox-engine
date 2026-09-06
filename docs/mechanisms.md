@@ -25,8 +25,7 @@
 | engine/classical/nd_propositional.py | 命题自然演绎 ND（证明树/经典 vs 直觉主义） | ✅ 自测8+正式16 |
 | engine/classical/resolution.py | 一阶归结（Skolem+合一+归结链，常量≠变量） | ✅ 自测6+正式10 |
 | engine/classical/equality_tableau.py | 等词替换 + 命题 tableau（反例模型） | ✅ 自测6+正式14 |
-| equality_tableau.py | 等词 + 表列法 tableau | ⏳ 进行中 |
-| stlc.py | 简单类型 λ 演算 STLC | ⏳ 后补 |
+| engine/classical/stlc.py | 简单类型 λ STLC（类型检查/推导，拦自应用，Curry-Howard） | ✅ 自测8+正式15 |
 
 > 每构件完整规格见任务指标《39_逻辑建模引擎_经典逻辑层详规》v2。
 
