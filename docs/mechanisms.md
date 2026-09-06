@@ -18,7 +18,7 @@
 |---|---|---|
 | engine/classical/propositional.py | 命题逻辑：真假/有效性/可满足性/重言式（经典二值） | ✅ 自测8+正式15 |
 | engine/classical/first_order.py | 一阶谓词：量词/关系/逻辑后承（有限论域展开法，可判） | ✅ 自测7+正式11 |
-| engine/classical/ltl.py | 时序 LTL：G/F/X/U 沿路径判定（含违约定位） | ✅ 自测8+正式14 |
+| engine/classical/ltl.py | 时序 LTL：G/F/X/U 沿路径判定（含违约定位） | ✅ 自测9+正式14 |
 | engine/classical/modal.py | 模态逻辑：□/◇ Kripke 语义（K/T/S4/S5，框架自检） | ✅ 自测7+正式14 |
 | engine/classical/lambda_calculus.py | λ 演算：β 归约/邱奇编码/Y 不动点（自指计算版） | ✅ 自测5+正式16 |
 | engine/classical/turing_machine.py | 图灵机：模拟/UTM 自模拟/停机不可判定演示 | ✅ 自测6+正式14 |
