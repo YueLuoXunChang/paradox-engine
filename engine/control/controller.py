@@ -65,7 +65,11 @@ for _p in (_HERE, _REPO, os.path.join(_REPO, 'engine', 'classical'),
     if _p not in sys.path:
         sys.path.insert(0, _p)
 
-from classifier import run as classify  # noqa: E402
+# 双模式导入：pip 安装后走 engine. 前缀；直接运行本文件走平级
+try:
+    from engine.control.classifier import run as classify  # noqa: E402
+except ImportError:
+    from classifier import run as classify  # noqa: E402
 
 
 # ══════════════════════════════════════════════════════════════

@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "paradox-engine"
+description = "悖论/矛盾检测引擎——经典逻辑能算的算清，算不清的当第一公民（只诊断不决策）。Pure-Python paradox/contradiction detection engine: classical logic decides what it can, the undecidable is measured, annotated and reported (diagnose only, never decide)."
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MPL-2.0" }
+keywords = ["logic", "paradox", "contradiction", "reasoning", "diagnosis", "logical-reasoning"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: Mozilla Public License 2.0 (MPL 2.0)",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Intended Audience :: Science/Research",
+]
+dynamic = ["version"]
+
+[project.urls]
+Homepage = "https://github.com/YueLuoXunChang/paradox-engine"
+Repository = "https://github.com/YueLuoXunChang/paradox-engine"
+Documentation = "https://github.com/YueLuoXunChang/paradox-engine#readme"
+
+[project.scripts]
+paradox-engine = "engine.cli:main"
+
+[tool.setuptools]
+packages = [
+    "engine",
+    "engine.ai",
+    "engine.classical",
+    "engine.cold",
+    "engine.control",
+    "engine.mechanisms",
+    "engine.skeleton",
+]
+
+[tool.setuptools.dynamic]
+version = { attr = "engine.__version__" }

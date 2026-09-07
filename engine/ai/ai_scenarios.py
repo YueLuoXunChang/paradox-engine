@@ -20,7 +20,10 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from tools import tools, call_tool  # noqa: E402
+try:
+    from engine.ai.tools import tools, call_tool  # noqa: E402
+except ImportError:
+    from tools import tools, call_tool  # noqa: E402
 
 
 def banner(t):

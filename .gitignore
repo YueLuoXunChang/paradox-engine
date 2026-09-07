@@ -2,3 +2,10 @@ __pycache__/
 *.pyc
 *.pyo
 .DS_Store
+
+# 构建产物 / 虚拟环境
+build/
+dist/
+*.egg-info/
+.venv/
+_venv*/

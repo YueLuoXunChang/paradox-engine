@@ -34,6 +34,27 @@
 
 ## 二、快速开始（2 分钟）
 
+### 方式 A：装成包用（pip install）
+
+```bash
+# 从 GitHub 安装
+pip install git+https://github.com/YueLuoXunChang/paradox-engine.git
+# 或本地克隆后安装
+git clone https://github.com/YueLuoXunChang/paradox-engine.git
+cd paradox-engine && pip install .
+
+# 命令行直接用
+paradox-engine --text "产品既要快又要稳"
+paradox-engine --text "这句话是假的" --json      # 结构化输出
+
+# 或作为 Python 包 import
+from engine.control.controller import run as controller
+r = controller({'text': '产品既要快又要稳'})
+print(r['report'])
+```
+
+### 方式 B：不装，直接跑演示
+
 ```bash
 # 克隆后，在仓库根目录
 python demo.py
@@ -117,7 +138,9 @@ paradox-engine/
 │       ├── turing_machine.py     图灵机（模拟 + UTM 自模拟 + 停机演示）
 │       └── stlc.py               简单类型 λ（类型检查，拦自应用）
 │       （每个构件配 test_*.py 正式测试 + 公式卡）
+│   └── cli.py                 ← 命令行入口（--text/--json/--file/--tools）
 ├── demo.py                  ← 2 分钟上手演示（十五步）
+├── pyproject.toml           ← pip 打包（paradox-engine console 命令）
 ├── docs/
 │   ├── mechanisms.md            分层能力总表（每构件：自测N+正式M）
 │   ├── ROADMAP.md               分层路线（7 阶段）

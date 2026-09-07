@@ -40,7 +40,7 @@ PORTS = {
             'steps': 'list', 'boundary': 'str'},
 }
 
-# 子构件（同目录 import；无子构件时管线诚实降级）
+# 子构件（双模式导入：pip 安装走 engine. 前缀；直接运行走平级）
 import os
 import sys
 
@@ -48,12 +48,20 @@ _HERE = os.path.dirname(os.path.abspath(__file__))
 if _HERE not in sys.path:
     sys.path.insert(0, _HERE)
 
-from paradox_measure import run as measure_run  # noqa: E402
-from paradox_annotate import run as annotate_run  # noqa: E402
-from selfref_fixpoint import run as fixpoint_run  # noqa: E402
-from boundary_paradox import run as boundary_run  # noqa: E402
-from observer_bypass import run as bypass_run  # noqa: E402
-from counterpoint_gen import run as counterpoint_run  # noqa: E402
+try:
+    from engine.mechanisms.paradox_measure import run as measure_run  # noqa: E402,F401
+    from engine.mechanisms.paradox_annotate import run as annotate_run  # noqa: E402,F401
+    from engine.mechanisms.selfref_fixpoint import run as fixpoint_run  # noqa: E402,F401
+    from engine.mechanisms.boundary_paradox import run as boundary_run  # noqa: E402,F401
+    from engine.mechanisms.observer_bypass import run as bypass_run  # noqa: E402,F401
+    from engine.mechanisms.counterpoint_gen import run as counterpoint_run  # noqa: E402,F401
+except ImportError:
+    from paradox_measure import run as measure_run  # noqa: E402,F401
+    from paradox_annotate import run as annotate_run  # noqa: E402,F401
+    from selfref_fixpoint import run as fixpoint_run  # noqa: E402,F401
+    from boundary_paradox import run as boundary_run  # noqa: E402,F401
+    from observer_bypass import run as bypass_run  # noqa: E402,F401
+    from counterpoint_gen import run as counterpoint_run  # noqa: E402,F401
 
 
 def run(inputs):
