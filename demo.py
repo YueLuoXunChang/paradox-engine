@@ -19,7 +19,8 @@ demo.py — paradox-engine · 2 分钟上手演示
  12) 总控五步：一段中文 → 判类→复杂度→切路→执行→判输出——引擎大脑；
  13) MT-MP-TL 骨架：多线程并行→汇合（点/线程/拓扑/操作）——第 0 层；
  14) 冷门逻辑：矛盾取"两者"（Belnap 四值）+ 立场分析（Dung）——第 3 层；
- 15) AI 挂载：23 个引擎函数 = AI 可调用工具（function-calling）——挂载层。
+ 15) AI 挂载：23 个引擎函数 = AI 可调用工具（function-calling）——挂载层；
+ 16) 数学底座：自指程序构造（Kleene 递归定理）+ 真值修正（Gupta-Belnap）。
 """
 
 import os
@@ -249,6 +250,27 @@ def main():
     print("    （场景1 论证矛盾检查 / 场景2 学科建模——AI 决策工具链）")
     print("  AI 挂载层纪律：schema 与 PORTS 一致；缺参由构件诚实拦截，挂载层不伪造输入。")
 
+    banner("⑯ 数学底座：自指程序 + 真值修正（借鉴区，标注来源）")
+    print("场景：给「自指」补两个学界锚点——程序拿到自己（Kleene 递归定理）")
+    print("      与修正序列振荡（Gupta-Belnap 真值修正——共振带的学术出处）。")
+    from engine.classical.recursion_theorem import run as kleene
+    r16a = kleene({'mode': 'quine', 'payload': '自指演示'})
+    print(f"  → Kleene 递归定理：quine 自复制程序构造成功"
+          f"（{len(r16a['program'])} 字符源码）")
+    print(f"    runs_like: {r16a['runs_like']}")
+    from engine.cold.truth_revision import run as gb
+    r16b = gb({'mode': 'demo'})
+    for tag, name in [('liar', '说谎者 P↔¬P'),
+                      ('ring', '互指环 P↔Q真/Q↔P假'),
+                      ('benign', '良性 P↔P∧Q')]:
+        s = r16b['detail']['systems'][tag]
+        period_note = ''
+        if s.get('period'):
+            period_note = f"（周期 {s['period']}）"
+        print(f"    {name} → {s['verdict']}{period_note}")
+    print("  借鉴纪律：Kleene 1952 / Gupta-Belnap 1993——归借鉴区，不混原创区；")
+    print("  振荡≠判真值（说谎者周期 2 是教科书结论，非引擎自创）。")
+
     print("\n" + "=" * 62)
     print("paradox-engine 的分层主张：")
     print("  总控：判类→判复杂度→切路→执行→判输出（最小充分：简单问题绝不复杂化）")
@@ -256,7 +278,8 @@ def main():
     print("  第 1 层经典逻辑：能算的先算清（命题/谓词/时序/模态/λ/图灵机/类型）")
     print("  第 2 层悖论：算不清的当第一公民（测量→注解→钻墙五选一→创生）")
     print("  第 3 层冷门：矛盾该共存（四值）/立场谁站得住（Dung）——按痛点选")
-    print("  AI 挂载：引擎 = 23 个可调用工具——诊断留给使用者（只诊断不决策）")
+    print("  数学底座：自指程序（Kleene）/真值修正（Gupta-Belnap）——借鉴标注")
+    print("  AI 挂载：引擎 = 23+ 个可调用工具——诊断留给使用者（只诊断不决策）")
     print("  只诊断不决策：把判断留给使用它的人。")
     print("更多：见 README.md + docs/ROADMAP.md")
     print("=" * 62)
