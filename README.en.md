@@ -161,6 +161,7 @@ paradox-engine/
 │   ├── ROADMAP.md                layered roadmap
 │   └── formulas/                 concept cards (×10 for the classical layer)
 ├── README.md                ← Chinese readme (this English one: README.en.md)
+├── CHANGELOG.md             ← changelog (by date — no versions until release)
 └── (will grow as the author selects more parts to make public)
 ```
 
@@ -262,16 +263,30 @@ can be discussed, compared, and traced.
   positions can withstand attack) — chosen by real need; external consensus
   is labeled and kept in the "borrowed" section, never mixed into the
   original-work section;
-- **AI mounting layer**: all 23 components wrapped as function-calling tools
+- **AI mounting layer**: all components wrapped as function-calling tools
   (schemas auto-generated from PORTS, zero hand-maintained drift) + `call_tool`
   dispatch — an AI receives the tool list and can call the whole engine;
   two end-to-end real scenarios (argument-conflict check / discipline
   modeling).
+- **Mathematical foundations (borrowed, sources labeled)**: Kleene recursion
+  theorem self-reference construction (a program that reads its own source) +
+  Gupta-Belnap truth revision (the scholarly anchor for resonance-band
+  convergence — the liar's period-2 oscillation is a textbook result).
 
-**Extending (see docs/ROADMAP.md)**: stage 7 optional (Kleene recursion
-theorem / Gupta-Belnap truth revision / arithmetic hierarchy — borrowed
-mathematical foundations, sources labeled) → AGM non-monotonic / relevance
-logic (added when a real pain point appears).
+**Extending (see docs/ROADMAP.md)**: arithmetic hierarchy / decidable
+fragments (a precise map of the walls; borrowed, sources labeled) → AGM
+non-monotonic / relevance logic (added when a real pain point appears).
+
+### Test status
+
+- **548 formal assertions pass** (21 component test files + CLI entry),
+  covering all 27 mechanism components plus the controller/scenario/tool
+  layers;
+- Every component is self-contained: `python engine/<layer>/<name>.py` runs
+  its self-test; `python engine/<layer>/test_<name>.py` runs its formal tests;
+- Demo: `python demo.py` walks through sixteen steps; end-to-end scenarios:
+  `python engine/ai/ai_scenarios.py`;
+- Zero third-party dependencies — pure Python standard library (≥3.9).
 
 - Pure Python standard library, zero third-party dependencies;
 - The full body of the system (Luoluo Logic System: complete mechanism
