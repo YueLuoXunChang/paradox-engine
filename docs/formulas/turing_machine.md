@@ -1,4 +1,4 @@
-# 公式卡：图灵机构件（turing_machine）
+﻿# 公式卡：图灵机构件（turing_machine）
 
 > 概念来源：经典可计算性理论（Turing 1936）——非落落原创，经典共识
 > 代码：engine/classical/turing_machine.py · 测试：engine/classical/test_turing_machine.py
@@ -40,7 +40,7 @@ run({program, input, mode})
 ## 五、注记与边界
 
 - **停机问题 = undecidable 判定结果**：引擎不宣称绕过（那是伪数学）——
-  收编为标本：μ₂ 自指测度=1 → 注解 P-A 结构性（41 详规接缝）；
+  收编为标本：μ₂ 自指测度=1 → 注解 P-A 结构性（内部详规接缝）；
 - 模拟器步数上限默认 10000，超限报 steps_exceeded（诚实）；
 - 自模拟的完整版需 ⟨M⟩ 编码语法化（把机器定义编码成纸带串）——本版给
   结构演示（机器模拟自己运行），完整编码后补；
