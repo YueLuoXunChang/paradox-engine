@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 test_wall_pipeline.py — 正式测试：撞墙处理管线 A（第 2 层编排）
-用例依据：内部规格 41 §七（五选一诊断 + 各步白箱 + 诚实边界）
+用例依据：内部规格 §七（五选一诊断 + 各步白箱 + 诚实边界）
 运行：python engine/mechanisms/test_wall_pipeline.py
 """
 import os

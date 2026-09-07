@@ -8,10 +8,10 @@
 
 | 文件 | 一句话 | 状态 |
 |---|---|---|
-| engine/ai/tools.py | 23 构件封装为 function-calling 工具（schema 从 PORTS 自动生成）+ call_tool 分派 | ✅ 自测8+正式34 |
+| engine/ai/tools.py | 25 构件封装为 function-calling 工具（schema 从 PORTS 自动生成）+ call_tool 分派 | ✅ 自测8+正式36 |
 | engine/ai/ai_scenarios.py | 真实场景端到端：论证矛盾检查 / 学科建模（AI 决策工具链演示） | ✅ 两场景跑通 |
 
-## 总控 · 引擎大脑（38 总控五步）
+## 总控 · 引擎大脑（判类/复杂度/路由/五步流水线）
 
 | 文件 | 一句话 | 状态 |
 |---|---|---|

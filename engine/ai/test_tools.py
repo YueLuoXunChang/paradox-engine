@@ -9,7 +9,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from tools import tools, call_tool, run  # noqa: E402
+from tools import tools, call_tool, run, _TOOL_REGISTRY  # noqa: E402
 
 PASS = 0
 
@@ -26,8 +26,13 @@ print("=" * 60)
 
 # ── 用例1：工具清单完整性
 tl = tools()
-check("工具清单 23 件", len(tl) == 23, str(len(tl)))
 names = [t['function']['name'] for t in tl]
+check("工具清单 = 全量注册表", len(tl) == len(_TOOL_REGISTRY),
+      str(len(tl)))
+check("工具清单 ≥25 件（含数学底座）", len(tl) >= 25, str(len(tl)))
+check("含新数学底座工具",
+      all(n in names for n in ('recursion_theorem', 'truth_revision')),
+      str(names))
 check("含悖论/经典/骨架/冷门/总控全层工具",
       all(n in names for n in ('paradox_measure', 'wall_pipeline',
                                'propositional', 'stlc', 'mtmp',
@@ -105,7 +110,8 @@ check("propositional 缺参 → formula_pending 或拦截",
 # ── 用例6：run 统一入口
 r = run({'action': 'list'})
 check("run list → tools_listed", r['verdict'] == 'tools_listed', str(r))
-check("run list 带 23 工具", len(r['tools']) == 23, str(r))
+check("run list 带全量工具", len(r['tools']) == len(_TOOL_REGISTRY),
+      str(r))
 r = run({'action': 'call', 'name': 'converge_check'})
 check("run call 缺参 → 构件 input_pending 透传", r['verdict'] == 'ok'
       and r['result']['result']['verdict'] == 'input_pending', str(r))
@@ -126,5 +132,5 @@ check("边界声明：只诊断不决策随行",
       '只诊断' in run({'action': 'list'})['boundary'])
 
 print("=" * 60)
-print(f"结果: {PASS}/34 通过")
-raise SystemExit(0 if PASS == 34 else 1)
+print(f"结果: {PASS}/36 通过")
+raise SystemExit(0 if PASS == 36 else 1)

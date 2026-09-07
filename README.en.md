@@ -24,7 +24,7 @@ of the system (documentation library and complete mechanism library).
 > decided (self-reference and paradox) goes through a "wall pipeline" that
 > returns a five-way diagnosis (decidable / benign self-reference /
 > resonance-band self-reference / divergent wall / creatable). Zero
-> third-party dependencies; `python demo.py` walks through all fifteen
+> third-party dependencies; `python demo.py` walks through all sixteen
 > capabilities in about two minutes.
 
 ---
@@ -71,9 +71,9 @@ print(r['report'])
 python demo.py
 ```
 
-`demo.py` demonstrates fifteen things (①②③ the paradox trio → ④-⑩ the
+`demo.py` demonstrates sixteen things (①②③ the paradox trio → ④-⑩ the
 classical-logic foundation → ⑪ wall pipeline → ⑫ five-step controller →
-⑬ MT-MP-TL skeleton → ⑭ cold logics → ⑮ AI mounting):
+⑬ MT-MP-TL skeleton → ⑭ cold logics → ⑮ AI mounting → ⑯ math foundations):
 
 | Step | Demonstration | Layer |
 |---|---|---|
@@ -91,7 +91,8 @@ classical-logic foundation → ⑪ wall pipeline → ⑫ five-step controller �
 | ⑫ five-step controller | Chinese text → classify→complexity→route→execute→judge (Chinese report) | Control |
 | ⑬ MT-MP-TL skeleton | Multi-thread parallel → merge + topology classification (structure only, no judging) | L0 |
 | ⑭ cold logics | Contradiction takes value "both" (Belnap four-valued) + stance analysis (Dung) | L3 |
-| ⑮ AI mounting | All 23 engine functions = AI-callable tools (function-calling schemas auto-generated) | Mounting |
+| ⑮ AI mounting | All 25 engine functions = AI-callable tools (function-calling schemas auto-generated) | Mounting |
+| ⑯ math foundations | Self-referential program construction (Kleene recursion theorem) + truth revision (Gupta-Belnap — scholarly anchor for resonance bands) | Borrowed |
 
 You can also call a mechanism directly:
 
@@ -120,7 +121,7 @@ print(r['verdict'])   # valid
 paradox-engine/
 ├── engine/
 │   ├── ai/                     ← AI mounting (engine functions = function-calling tools)
-│   │   ├── tools.py              schemas auto-generated from all 23 components + call_tool
+│   │   ├── tools.py              schemas auto-generated from all 25 components + call_tool
 │   │   └── ai_scenarios.py       two end-to-end real scenarios (argument conflict / modeling)
 │   ├── control/               ← Controller (the "brain": classify/complexity/route/five-step pipeline)
 │   │   ├── classifier.py         12 problem-type classifier + L1/L2/L3 complexity + ROUTE (36 keys)
@@ -154,7 +155,7 @@ paradox-engine/
 │       └── stlc.py                simply typed lambda calculus (type checking, blocks self-application)
 │       (each component ships with a test_*.py formal test)
 │   └── cli.py                 ← command-line entry (--text/--json/--file/--tools)
-├── demo.py                  ← 2-minute tour (fifteen steps)
+├── demo.py                  ← 2-minute tour (sixteen steps)
 ├── pyproject.toml           ← pip packaging (provides the `paradox-engine` command)
 ├── docs/
 │   ├── mechanisms.md             layered capability index (self-test N + formal M per component)
@@ -279,9 +280,8 @@ non-monotonic / relevance logic (added when a real pain point appears).
 
 ### Test status
 
-- **548 formal assertions pass** (21 component test files + CLI entry),
-  covering all 27 mechanism components plus the controller/scenario/tool
-  layers;
+- **533 formal assertions pass** (24 test files), covering every mechanism
+  component plus the controller/scenario/AI-tool layers;
 - Every component is self-contained: `python engine/<layer>/<name>.py` runs
   its self-test; `python engine/<layer>/test_<name>.py` runs its formal tests;
 - Demo: `python demo.py` walks through sixteen steps; end-to-end scenarios:
