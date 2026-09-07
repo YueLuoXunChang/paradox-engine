@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """
 test_resolution.py — 正式测试：一阶归结构件（经典逻辑层 1.4）
 用例依据：内部规格七·补B + docs/formulas/resolution.md

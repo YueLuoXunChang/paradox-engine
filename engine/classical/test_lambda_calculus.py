@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """
 test_lambda_calculus.py — 正式测试：λ 演算构件（经典逻辑层 1.6）
 用例依据：内部规格七·补D + docs/formulas/lambda_calculus.md
