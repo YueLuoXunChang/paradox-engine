@@ -30,6 +30,7 @@
 |---|---|---|
 | engine/cold/belnap_four.py | Belnap 四值（T/F/两者/皆非）：矛盾取"两者"不爆炸——次协调语义地基（借鉴 Belnap 1977） | ✅ 自测7+正式30 |
 | engine/cold/dung_framework.py | Dung 论证框架：冲突场哪些立场站得住（grounded/preferred/争议集，借鉴 Dung 1995） | ✅ 自测5+正式21 |
+| engine/cold/truth_revision.py | Gupta-Belnap 真值修正：多句系统修正序列（稳定/周期振荡——共振带学界锚点，借鉴 Gupta-Belnap 1993） | ✅ 自测6组+正式19 |
 
 ## 第 2 层 · 悖论（矛盾当第一公民——落落独创主场）
 
@@ -65,8 +66,9 @@
 | engine/classical/resolution.py | 一阶归结（Skolem+合一+归结链，常量≠变量） | ✅ 自测6+正式10 |
 | engine/classical/equality_tableau.py | 等词替换 + 命题 tableau（反例模型） | ✅ 自测6+正式14 |
 | engine/classical/stlc.py | 简单类型 λ STLC（类型检查/推导，拦自应用，Curry-Howard） | ✅ 自测8+正式15 |
+| engine/classical/recursion_theorem.py | Kleene 递归定理：自指程序构造（quine/递归定理形态，借数学底座） | ✅ 自测5组+正式16 |
 
-> 每构件完整规格见《逻辑建模引擎_经典逻辑层详规》v2。
+> 每构件完整规格见《经典逻辑层详规》（内部规划文档，未随本仓库公开）。
 
 ## 为什么分层
 
