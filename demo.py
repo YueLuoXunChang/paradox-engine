@@ -4,7 +4,7 @@ demo.py — paradox-engine · 2 分钟上手演示
 ==========================================
 运行：python demo.py
 
-演示十件事：
+演示十六件事：
   1) 悖论测度：矛盾有多尖锐 → 一个数 μ ∈ [0,1]；
   2) 悖论注解：矛盾拿一张 8 字段"身份证" + 分级（P-A/P-B/P-C）；
   3) 收敛判定：一个迭代过程会不会停下来；
@@ -19,7 +19,7 @@ demo.py — paradox-engine · 2 分钟上手演示
  12) 总控五步：一段中文 → 判类→复杂度→切路→执行→判输出——引擎大脑；
  13) MT-MP-TL 骨架：多线程并行→汇合（点/线程/拓扑/操作）——第 0 层；
  14) 冷门逻辑：矛盾取"两者"（Belnap 四值）+ 立场分析（Dung）——第 3 层；
- 15) AI 挂载：23 个引擎函数 = AI 可调用工具（function-calling）——挂载层；
+ 15) AI 挂载：25 个引擎函数 = AI 可调用工具（function-calling）——挂载层；
  16) 数学底座：自指程序构造（Kleene 递归定理）+ 真值修正（Gupta-Belnap）。
 """
 
@@ -178,7 +178,7 @@ def main():
     print("  立场：不是'判定了说谎者真值'——是把它从'死'变成可诊断的一格（只诊断不决策）。")
 
     banner("⑫ 总控五步：一段中文 → 判类→复杂度→切路→执行→判输出（引擎大脑）")
-    print("场景：把 38 总控五步落码——任意一段问题文本，自动判类、判复杂度、")
+    print("场景：把总控五步落码——任意一段问题文本，自动判类、判复杂度、")
     print("      切路、按路由真跑构件、五查判输出。")
     from engine.control.controller import run as controller
     r12 = controller({
@@ -227,7 +227,7 @@ def main():
           f"preferred = {r14b['preferred']}")
     print("  第 3 层纪律：外部共识（Belnap 1977 / Dung 1995）——借鉴区，标注来源不混原创。")
 
-    banner("⑮ AI 挂载：23 个引擎函数 = AI 可调用工具")
+    banner("⑮ AI 挂载：25 个引擎函数 = AI 可调用工具")
     print("场景：把引擎全部构件封装成 function-calling 工具——AI（或任何")
     print("      调用客户端）看 schema 就知道能干什么、要什么参数。")
     from engine.ai.tools import tools as ai_tools
@@ -279,7 +279,7 @@ def main():
     print("  第 2 层悖论：算不清的当第一公民（测量→注解→钻墙五选一→创生）")
     print("  第 3 层冷门：矛盾该共存（四值）/立场谁站得住（Dung）——按痛点选")
     print("  数学底座：自指程序（Kleene）/真值修正（Gupta-Belnap）——借鉴标注")
-    print("  AI 挂载：引擎 = 23+ 个可调用工具——诊断留给使用者（只诊断不决策）")
+    print("  AI 挂载：引擎 = 25+ 个可调用工具——诊断留给使用者（只诊断不决策）")
     print("  只诊断不决策：把判断留给使用它的人。")
     print("更多：见 README.md + docs/ROADMAP.md")
     print("=" * 62)

@@ -15,7 +15,7 @@
 > 能不能稳定存在、以及哪些立场站得住——全部带依据、可复核。
 > 经典逻辑能算的先算清（命题/一阶/时序/模态/λ/类型），算不清的自指
 > 和矛盾走"撞墙管线"给五选一诊断（可判/良性自指/共振带自指/发散真墙/
-> 可创生）。零第三方依赖，`python demo.py` 十五步看完所有能力。
+> 可创生）。零第三方依赖，`python demo.py` 十六步看完所有能力。
 
 ---
 
@@ -60,7 +60,7 @@ print(r['report'])
 python demo.py
 ```
 
-`demo.py` 演示十五件事（①②③ 悖论三件套 → ④-⑩ 经典逻辑地基 → ⑪ 撞墙管线 → ⑫ 总控五步 → ⑬ MT-MP-TL 骨架 → ⑭ 冷门逻辑 → ⑮ AI 挂载）：
+`demo.py` 演示十六件事（①②③ 悖论三件套 → ④-⑩ 经典逻辑地基 → ⑪ 撞墙管线 → ⑫ 总控五步 → ⑬ MT-MP-TL 骨架 → ⑭ 冷门逻辑 → ⑮ AI 挂载 → ⑯ 数学底座）：
 
 | 步骤 | 演示 | 层 |
 |---|---|---|
@@ -78,7 +78,8 @@ python demo.py
 | ⑫ 总控五步 | 一段中文 → 判类→复杂度→切路→执行→判输出（中文诊断报告） | 总控 |
 | ⑬ MT-MP-TL 骨架 | 多线程并行→汇合 + 拓扑分类（结构表达，不掺判定） | 第 0 层 |
 | ⑭ 冷门逻辑 | 矛盾取"两者"（Belnap 四值）+ 立场分析（Dung 论证框架） | 第 3 层 |
-| ⑮ AI 挂载 | 23 个引擎函数 = AI 可调用工具（function-calling schema 自动生成） | 挂载 |
+| ⑮ AI 挂载 | 25 个引擎函数 = AI 可调用工具（function-calling schema 自动生成） | 挂载 |
+| ⑯ 数学底座 | 自指程序构造（Kleene 递归定理）+ 真值修正（Gupta-Belnap——共振带学界锚点） | 借鉴 |
 
 也可以直接调机制：
 
@@ -107,7 +108,7 @@ print(r['verdict'])   # valid
 paradox-engine/
 ├── engine/
 │   ├── ai/                     ← AI 挂载（引擎函数 = function-calling 工具集）
-│   │   ├── tools.py              23 构件 schema 自动生成 + call_tool 分派
+│   │   ├── tools.py              25 构件 schema 自动生成 + call_tool 分派
 │   │   └── ai_scenarios.py       两真实场景端到端演示（论证矛盾/学科建模）
 │   ├── control/               ← 总控（引擎大脑：判类/复杂度/路由/五步流水线）
 │   │   ├── classifier.py        12 题型判类 + L1/L2/L3 复杂度 + ROUTE 36 键
@@ -141,7 +142,7 @@ paradox-engine/
 │       └── stlc.py               简单类型 λ（类型检查，拦自应用）
 │       （每个构件配 test_*.py 正式测试 + 公式卡）
 │   └── cli.py                 ← 命令行入口（--text/--json/--file/--tools）
-├── demo.py                  ← 2 分钟上手演示（十五步）
+├── demo.py                  ← 2 分钟上手演示（十六步）
 ├── pyproject.toml           ← pip 打包（paradox-engine console 命令）
 ├── docs/
 │   ├── mechanisms.md            分层能力总表（每构件：自测N+正式M）
@@ -243,8 +244,8 @@ run(inputs: dict) -> dict
 
 ### 测试状态
 
-- **548 项正式断言全过**（21 个构件测试文件 + CLI 入口），覆盖全部 27 个
-  机制构件与总控/场景/工具层；
+- **533 项正式断言全过**（24 个测试文件），覆盖全部
+  机制构件与总控/场景/AI 工具层；
 - 每个构件自包含：`python engine/<层>/<名>.py` 跑自测（机制自身验证），
   `python engine/<层>/test_<名>.py` 跑正式测试；
 - 演示：`python demo.py` 十六步全过；真实场景端到端：

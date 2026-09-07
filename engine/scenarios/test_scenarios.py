@@ -25,7 +25,7 @@ print("场景库 · 正式测试")
 print("=" * 60)
 
 # ── 用例1：场景注册表完整性
-check("场景 ≥7 个（45 蓝图 B1：≥5）", len(SCENES) >= 5, str(len(SCENES)))
+check("场景 ≥7 个（蓝图轨 B：≥5）", len(SCENES) >= 5, str(len(SCENES)))
 ids = [s['id'] for s in SCENES]
 check("场景 id 唯一", len(ids) == len(set(ids)), str(ids))
 check("每场景有 text/expect_type",

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 test_counterpoint_gen.py — 正式测试：对位创生第三态（第 2 层 2.6）
-用例依据：内部规格 41 §六（对立交汇/三型耦合/第三态候选+依据 + 诚实边界）
+用例依据：内部规格 §六（对立交汇/三型耦合/第三态候选+依据 + 诚实边界）
 运行：python engine/mechanisms/test_counterpoint_gen.py
 """
 import os
@@ -24,7 +24,7 @@ def check(label, cond, detail=""):
 print("对位创生第三态 · 正式测试")
 print("=" * 60)
 
-# ── 用例1：反向耦合（自动探测）——要快 vs 要稳（41 走查例）
+# ── 用例1：反向耦合（自动探测）——要快 vs 要稳（详规走查例）
 r = run({'thesis': '要快', 'antithesis': '要稳'})
 check("要快 vs 要稳 → third_state", r['verdict'] == 'third_state', str(r))
 check("自动判 reverse", r['coupling'] == 'reverse', str(r))

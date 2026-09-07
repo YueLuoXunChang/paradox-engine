@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 test_classifier.py — 正式测试：判类器 + 复杂度 + 路由（总控步 1/2/3）
-用例依据：内部规格 44（信号表/打分公式/ROUTE）+ 38（走查一二三）
+用例依据：内部规格（信号表/打分公式/ROUTE + 走查一二三）
 运行：python engine/control/test_classifier.py
 """
 import os
@@ -24,7 +24,7 @@ def check(label, cond, detail=""):
 print("判类器 + 复杂度 + 路由 · 正式测试")
 print("=" * 60)
 
-# ── 用例1：38 走查三——排中律（T1-L1，不被复杂化）
+# ── 用例1：总控走查三——排中律（T1-L1，不被复杂化）
 r = run({'text': '今天下雨或没下雨'})
 check("排中律 → T1", r['main_type'] == 'T1', str(r))
 check("排中律 → L1", r['level'] == 'L1', str(r))

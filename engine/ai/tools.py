@@ -3,8 +3,8 @@
 tools.py — AI 挂载层：function-calling 工具封装（阶段 6）
 ================================================================
 概念来源：ROADMAP 阶段 6（AI 挂载层——引擎函数 = AI 可调用工具）
-设计：38 总架构（输出双形态：给人看/给 AI 用）+ 各构件统一 run 接口。
-本文件不是新判定构件——是**挂载器**：把全部 23 个构件包装成
+设计：总架构（输出双形态：给人看/给 AI 用）+ 各构件统一 run 接口。
+本文件不是新判定构件——是**挂载器**：把全部机制构件包装成
 OpenAI 风格 function-calling 工具（name/description/parameters JSON
 Schema），并提供 call_tool(name, args) 统一分派。
 
@@ -82,6 +82,10 @@ _TOOL_REGISTRY = [
     ('belnap_four', 'cold.belnap_four', 'Belnap 四值：矛盾取"两者"不爆炸'),
     ('dung_framework', 'cold.dung_framework',
      'Dung 论证框架：哪些立场站得住（grounded/preferred）'),
+    ('truth_revision', 'cold.truth_revision',
+     'Gupta-Belnap 真值修正：多句系统修正序列分类（稳定/振荡——共振带锚点）'),
+    ('recursion_theorem', 'classical.recursion_theorem',
+     'Kleene 递归定理：自指程序构造（quine/程序拿自己——借数学底座）'),
     ('classifier', 'control.classifier',
      '判类器：12 题型 + 复杂度 L1/L2/L3 + 路由'),
     ('controller', 'control.controller',
@@ -115,7 +119,7 @@ def _load_module(mod_path):
 
 
 def tools():
-    """OpenAI 风格工具清单：全 23 件（schema 从 PORTS 自动生成）。"""
+    """OpenAI 风格工具清单：全量机制（schema 从 PORTS 自动生成）。"""
     out = []
     for name, mod_path, desc in _TOOL_REGISTRY:
         mod = _load_module(mod_path)
@@ -198,11 +202,12 @@ if __name__ == '__main__':
     print('AI 挂载层 · 自测（function-calling 封装）')
     print('=' * 62)
 
-    # 1) 工具清单：全 23 件，schema 有 name/parameters
+    # 1) 工具清单：全量机制，schema 有 name/parameters
     tl = tools()
-    assert len(tl) == 23, len(tl)
+    assert len(tl) == len(_TOOL_REGISTRY), len(tl)
     names = [t['function']['name'] for t in tl]
     assert 'paradox_measure' in names and 'controller' in names, names
+    assert 'recursion_theorem' in names and 'truth_revision' in names, names
     assert all('parameters' in t['function'] for t in tl)
     assert all('description' in t['function'] for t in tl)
     print(f'✅ 工具清单 {len(tl)} 件（schema 自动生成）')
@@ -258,7 +263,7 @@ if __name__ == '__main__':
 
     # 8) run 接口
     r8 = run({'action': 'list'})
-    assert r8['verdict'] == 'tools_listed' and len(r8['tools']) == 23, r8
+    assert r8['verdict'] == 'tools_listed' and len(r8['tools']) == len(_TOOL_REGISTRY), r8
     r8b = run({'action': 'call', 'name': 'dung_framework',
                'arguments': {'arguments': ['a', 'b'],
                              'attacks': [('a', 'b')]}})

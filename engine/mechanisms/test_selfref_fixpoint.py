@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 test_selfref_fixpoint.py — 正式测试：递归修正 × 自指检测（第 2 层 2.3）
-用例依据：内部规格 41 §三（共振带三态 + 诚实边界）
+用例依据：内部规格 §三（共振带三态 + 诚实边界）
 运行：python engine/mechanisms/test_selfref_fixpoint.py
 """
 import os

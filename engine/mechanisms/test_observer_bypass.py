@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 test_observer_bypass.py — 正式测试：悖论全程自反旁路（第 2 层 2.5）
-用例依据：内部规格 41 §五（主链不停/并行观察/检测点注解注入/架构级免疫）
+用例依据：内部规格 §五（主链不停/并行观察/检测点注解注入/架构级免疫）
 运行：python engine/mechanisms/test_observer_bypass.py
 """
 import os
