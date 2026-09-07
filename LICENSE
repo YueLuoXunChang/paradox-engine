@@ -1,16 +1,3 @@
-paradox-engine
-================================
-
-Copyright (c) 2026 月落寻常（YueLuoXunChang / 落落）· 「落落逻辑体系」作者
-
-This Source Code Form is subject to the terms of the Mozilla Public
-License, v. 2.0. If a copy of the MPL was not distributed with this
-file, You can obtain one at https://mozilla.org/MPL/2.0/.
-
-概念与设计来源：「落落逻辑体系」（作者原创，月落寻常）。
-工程实现由作者与 AI 协作完成（AI 承担实现与整理，概念与决策由作者主导）。
-docs/formulas/ 概念卡与 docstring 中的概念说明属作者原创内容。
-
 Mozilla Public License Version 2.0
 ==================================
 
@@ -384,4 +371,3 @@ Exhibit B - "Incompatible With Secondary Licenses" Notice
 
   This Source Code Form is "Incompatible With Secondary Licenses", as
   defined by the Mozilla Public License, v. 2.0.
-

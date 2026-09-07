@@ -150,6 +150,7 @@ paradox-engine/
 │   └── formulas/                公式卡 ×10（第 1 层每构件一张概念说明）
 ├── README.md                ← 本文件（中英双语 + 测试状态）
 ├── CHANGELOG.md             ← 变更日志（按日期，未发布不标版本）
+├── NOTICE                   ← 版权/署名/AI 协作声明
 └── (内容将逐步扩充——作者只放入精选后可以公开的部分)
 ```
 
@@ -274,7 +275,8 @@ run(inputs: dict) -> dict
 - 代码中的公式卡引用（`formulas/*.md`）为概念说明，可能随仓库演化补齐。
 - **许可**：**MPL-2.0（Mozilla Public License 2.0）**——允许商用、允许修改、
   欢迎协作（fork / 提 PR / 一起改）；改了哪个源文件，那个文件保持 MPL
-  开源。完整条款见 [LICENSE](LICENSE)。
+  开源。[LICENSE](LICENSE) 为纯 MPL-2.0 全文；版权/署名/AI 协作声明见
+  [NOTICE](NOTICE)。
 
 ---
 
