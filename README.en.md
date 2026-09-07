@@ -281,10 +281,10 @@ logic (added when a real pain point appears).
   original-work section.
 - References to concept cards (`formulas/*.md`) are explanatory and may be
   completed as the repository evolves.
-- **License**: non-commercial + open collaboration — **forking, pull requests,
-  and co-development are welcome**; commercial use and AI training are
-  prohibited. Full terms in [LICENSE](LICENSE) (custom terms; contact the
-  author for commercial use or training permission).
+- **License**: **MPL-2.0 (Mozilla Public License 2.0)** — commercial use and
+  modification allowed; collaboration welcome (fork / pull requests /
+  co-development). If you modify a source file, that file stays open under
+  the MPL. Full terms in [LICENSE](LICENSE).
 
 ---
 
