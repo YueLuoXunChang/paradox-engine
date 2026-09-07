@@ -118,6 +118,17 @@ def run(inputs):
             inputs.get("has_layers", False),
             inputs.get("need_entropy", False))
 
+    # 非法 mode 诚实拦截（2026-09-06 补：未知/拼错 mode 曾静默落 mu1——
+    # 与 μ₂ 丢 else 分支同类隐患：改了分支不知道。显式报错兜测试）
+    if mode not in ('mu1', 'mu2', 'mu3', 'mu4'):
+        return {'mu': None, 'branch': mode,
+                'proposition': proposition,
+                'error': f'未知分支 mode={mode!r}（应为 mu1/mu2/mu3/mu4）'
+                         '——诚实拦截，不静默落默认'}
+    if mode == 'mu3' and (tau_L1 is None or tau_L2 is None):
+        return {'mu': None, 'branch': mode, 'proposition': proposition,
+                'error': 'mu3 层级型需 tau_L1/tau_L2（跨层真值）——'
+                         '诚实拦截，不硬算'}
     if mode == 'mu2':
         mu = _mu2()
     elif mode == 'mu3':

@@ -163,6 +163,7 @@ paradox-engine/
 │   └── formulas/                 concept cards (×10 for the classical layer)
 ├── README.md                ← Chinese readme (this English one: README.en.md)
 ├── CHANGELOG.md             ← changelog (by date — no versions until release)
+├── NOTICE                   ← copyright / authorship / AI-collaboration notes
 └── (will grow as the author selects more parts to make public)
 ```
 
@@ -324,7 +325,8 @@ non-monotonic / relevance logic (added when a real pain point appears).
 - **License**: **MPL-2.0 (Mozilla Public License 2.0)** — commercial use and
   modification allowed; collaboration welcome (fork / pull requests /
   co-development). If you modify a source file, that file stays open under
-  the MPL. Full terms in [LICENSE](LICENSE).
+  the MPL. [LICENSE](LICENSE) is the pure MPL-2.0 text; copyright / authorship
+  / AI-collaboration notes are in [NOTICE](NOTICE).
 
 ---
 
