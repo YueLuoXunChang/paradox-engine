@@ -33,6 +33,7 @@ packages = [
     "engine.cold",
     "engine.control",
     "engine.mechanisms",
+    "engine.scenarios",
     "engine.skeleton",
 ]
 
