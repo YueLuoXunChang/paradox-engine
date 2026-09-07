@@ -1,7 +1,7 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 """
 test_classifier.py — 正式测试：判类器 + 复杂度 + 路由（总控步 1/2/3）
-用例依据：任务指标 44（信号表/打分公式/ROUTE）+ 38（走查一二三）
+用例依据：内部规格 44（信号表/打分公式/ROUTE）+ 38（走查一二三）
 运行：python engine/control/test_classifier.py
 """
 import os

@@ -1,7 +1,7 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 """
 test_dung_framework.py — 正式测试：Dung 论证框架（第 3 层 3.2）
-用例依据：任务指标 43 §二（grounded/preferred/可接受/争议集）+ Dung 1995 标准
+用例依据：内部规格 43 §二（grounded/preferred/可接受/争议集）+ Dung 1995 标准
 运行：python engine/cold/test_dung_framework.py
 """
 import os

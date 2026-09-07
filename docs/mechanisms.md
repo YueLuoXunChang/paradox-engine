@@ -1,4 +1,4 @@
-# paradox-engine · 能力目录
+﻿# paradox-engine · 能力目录
 
 > 分层：总控（神经系统）· 第 0 层骨架（✅）· 第 1 层经典逻辑（✅）·
 > 第 2 层悖论（✅ 核心）· 第 3 层冷门（✅ 首期）· AI 挂载（✅）。
@@ -41,7 +41,7 @@
 | engine/mechanisms/paradox_annotate.py | 悖论注解（8 字段卡 + P-A/B/C 分级） | ✅ 自测6 |
 | engine/mechanisms/converge_check.py | 收敛判定（压缩/有限步/渐进/振荡） | ✅ 自测6 |
 
-### 撞墙管线五件（阶段 2 新增，41 详规 2.3-2.6 + 管线 A）
+### 撞墙管线五件（阶段 2 新增，内部详规 2.3-2.6 + 管线 A）
 
 | 文件 | 一句话 | 状态 |
 |---|---|---|
@@ -66,7 +66,7 @@
 | engine/classical/equality_tableau.py | 等词替换 + 命题 tableau（反例模型） | ✅ 自测6+正式14 |
 | engine/classical/stlc.py | 简单类型 λ STLC（类型检查/推导，拦自应用，Curry-Howard） | ✅ 自测8+正式15 |
 
-> 每构件完整规格见任务指标《39_逻辑建模引擎_经典逻辑层详规》v2。
+> 每构件完整规格见《逻辑建模引擎_经典逻辑层详规》v2。
 
 ## 为什么分层
 

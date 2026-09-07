@@ -1,7 +1,7 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 """
 test_turing_machine.py — 正式测试：图灵机构件（经典逻辑层 1.7）
-用例依据：任务指标 39 详规七·补E + docs/formulas/turing_machine.md
+用例依据：内部规格七·补E + docs/formulas/turing_machine.md
 运行：python engine/classical/test_turing_machine.py
 """
 import os

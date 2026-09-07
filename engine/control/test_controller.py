@@ -1,7 +1,7 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 """
 test_controller.py — 正式测试：总控五步流水线（38 步1-5 落码）
-用例依据：任务指标 38（走查一/三 + 五查 + 诚实边界）
+用例依据：内部规格 38（走查一/三 + 五查 + 诚实边界）
 运行：python engine/control/test_controller.py
 """
 import os

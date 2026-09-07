@@ -1,7 +1,7 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 """
 test_belnap_four.py — 正式测试：Belnap 四值逻辑（第 3 层 3.1 次协调语义）
-用例依据：任务指标 43 §一（矛盾取"两者"不爆炸 + 与第 2 层咬合）+ 借鉴标注
+用例依据：内部规格 43 §一（矛盾取"两者"不爆炸 + 与第 2 层咬合）+ 借鉴标注
 运行：python engine/cold/test_belnap_four.py
 """
 import os

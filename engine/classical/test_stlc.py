@@ -1,7 +1,7 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 """
 test_stlc.py — 正式测试：简单类型 λ（STLC，经典逻辑层 1.9）
-用例依据：任务指标 39 详规七·补F + docs/formulas/stlc.md
+用例依据：内部规格七·补F + docs/formulas/stlc.md
 运行：python engine/classical/test_stlc.py
 """
 import os

@@ -1,7 +1,7 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 """
 test_boundary_paradox.py — 正式测试：边界悖论判定（第 2 层 2.4）
-用例依据：任务指标 41 §四（边界态检测/张力/划设即撤销/重生路径 + 诚实边界）
+用例依据：内部规格 41 §四（边界态检测/张力/划设即撤销/重生路径 + 诚实边界）
 运行：python engine/mechanisms/test_boundary_paradox.py
 """
 import os

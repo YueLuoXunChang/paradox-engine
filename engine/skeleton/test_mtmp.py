@@ -1,7 +1,7 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 """
 test_mtmp.py — 正式测试：MT-MP-TL 骨架层（第 0 层）
-用例依据：任务指标 42 §一~四（点四元组/线程三属性/12 形态/5 操作 + 诚实边界）
+用例依据：内部规格 42 §一~四（点四元组/线程三属性/12 形态/5 操作 + 诚实边界）
 运行：python engine/skeleton/test_mtmp.py
 """
 import os
