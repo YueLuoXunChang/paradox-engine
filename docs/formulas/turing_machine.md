@@ -1,4 +1,4 @@
-﻿# 公式卡：图灵机构件（turing_machine）
+# 公式卡：图灵机构件（turing_machine）
 
 > 概念来源：经典可计算性理论（Turing 1936）——非落落原创，经典共识
 > 代码：engine/classical/turing_machine.py · 测试：engine/classical/test_turing_machine.py

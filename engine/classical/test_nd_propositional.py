@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """
 test_nd_propositional.py — 正式测试：命题自然演绎（经典逻辑层 1.2）
 用例依据：内部规格七·补A + docs/formulas/nd_propositional.md

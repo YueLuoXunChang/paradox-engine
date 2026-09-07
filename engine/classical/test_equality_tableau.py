@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """
 test_equality_tableau.py — 正式测试：等词 + 表列法（经典逻辑层 1.5）
 用例依据：内部规格七·补C + docs/formulas/equality_tableau.md
