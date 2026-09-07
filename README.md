@@ -121,6 +121,8 @@ paradox-engine/
 │   │   ├── observer_bypass.py   悖论全程自反旁路（主链不停，观察+注解+注入）
 │   │   ├── counterpoint_gen.py  对位创生第三态（对立交汇 → 候选+依据）
 │   │   └── wall_pipeline.py     撞墙管线 A（测→注→钻→看→旁→创 → 五选一诊断）
+│   ├── scenarios/             ← 场景库（真实输入+期望诊断+复核——语料回馈判类器）
+│   │   └── scenarios.py          7 场景注册表 + run_all 对照（期望 vs 实际）
 │   ├── skeleton/              ← MT-MP-TL 骨架（第 0 层：结构表达，不掺判定）
 │   │   └── mtmp.py              点/线程/拓扑（12 形态）/操作（5 种）
 │   ├── cold/                  ← 冷门逻辑（第 3 层：按痛点选，外部共识归借鉴区）

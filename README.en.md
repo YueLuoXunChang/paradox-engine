@@ -134,6 +134,8 @@ paradox-engine/
 │   │   ├── observer_bypass.py    full self-reflexive bypass (main chain never blocks)
 │   │   ├── counterpoint_gen.py   counterpoint generation (opposites → third state candidate)
 │   │   └── wall_pipeline.py      wall pipeline A (measure→annotate→drill→view→bypass→create → 5-way verdict)
+│   ├── scenarios/             ← Scenario library (real input + expected diagnosis + review — corpus feedback)
+│   │   └── scenarios.py          7-scenario registry + run_all comparison (expected vs actual)
 │   ├── skeleton/              ← MT-MP-TL skeleton (L0: structure only, no judging)
 │   │   └── mtmp.py               points/threads/topology (12 shapes)/operations (5 kinds)
 │   ├── cold/                  ← Cold logics (L3: chosen by need; external consensus marked as borrowed)
