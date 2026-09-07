@@ -281,8 +281,10 @@ logic (added when a real pain point appears).
   original-work section.
 - References to concept cards (`formulas/*.md`) are explanatory and may be
   completed as the repository evolves.
-- **License**: *to be filled in once the author settles the terms* (currently
-  public for viewing only — please do not reuse, train on, or commercialize).
+- **License**: non-commercial + open collaboration — **forking, pull requests,
+  and co-development are welcome**; commercial use and AI training are
+  prohibited. Full terms in [LICENSE](LICENSE) (custom terms; contact the
+  author for commercial use or training permission).
 
 ---
 
