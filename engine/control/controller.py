@@ -77,164 +77,177 @@ except ImportError:
 # 输入构造函数(structured) -> dict 或 None（None=缺结构化输入）
 # ══════════════════════════════════════════════════════════════
 
+# ══════════════════════════════════════════════════════════════
+# 执行映射（声明式 ADAPTER_SPECS——加新构件 = 加一行，不用写整段 builder）
+# 每条：(模块路径, 必填键, 缺参提示, 附加默认参 dict, 特殊钩子函数 或 None)
+# 通用生成：从 structured 取必填键 + 附加默认参 → 构件 run 输入。
+# 特殊钩子：prop_validity（空前提转 formula）/ selfref（句子名映射）等
+# 有真逻辑的适配留在钩子里；纯传参的零代码。
+# ══════════════════════════════════════════════════════════════
+
+def _need(struct, keys, hint):
+    """校验必填键齐全；缺 → (None, 提示)。"""
+    if not struct:
+        return None, hint
+    missing = [k for k in keys if k not in struct]
+    if missing:
+        return None, f'缺结构化输入 {missing}（{hint}）'
+    return struct, None
+
+
+def _hook_prop_validity(struct, d):
+    """T1 空前提 = 直接判 conclusion（重言/矛盾），非空走有效性。"""
+    if not d['premises']:
+        return {'formula': d['conclusion']}, None
+    return {'premises': d['premises'], 'conclusion': d['conclusion'],
+            'mode': 'validity'}, None
+
+
+def _hook_selfref(struct, d):
+    """T6：句子名 → 内置自指句；否则自定义 iterate 修正。"""
+    s = d['sentence']
+    known = {'liar': 'liar', 'godel': 'godel',
+             'truth_teller': 'truth_teller',
+             '这句话是假的': 'liar', '本句不可证': 'godel',
+             '本句为真': 'truth_teller'}
+    if s in known:
+        return {'mode': 'sentence', 'sentence': known[s]}, None
+    return {'mode': 'iterate',
+            'f': lambda x: not x if isinstance(x, bool) else 1 - x,
+            'state0': False}, None
+
+
+# 声明表：(module, 必填键, 缺参提示, 附加默认参数, 钩子或 None)
+ADAPTER_SPECS = {
+    # 第 1 层经典
+    'propositional.validity': ('classical.propositional',
+                               ['premises', 'conclusion'],
+                               'T1 需 premises/conclusion', {},
+                               _hook_prop_validity),
+    'propositional.consistency': ('classical.propositional',
+                                  ['formula'],
+                                  '需 formula 命题公式', {'mode': 'consistency'},
+                                  None),
+    'first_order.query': ('classical.first_order',
+                          ['facts', 'rules', 'query'],
+                          'T9/T1-L2 需 facts/rules/query', {}, None),
+    # 第 2 层悖论
+    'paradox_measure.mu1': ('mechanisms.paradox_measure',
+                            ['wA', 'wNotA'],
+                            '需 wA/wNotA 证据权重',
+                            {'mode': 'mu1'}, None),
+    'paradox_measure.mu2': ('mechanisms.paradox_measure', [],
+                            'mu2 自指直判无需输入', {'mode': 'mu2'}, None),
+    'paradox_measure.mu4': ('mechanisms.paradox_measure', [],
+                            'mu4 演示（默认 wA=wNotA=5）',
+                            {'mode': 'mu4', 'wA': 5, 'wNotA': 5}, None),
+    'paradox_annotate': ('mechanisms.paradox_annotate',
+                         ['A', 'B'],
+                         '需 A/¬A 两方（T2 用）', {}, None),
+    'selfref_fixpoint': ('mechanisms.selfref_fixpoint', ['sentence'],
+                         'T6 需 sentence（liar/godel/truth_teller 或句子）',
+                         {}, _hook_selfref),
+    'boundary_paradox': ('mechanisms.boundary_paradox', ['wall_name'],
+                         '需 wall_name（墙名）',
+                         {'inside': '可判定', 'outside': '不可判定'}, None),
+    'counterpoint_gen': ('mechanisms.counterpoint_gen',
+                         ['thesis', 'antithesis'],
+                         'T7 需 thesis/antithesis', {}, None),
+    'wall_pipeline': ('mechanisms.wall_pipeline', ['wall'],
+                      '需 wall（疑似墙描述）', {}, None),
+    'converge_check': ('mechanisms.converge_check',
+                       ['f', 'err_fn'], '需 f/err_fn 函数',
+                       {'branch': 'finite', 'x0': 0.0}, None),
+    'converge_check.finite': ('mechanisms.converge_check',
+                              ['f', 'err_fn'], '需 f/err_fn 函数',
+                              {'branch': 'finite', 'x0': 0.0}, None),
+    # 第 3 层冷门
+    'belnap_four': ('cold.belnap_four', ['formula'],
+                    '需 formula 命题公式（四值求值）', {}, None),
+    'dung': ('cold.dung_framework', ['arguments', 'attacks'],
+             '需 arguments/attacks（论证+攻击图）', {}, None),
+    # 第 0 层骨架
+    'skeleton': ('skeleton.mtmp', ['mode'],
+                 '骨架需 mode（point/thread/topology/op）', {}, None),
+    'mtmp': ('skeleton.mtmp', ['mode'],
+             '骨架需 mode（point/thread/topology/op）', {}, None),
+}
+
+# annotate 需把 A/B 包进 paradox dict——单独钩子
+_ANNOTATE_KEYS = ('paradox', 'source', 'impact', 'eliminable')
+
+
+def _hook_annotate(struct, d):
+    return {'paradox': {'A': d['A'], 'notA': d['B'],
+                        'pos': '总控执行层', 'src': 'runtime',
+                        'effect': '下游决策', 'note': '总控 T2 自动注解'},
+            'source': 'runtime', 'impact': 'global', 'eliminable': True}, None
+
+
+def _hook_belnap(struct, d):
+    """Belnap：assign 缺省空 dict（不能 None——run 会判 assign_pending）。"""
+    return {'formula': d['formula'],
+            'assign': d.get('assign') or {}}, None
+
+
+def _hook_mtmp(struct, d):
+    """骨架：全透传 structured（mode + points/edges/threads 等原样给 run）。"""
+    base = dict(d)
+    return base, None
+
+
+def _hook_wall(struct, d):
+    """撞墙管线：wall 必填 + thesis/antithesis/events 可选透传。"""
+    return {'wall': d['wall'],
+            'thesis': d.get('thesis'), 'antithesis': d.get('antithesis'),
+            'events': d.get('events')}, None
+
+
+_ADAPTER_HOOKS = {
+    'propositional.validity': _hook_prop_validity,
+    'selfref_fixpoint': _hook_selfref,
+    'paradox_annotate': _hook_annotate,
+    'belnap_four': _hook_belnap,
+    'skeleton': _hook_mtmp,
+    'mtmp': _hook_mtmp,
+    'wall_pipeline': _hook_wall,
+}
+
+
 def _builders():
     import importlib
 
     def get(mod):
         # mod 形如 'classical.propositional' / 'mechanisms.paradox_measure'
-        # repo 根已在 sys.path → engine.classical.propositional
         return importlib.import_module(f'engine.{mod}')
 
-    def need(struct, keys, hint):
-        if not struct:
-            return None, hint
-        missing = [k for k in keys if k not in struct]
-        if missing:
-            return None, f'缺结构化输入 {missing}（{hint}）'
-        return struct, None
+    def make(name, spec):
+        module, keys, hint, defaults, _hook = spec
+        # 钩子优先级：spec 内嵌 > 全局 _ADAPTER_HOOKS（annotate 等结构化包型）
+        _hook = _hook or _ADAPTER_HOOKS.get(name)
+
+        def builder(struct):
+            d, h = _need(struct, keys, hint)
+            if d is None:
+                return None, h
+            if _hook is not None:
+                return _hook(struct, d)
+            args = dict(defaults) if defaults else {}
+            if keys:
+                for k in keys:
+                    if k in d:
+                        args[k] = d[k]
+            else:
+                # 无必填键（mu2/mu4 等）或全透传型：默认参数即可
+                if not defaults:
+                    args.update(d)
+            return args, None
+        return builder
 
     builders = {}
-
-    def b_prop_validity(struct):
-        d, hint = need(struct, ['premises', 'conclusion'],
-                       'T1 需 premises/conclusion')
-        if d is None:
-            return None, hint
-        if not d['premises']:
-            # 空前提 = 直接判 conclusion 自身（重言/矛盾/偶真）
-            return {'formula': d['conclusion']}, None
-        return {'premises': d['premises'], 'conclusion': d['conclusion'],
-                'mode': 'validity'}, None
-
-    def b_prop_consistency(struct):
-        d, hint = need(struct, ['formula'], '需 formula 命题公式')
-        if d is None:
-            return None, hint
-        return {'formula': d['formula'], 'mode': 'consistency'}, None
-
-    def b_fol_query(struct):
-        d, hint = need(struct, ['facts', 'rules', 'query'],
-                       'T9/T1-L2 需 facts/rules/query')
-        if d is None:
-            return None, hint
-        return {'facts': d['facts'], 'rules': d['rules'],
-                'query': d['query']}, None
-
-    def b_mu1(struct):
-        d, hint = need(struct, ['wA', 'wNotA'],
-                       '需 wA/wNotA 证据权重')
-        if d is None:
-            return None, hint
-        return {'mode': 'mu1', 'wA': d['wA'], 'wNotA': d['wNotA']}, None
-
-    def b_mu2(struct):
-        return {'mode': 'mu2'}, None
-
-    def b_annotate(struct):
-        d, hint = need(struct, ['A', 'B'],
-                       '需 A/¬A 两方（T2 用）')
-        if d is None:
-            return None, hint
-        return {'paradox': {'A': d['A'], 'notA': d['B'],
-                            'pos': '总控执行层',
-                            'src': 'runtime',
-                            'effect': '下游决策',
-                            'note': '总控 T2 自动注解'},
-                'source': 'runtime', 'impact': 'global',
-                'eliminable': True}, None
-
-    def b_selfref(struct):
-        d, hint = need(struct, ['sentence'],
-                       'T6 需 sentence（liar/godel/truth_teller 或句子）')
-        if d is None:
-            return None, hint
-        s = d['sentence']
-        known = {'liar': 'liar', 'godel': 'godel',
-                 'truth_teller': 'truth_teller',
-                 '这句话是假的': 'liar', '本句不可证': 'godel',
-                 '本句为真': 'truth_teller'}
-        if s in known:
-            return {'mode': 'sentence', 'sentence': known[s]}, None
-        return {'mode': 'iterate',
-                'f': lambda x: not x if isinstance(x, bool) else 1 - x,
-                'state0': False}, None
-
-    def b_boundary(struct):
-        d, hint = need(struct, ['wall_name'],
-                       '需 wall_name（墙名）')
-        if d is None:
-            return None, hint
-        return {'wall_name': d['wall_name'],
-                'inside': d.get('inside', '可判定'),
-                'outside': d.get('outside', '不可判定')}, None
-
-    def b_counterpoint(struct):
-        d, hint = need(struct, ['thesis', 'antithesis'],
-                       'T7 需 thesis/antithesis')
-        if d is None:
-            return None, hint
-        return {'thesis': d['thesis'], 'antithesis': d['antithesis']}, None
-
-    def b_wall(struct):
-        d, hint = need(struct, ['wall'], '需 wall（疑似墙描述）')
-        if d is None:
-            return None, hint
-        return {'wall': d['wall'],
-                'thesis': d.get('thesis'), 'antithesis': d.get('antithesis'),
-                'events': d.get('events')}, None
-
-    def b_converge(struct):
-        d, hint = need(struct, ['f', 'err_fn'], '需 f/err_fn 函数')
-        if d is None:
-            return None, hint
-        return {'branch': d.get('branch', 'finite'),
-                'f': d['f'], 'err_fn': d['err_fn'],
-                'x0': d.get('x0', 0.0)}, None
-
-    def b_belnap(struct):
-        d, hint = need(struct, ['formula'], '需 formula 命题公式（四值求值）')
-        if d is None:
-            return None, hint
-        return {'formula': d['formula'], 'assign': d.get('assign') or {}}, None
-
-    def b_dung(struct):
-        d, hint = need(struct, ['arguments', 'attacks'],
-                       '需 arguments/attacks（论证+攻击图）')
-        if d is None:
-            return None, hint
-        return {'arguments': d['arguments'], 'attacks': d['attacks']}, None
-
-    def b_mtmp(struct):
-        d, hint = need(struct, ['mode'], '骨架需 mode（point/thread/'
-                       'topology/op）')
-        if d is None:
-            return None, hint
-        base = dict(d)
-        return base, None
-
-    builders.update({
-        'propositional.validity': ('classical.propositional',
-                                   b_prop_validity),
-        'propositional.consistency': ('classical.propositional',
-                                      b_prop_consistency),
-        'first_order.query': ('classical.first_order', b_fol_query),
-        'paradox_measure.mu1': ('mechanisms.paradox_measure', b_mu1),
-        'paradox_measure.mu2': ('mechanisms.paradox_measure', b_mu2),
-        'paradox_measure.mu4': ('mechanisms.paradox_measure',
-                                lambda s: ({'mode': 'mu4', 'wA': 5,
-                                            'wNotA': 5}, None)),
-        'paradox_annotate': ('mechanisms.paradox_annotate', b_annotate),
-        'selfref_fixpoint': ('mechanisms.selfref_fixpoint', b_selfref),
-        'boundary_paradox': ('mechanisms.boundary_paradox', b_boundary),
-        'counterpoint_gen': ('mechanisms.counterpoint_gen', b_counterpoint),
-        'wall_pipeline': ('mechanisms.wall_pipeline', b_wall),
-        'converge_check': ('mechanisms.converge_check', b_converge),
-        'converge_check.finite': ('mechanisms.converge_check', b_converge),
-        'belnap_four': ('cold.belnap_four', b_belnap),
-        'dung': ('cold.dung_framework', b_dung),
-        'skeleton': ('skeleton.mtmp', b_mtmp),
-        'mtmp': ('skeleton.mtmp', b_mtmp),
-    })
+    for name, spec in ADAPTER_SPECS.items():
+        module = spec[0]  # spec: (module, keys, hint, defaults, hook)
+        builders[name] = (module, make(name, spec))
     return builders, get
 
 
