@@ -45,6 +45,27 @@ annotatable, traceable objects.**
 
 ## 2. Quick start (2 minutes)
 
+### Way A: install as a package (pip)
+
+```bash
+# From GitHub
+pip install git+https://github.com/YueLuoXunChang/paradox-engine.git
+# Or clone and install locally
+git clone https://github.com/YueLuoXunChang/paradox-engine.git
+cd paradox-engine && pip install .
+
+# Command line
+paradox-engine --text "产品既要快又要稳"
+paradox-engine --text "这句话是假的" --json      # structured output
+
+# Or import as a Python package
+from engine.control.controller import run as controller
+r = controller({'text': '产品既要快又要稳'})
+print(r['report'])
+```
+
+### Way B: no install, run the demo directly
+
 ```bash
 # After cloning, from the repository root
 python demo.py
@@ -130,7 +151,9 @@ paradox-engine/
 │       ├── turing_machine.py      Turing machine (simulation + UTM + halting demo)
 │       └── stlc.py                simply typed lambda calculus (type checking, blocks self-application)
 │       (each component ships with a test_*.py formal test)
+│   └── cli.py                 ← command-line entry (--text/--json/--file/--tools)
 ├── demo.py                  ← 2-minute tour (fifteen steps)
+├── pyproject.toml           ← pip packaging (provides the `paradox-engine` command)
 ├── docs/
 │   ├── mechanisms.md             layered capability index (self-test N + formal M per component)
 │   ├── ROADMAP.md                layered roadmap
