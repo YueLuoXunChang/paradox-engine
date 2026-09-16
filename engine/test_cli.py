@@ -13,6 +13,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from cli import main  # noqa: E402
+from ai.tools import _TOOL_REGISTRY  # noqa: E402
 
 PASS = 0
 
@@ -73,7 +74,9 @@ finally:
 # ── 用例4：--tools
 code, out = run_cli('--tools')
 check("--tools exit=0", code == 0, f"exit={code}")
-check("--tools 列工具", '可用工具' in out and '23' in out, out[:200])
+check("--tools 列工具", '可用工具' in out, out[:200])
+check("--tools 列出全量工具（数=注册表，动态取、不硬编）",
+      str(len(_TOOL_REGISTRY)) in out, out[:200])
 
 # ── 用例5：缺文本 → exit 2 提示
 code, out = run_cli()
@@ -92,5 +95,5 @@ code, out = run_cli(
 check("边界声明不决策", '只诊断不决策' in out or '不决策' in out, out[-300:])
 
 print("=" * 60)
-print(f"结果: {PASS}/17 通过")
-raise SystemExit(0 if PASS == 17 else 1)
+print(f"结果: {PASS}/18 通过")
+raise SystemExit(0 if PASS == 18 else 1)

@@ -24,7 +24,7 @@ of the system (documentation library and complete mechanism library).
 > decided (self-reference and paradox) goes through a "wall pipeline" that
 > returns a five-way diagnosis (decidable / benign self-reference /
 > resonance-band self-reference / divergent wall / creatable). Zero
-> third-party dependencies; `python demo.py` walks through all sixteen
+> third-party dependencies; `python demo.py` walks through all seventeen
 > capabilities in about two minutes.
 
 ---
@@ -71,9 +71,10 @@ print(r['report'])
 python demo.py
 ```
 
-`demo.py` demonstrates sixteen things (①②③ the paradox trio → ④-⑩ the
+`demo.py` demonstrates seventeen things (①②③ the paradox trio → ④-⑩ the
 classical-logic foundation → ⑪ wall pipeline → ⑫ five-step controller →
-⑬ MT-MP-TL skeleton → ⑭ cold logics → ⑮ AI mounting → ⑯ math foundations):
+⑬ MT-MP-TL skeleton → ⑭ cold logics → ⑮ AI mounting → ⑯ math foundations →
+⑰ cold logics completed):
 
 | Step | Demonstration | Layer |
 |---|---|---|
@@ -91,8 +92,9 @@ classical-logic foundation → ⑪ wall pipeline → ⑫ five-step controller �
 | ⑫ five-step controller | Chinese text → classify→complexity→route→execute→judge (Chinese report) | Control |
 | ⑬ MT-MP-TL skeleton | Multi-thread parallel → merge + topology classification (structure only, no judging) | L0 |
 | ⑭ cold logics | Contradiction takes value "both" (Belnap four-valued) + stance analysis (Dung) | L3 |
-| ⑮ AI mounting | All 25 engine functions = AI-callable tools (function-calling schemas auto-generated) | Mounting |
+| ⑮ AI mounting | All engine functions = AI-callable tools (function-calling schemas auto-generated) | Mounting |
 | ⑯ math foundations | Self-referential program construction (Kleene recursion theorem) + truth revision (Gupta-Belnap — scholarly anchor for resonance bands) | Borrowed |
+| ⑰ cold logics completed | Belief revision / non-monotonicity (AGM: a black swan retracts the old conclusion) + relevance logic (real conflict vs empty rhetoric) | L3 |
 
 You can also call a mechanism directly:
 
@@ -121,7 +123,7 @@ print(r['verdict'])   # valid
 paradox-engine/
 ├── engine/
 │   ├── ai/                     ← AI mounting (engine functions = function-calling tools)
-│   │   ├── tools.py              schemas auto-generated from all 25 components + call_tool
+│   │   ├── tools.py              schemas auto-generated from all components + call_tool
 │   │   └── ai_scenarios.py       two end-to-end real scenarios (argument conflict / modeling)
 │   ├── control/               ← Controller (the "brain": classify/complexity/route/five-step pipeline)
 │   │   ├── classifier.py         12 problem-type classifier + L1/L2/L3 complexity + ROUTE (36 keys)
@@ -141,7 +143,9 @@ paradox-engine/
 │   │   └── mtmp.py               points/threads/topology (12 shapes)/operations (5 kinds)
 │   ├── cold/                  ← Cold logics (L3: chosen by need; external consensus marked as borrowed)
 │   │   ├── belnap_four.py        Belnap four-valued logic (contradiction = "both", no explosion)
-│   │   └── dung_framework.py     Dung argumentation framework (which positions stand)
+│   │   ├── dung_framework.py     Dung argumentation framework (which positions stand)
+│   │   ├── agm_revision.py       AGM belief revision + non-monotonic defaults (retractable conclusions)
+│   │   └── relevance_logic.py    relevance logic (real conflict vs empty rhetoric)
 │   └── classical/             ← Classical-logic foundation (L1: decision/proof/computation/types)
 │       ├── propositional.py       propositional logic (validity/counterexample/satisfiable/tautology)
 │       ├── nd_propositional.py    natural deduction ND (proof trees, classical/intuitionistic)
@@ -155,7 +159,7 @@ paradox-engine/
 │       └── stlc.py                simply typed lambda calculus (type checking, blocks self-application)
 │       (each component ships with a test_*.py formal test)
 │   └── cli.py                 ← command-line entry (--text/--json/--file/--tools)
-├── demo.py                  ← 2-minute tour (sixteen steps)
+├── demo.py                  ← 2-minute tour (seventeen steps)
 ├── pyproject.toml           ← pip packaging (provides the `paradox-engine` command)
 ├── docs/
 │   ├── mechanisms.md             layered capability index (self-test N + formal M per component)
@@ -259,11 +263,14 @@ can be discussed, compared, and traced.
   **five-way diagnosis** (decidable / benign self-reference /
   resonance-band self-reference / divergent wall / creatable). "Contradiction
   as first-class citizen" moves from slogan to runnable pipeline;
-- **L3 · cold logics (first two pieces)**: Belnap four-valued logic
+- **L3 · cold logics (chosen by real need)**: Belnap four-valued logic
   (contradiction = "both", no explosion — a semantic foundation for the
   resonance band) + Dung argumentation framework (grounded/preferred — which
-  positions can withstand attack) — chosen by real need; external consensus
-  is labeled and kept in the "borrowed" section, never mixed into the
+  positions can withstand attack) + **AGM belief revision / non-monotonicity**
+  (does the old conclusion survive new information — minimal retraction +
+  defeasible defaults) + **relevance logic** (do premises and conclusion share
+  a variable — real conflict vs empty rhetoric) — external consensus is
+  labeled and kept in the "borrowed" section, never mixed into the
   original-work section;
 - **AI mounting layer**: all components wrapped as function-calling tools
   (schemas auto-generated from PORTS, zero hand-maintained drift) + `call_tool`
@@ -276,16 +283,16 @@ can be discussed, compared, and traced.
   convergence — the liar's period-2 oscillation is a textbook result).
 
 **Extending (see docs/ROADMAP.md)**: arithmetic hierarchy / decidable
-fragments (a precise map of the walls; borrowed, sources labeled) → AGM
-non-monotonic / relevance logic (added when a real pain point appears).
+fragments (a precise map of the walls; borrowed, sources labeled) →
+intuitionistic logic (constructive stance, optional).
 
 ### Test status
 
-- **533 formal assertions pass** (24 test files), covering every mechanism
+- **706 formal assertions pass** (29 test files), covering every mechanism
   component plus the controller/scenario/AI-tool layers;
 - Every component is self-contained: `python engine/<layer>/<name>.py` runs
   its self-test; `python engine/<layer>/test_<name>.py` runs its formal tests;
-- Demo: `python demo.py` walks through sixteen steps; end-to-end scenarios:
+- Demo: `python demo.py` walks through seventeen steps; end-to-end scenarios:
   `python engine/ai/ai_scenarios.py`;
 - Zero third-party dependencies — pure Python standard library (≥3.9).
 
@@ -316,9 +323,10 @@ non-monotonic / relevance logic (added when a real pain point appears).
   logic decides what it can; layer 2: contradiction as first-class citizen;
   diagnose-only-never-decide) are the author's original direction.
 - **Borrowed material**: classical consensus reused in the code (e.g. Belnap
-  four-valued logic, Dung argumentation framework, and the classical-logic
-  components) is labeled with its source in the corresponding file's
-  docstring and kept in the "borrowed" section — never mixed into the
+  four-valued logic, Dung argumentation framework, AGM belief revision 1985,
+  Reiter default logic, Anderson–Belnap relevance logic 1975, and the
+  classical-logic components) is labeled with its source in the corresponding
+  file's docstring and kept in the "borrowed" section — never mixed into the
   original-work section.
 - References to concept cards (`formulas/*.md`) are explanatory and may be
   completed as the repository evolves.

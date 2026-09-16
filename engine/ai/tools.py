@@ -86,6 +86,10 @@ _TOOL_REGISTRY = [
      'Gupta-Belnap 真值修正：多句系统修正序列分类（稳定/振荡——共振带锚点）'),
     ('recursion_theorem', 'classical.recursion_theorem',
      'Kleene 递归定理：自指程序构造（quine/程序拿自己——借数学底座）'),
+    ('agm_revision', 'cold.agm_revision',
+     'AGM 信念修正+非单调默认：新信息来了旧结论还成立吗（最小放弃/可废止）'),
+    ('relevance_logic', 'cold.relevance_logic',
+     '相干逻辑：前提结论是否共享变量（区分真冲突与话术冲突）'),
     ('classifier', 'control.classifier',
      '判类器：12 题型 + 复杂度 L1/L2/L3 + 路由'),
     ('controller', 'control.controller',
@@ -115,7 +119,26 @@ def _port_to_schema(ports_in):
 
 
 def _load_module(mod_path):
-    return importlib.import_module(f'engine.{mod_path}')
+    """
+    加载构件模块（绝对路径 engine.<层>.<名>）。
+
+    防污染守卫：本机可能同时 editable 安装了别的项目、且其顶层包名也是
+    engine（本仓库真实踩过——脚本模式下 import engine 拿到了另一个项目的
+    engine 包，同名的构件被静默误用）。所以加载后核对模块文件确在本仓库内，
+    否则诚实报错、绝不静默用别人的代码。
+    """
+    mod = importlib.import_module(f'engine.{mod_path}')
+    try:
+        same_repo = os.path.commonpath(
+            [os.path.abspath(mod.__file__), _REPO]) == _REPO
+    except ValueError:  # 跨盘符等极端情况
+        same_repo = False
+    if not same_repo:
+        raise ImportError(
+            f'模块 engine.{mod_path} 解析到 {mod.__file__}——不在本仓库 '
+            f'{_REPO} 内（顶层包名 engine 被别的项目占用）。请确保本仓库根'
+            '在 sys.path 首位后重试。')
+    return mod
 
 
 def tools():
@@ -208,6 +231,7 @@ if __name__ == '__main__':
     names = [t['function']['name'] for t in tl]
     assert 'paradox_measure' in names and 'controller' in names, names
     assert 'recursion_theorem' in names and 'truth_revision' in names, names
+    assert 'agm_revision' in names and 'relevance_logic' in names, names
     assert all('parameters' in t['function'] for t in tl)
     assert all('description' in t['function'] for t in tl)
     print(f'✅ 工具清单 {len(tl)} 件（schema 自动生成）')
@@ -269,6 +293,24 @@ if __name__ == '__main__':
                              'attacks': [('a', 'b')]}})
     assert r8b['verdict'] == 'ok', r8b
     print('✅ run(action=list/call) 统一入口 OK')
+
+    # 9) call_tool：AGM 信念修正（冷门 3.3）
+    r9 = call_tool('agm_revision', {
+        'mode': 'revise', 'beliefs': ['P→Q', 'P'], 'new_info': '¬Q',
+        'priorities': {'P→Q': 1, 'P': 10}})
+    assert r9['verdict'] == 'ok', r9
+    assert r9['result']['verdict'] == 'revised', r9
+    assert r9['result']['dropped'] == ['P→Q'], r9
+    print(f"✅ call_tool agm_revision → {r9['result']['verdict']}"
+          f"（放弃 {r9['result']['dropped']}）")
+
+    # 10) call_tool：相干逻辑（冷门 3.4）
+    r10 = call_tool('relevance_logic', {
+        'premises': ['P', '¬P'], 'conclusion': 'Q'})
+    assert r10['verdict'] == 'ok', r10
+    assert r10['result']['verdict'] == 'irrelevant_valid', r10
+    print(f"✅ call_tool relevance_logic → {r10['result']['verdict']}"
+          '（爆炸有效但不相干）')
 
     print('=' * 62)
     print('AI 挂载层自测：全部通过 ✅')

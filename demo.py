@@ -227,7 +227,7 @@ def main():
           f"preferred = {r14b['preferred']}")
     print("  第 3 层纪律：外部共识（Belnap 1977 / Dung 1995）——借鉴区，标注来源不混原创。")
 
-    banner("⑮ AI 挂载：25 个引擎函数 = AI 可调用工具")
+    banner("⑮ AI 挂载：全量引擎函数 = AI 可调用工具（schema 自动生成）")
     print("场景：把引擎全部构件封装成 function-calling 工具——AI（或任何")
     print("      调用客户端）看 schema 就知道能干什么、要什么参数。")
     from engine.ai.tools import tools as ai_tools
@@ -271,15 +271,39 @@ def main():
     print("  借鉴纪律：Kleene 1952 / Gupta-Belnap 1993——归借鉴区，不混原创区；")
     print("  振荡≠判真值（说谎者周期 2 是教科书结论，非引擎自创）。")
 
+    banner("⑰ 冷门补完：信念修正（AGM）+ 相干逻辑（论证相关性）")
+    print("场景：黑天鹅来了——「所有天鹅白」旧结论要能撤销；以及判断一个"
+          "「矛盾」是真冲突还是各说各话。")
+    from engine.cold.agm_revision import run as agm
+    r17a = agm({'mode': 'revise', 'beliefs': ['P→Q', 'P'], 'new_info': '¬Q',
+                'priorities': {'P→Q': 1, 'P': 10}})
+    print(f"  → AGM 修正：B={{P→Q, P}} + ¬Q → {r17a['verdict']}，"
+          f"放弃 {r17a['dropped']}（最小放弃：信念度低者先弃），"
+          f"B'={r17a['kept']}")
+    r17b = agm({'mode': 'default', 'defaults': [('鸟', '会飞')],
+                'facts': ['鸟', '鸟(企鹅)'], 'exceptions': ['鸟(企鹅)']})
+    print(f"  → 非单调默认：鸟⇒会飞 + 企鹅例外 → "
+          f"{r17b['conclusions'][0]['status']}（可废止，不是矛盾）")
+    from engine.cold.relevance_logic import run as rel
+    r17c = rel({'premises': ['P', '¬P'], 'conclusion': 'Q'})
+    print(f"  → 相干检查：P, ¬P ⊢ Q → {r17c['verdict']}"
+          f"（经典层判爆炸有效，相干层判不相干——废话有效）")
+    r17d = rel({'mode': 'conflict', 'prop_a': 'P∧¬P', 'prop_b': 'Q∧¬Q'})
+    print(f"  → 冲突定性：两个不相干的矛盾 → {r17d['verdict']}"
+          f"（话术冲突：连相关性都没有，更可能是废话而非悖论）")
+    print("  第 3 层纪律：AGM 1985 / Reiter 默认逻辑 / Anderson-Belnap 1975"
+          "——借鉴区，逐条标注来源；算不动就报 undecided，绝不冒充结论。")
+
     print("\n" + "=" * 62)
     print("paradox-engine 的分层主张：")
     print("  总控：判类→判复杂度→切路→执行→判输出（最小充分：简单问题绝不复杂化）")
     print("  第 0 层骨架：点/线程/拓扑/操作——结构表达（12 形态，不掺判定）")
     print("  第 1 层经典逻辑：能算的先算清（命题/谓词/时序/模态/λ/图灵机/类型）")
     print("  第 2 层悖论：算不清的当第一公民（测量→注解→钻墙五选一→创生）")
-    print("  第 3 层冷门：矛盾该共存（四值）/立场谁站得住（Dung）——按痛点选")
+    print("  第 3 层冷门：矛盾该共存（四值）/立场谁站得住（Dung）/新信息来了"
+          "怎么改（AGM）/前提结论相不相干（相干）")
     print("  数学底座：自指程序（Kleene）/真值修正（Gupta-Belnap）——借鉴标注")
-    print("  AI 挂载：引擎 = 25+ 个可调用工具——诊断留给使用者（只诊断不决策）")
+    print(f"  AI 挂载：引擎 = {len(tl)} 个可调用工具——诊断留给使用者（只诊断不决策）")
     print("  只诊断不决策：把判断留给使用它的人。")
     print("更多：见 README.md + docs/ROADMAP.md")
     print("=" * 62)

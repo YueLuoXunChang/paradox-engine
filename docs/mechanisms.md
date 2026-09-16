@@ -1,14 +1,14 @@
 # paradox-engine · 能力目录
 
 > 分层：总控（神经系统）· 第 0 层骨架（✅）· 第 1 层经典逻辑（✅）·
-> 第 2 层悖论（✅ 核心）· 第 3 层冷门（✅ 首期）· AI 挂载（✅）。
+> 第 2 层悖论（✅ 核心）· 第 3 层冷门（✅ 五件）· AI 挂载（✅）。
 > 见 docs/ROADMAP.md。每个文件自包含：`python <文件>` 直接跑自测。
 
 ## AI 挂载 · 引擎 = 可调用工具集（阶段 6）
 
 | 文件 | 一句话 | 状态 |
 |---|---|---|
-| engine/ai/tools.py | 25 构件封装为 function-calling 工具（schema 从 PORTS 自动生成）+ call_tool 分派 | ✅ 自测8+正式36 |
+| engine/ai/tools.py | 全量构件封装为 function-calling 工具（schema 从 PORTS 自动生成，数=注册表不硬编）+ call_tool 分派 + 跨项目污染守卫 | ✅ 自测10+正式45 |
 | engine/ai/ai_scenarios.py | 真实场景端到端：论证矛盾检查 / 学科建模（AI 决策工具链演示） | ✅ 两场景跑通 |
 
 ## 总控 · 引擎大脑（判类/复杂度/路由/五步流水线）
@@ -31,6 +31,8 @@
 | engine/cold/belnap_four.py | Belnap 四值（T/F/两者/皆非）：矛盾取"两者"不爆炸——次协调语义地基（借鉴 Belnap 1977） | ✅ 自测7+正式30 |
 | engine/cold/dung_framework.py | Dung 论证框架：冲突场哪些立场站得住（grounded/preferred/争议集，借鉴 Dung 1995） | ✅ 自测5+正式21 |
 | engine/cold/truth_revision.py | Gupta-Belnap 真值修正：多句系统修正序列（稳定/周期振荡——共振带学界锚点，借鉴 Gupta-Belnap 1993） | ✅ 自测6组+正式19 |
+| engine/cold/agm_revision.py | AGM 信念修正 + 非单调默认：新信息来了旧结论还成立吗（最小放弃 + 可废止默认，借鉴 AGM 1985/Reiter） | ✅ 自测8组+正式48 |
+| engine/cold/relevance_logic.py | 相干逻辑：前提结论是否共享变量（真冲突 vs 话术冲突；算不动报 undecided，借鉴 Anderson-Belnap 1975） | ✅ 自测8组+正式43 |
 
 ## 第 2 层 · 悖论（矛盾当第一公民——落落独创主场）
 
@@ -81,5 +83,5 @@
 
 ## 规划中（见 docs/ROADMAP.md）
 
-MT-MP-TL 骨架（阶段 3）· 冷门逻辑（阶段 4：Dung/次协调 Belnap）·
-对位创生扩展（阶段 5 已并入 2.6）· AI 挂载层（阶段 6）。
+算术层级/可判定片段（墙的精确地图）· 直觉主义逻辑（构造性立场，备选）
+· 撞墙管线 B/C 支线（按真实痛点接入）。

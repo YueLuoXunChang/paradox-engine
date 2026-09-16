@@ -18,12 +18,13 @@ TOOL_SCHEMAS 后按场景决策调用（场景 1 走总控一条龙；场景 2 �
 import os
 import sys
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+_HERE = os.path.dirname(os.path.abspath(__file__))
+_REPO = os.path.dirname(os.path.dirname(_HERE))
+for _p in (_HERE, _REPO):
+    if _p not in sys.path:
+        sys.path.insert(0, _p)
 
-try:
-    from engine.ai.tools import tools, call_tool  # noqa: E402
-except ImportError:
-    from tools import tools, call_tool  # noqa: E402
+from engine.ai.tools import call_tool, tools  # noqa: E402
 
 
 def banner(t):

@@ -30,6 +30,8 @@ names = [t['function']['name'] for t in tl]
 check("工具清单 = 全量注册表", len(tl) == len(_TOOL_REGISTRY),
       str(len(tl)))
 check("工具清单 ≥25 件（含数学底座）", len(tl) >= 25, str(len(tl)))
+check("工具清单 ≥27 件（含冷门 3.3/3.4 新构件）", len(tl) >= 27,
+      str(len(tl)))
 check("含新数学底座工具",
       all(n in names for n in ('recursion_theorem', 'truth_revision')),
       str(names))
@@ -37,6 +39,9 @@ check("含悖论/经典/骨架/冷门/总控全层工具",
       all(n in names for n in ('paradox_measure', 'wall_pipeline',
                                'propositional', 'stlc', 'mtmp',
                                'dung_framework', 'controller')), str(names))
+check("含冷门新构件工具 agm_revision/relevance_logic",
+      all(n in names for n in ('agm_revision', 'relevance_logic')),
+      str(names))
 check("每工具带 description", all(t['function']['description']
       for t in tl), str(tl[0]))
 check("每工具 parameters 是 object schema",
@@ -82,6 +87,18 @@ check("Belnap 调用 → 两者 B", r['result']['value'] == 'B', str(r))
 r = call_tool('stlc', {'expr': 'λx:A.x x'})
 check("STLC 调用 → 拦自应用 type_error",
       r['result']['verdict'] == 'type_error', str(r))
+r = call_tool('agm_revision', {'mode': 'revise', 'beliefs': ['P→Q', 'P'],
+                               'new_info': '¬Q'})
+check("AGM 调用 → revised（最小放弃）",
+      r['result']['verdict'] == 'revised', str(r))
+check("AGM 调用放弃恰 1 条", len(r['result']['dropped']) == 1, str(r))
+r = call_tool('relevance_logic', {'premises': ['P'], 'conclusion': 'Q∨¬Q'})
+check("相干逻辑调用 → irrelevant_valid（形式有效但不相干）",
+      r['result']['verdict'] == 'irrelevant_valid', str(r))
+r = call_tool('relevance_logic', {'mode': 'conflict', 'prop_a': 'P∧¬P',
+                                  'prop_b': 'Q∧¬Q'})
+check("相干逻辑冲突定性 → hollow_conflict（话术冲突）",
+      r['result']['verdict'] == 'hollow_conflict', str(r))
 
 # ── 用例4：总控调用（真实中文论证端到端）
 r = call_tool('controller', {
@@ -131,6 +148,50 @@ check("坏 action → input_pending",
 check("边界声明：只诊断不决策随行",
       '只诊断' in run({'action': 'list'})['boundary'])
 
+# ── 用例7：跨项目污染守卫（顶层包名 engine 被别的项目占用时不静默误用）
+import shutil  # noqa: E402
+import tempfile  # noqa: E402
+import tools as _T  # noqa: E402
+
+_tmp = tempfile.mkdtemp(prefix='pe_guard_')
+try:
+    # 造一个"别的项目"：tempdir/engine/机制.py
+    os.makedirs(os.path.join(_tmp, 'engine'))
+    with open(os.path.join(_tmp, 'engine', '__init__.py'), 'w',
+              encoding='utf-8') as fh:
+        fh.write('')
+    with open(os.path.join(_tmp, 'engine', 'fakemod.py'), 'w',
+              encoding='utf-8') as fh:
+        fh.write('PORTS = {}\n')
+    _saved = {k: v for k, v in sys.modules.items()
+              if k == 'engine' or k.startswith('engine.')}
+    for k in _saved:
+        del sys.modules[k]
+    sys.path.insert(0, _tmp)
+    try:
+        import engine as _foreign
+        check("模拟的异项目 engine 已顶上（前置条件）",
+              _foreign.__file__.startswith(_tmp), _foreign.__file__)
+        _blocked = False
+        try:
+            _T._load_module('fakemod')
+        except ImportError as _e:
+            _blocked = '不在本仓库' in str(_e)
+        check("加载到本仓库外的 engine.* → 守卫诚实报错（不静默误用）",
+              _blocked, str(_T._REPO))
+    finally:
+        sys.path.remove(_tmp)
+        for k in [k for k in sys.modules
+                  if k == 'engine' or k.startswith('engine.')]:
+            del sys.modules[k]
+        sys.modules.update(_saved)
+finally:
+    shutil.rmtree(_tmp, ignore_errors=True)
+
+# 守卫拆除后本仓库加载照常
+check("守卫不影响正常加载（本仓库模块仍可用）",
+      _T._load_module('mechanisms.paradox_measure').PORTS.get('in') is not None)
+
 print("=" * 60)
-print(f"结果: {PASS}/36 通过")
-raise SystemExit(0 if PASS == 36 else 1)
+print(f"结果: {PASS}/45 通过")
+raise SystemExit(0 if PASS == 45 else 1)
