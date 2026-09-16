@@ -294,6 +294,22 @@ def main():
     print("  第 3 层纪律：AGM 1985 / Reiter 默认逻辑 / Anderson-Belnap 1975"
           "——借鉴区，逐条标注来源；算不动就报 undecided，绝不冒充结论。")
 
+    banner("⑱ 构造性立场：直觉主义（没构造出来就不算真）")
+    print("场景：经典层判「恒真」的公式，构造性立场未必认——排中律就是典型。")
+    from engine.cold.intuitionistic_logic import run as intu
+    r18a = intu({'mode': 'countermodel', 'formula': 'P∨¬P'})
+    cm = r18a['countermodel']
+    print(f"  → 排中律 P∨¬P → {r18a['verdict']}"
+          f"（{len(cm['worlds'])} 节点反模型：{cm['note']}）")
+    r18b = intu({'mode': 'compare'})
+    for row in r18b['comparison'][:4]:
+        print(f"      · {row['label']}：Kripke={row['kripke']}"
+              f"（经典层仍判 {row['classical_kind']}）")
+    print(f"    …共 {len(r18b['comparison'])} 条对照：经典成立 ≠ 构造性成立；"
+          'De Morgan 的有效那一侧两边都认。')
+    print("  诚实边界：完备界 2^n 节点内无反模型才判「有效」；界内没找到只报"
+          " not_found_in_limit——不冒充判定。")
+
     print("\n" + "=" * 62)
     print("paradox-engine 的分层主张：")
     print("  总控：判类→判复杂度→切路→执行→判输出（最小充分：简单问题绝不复杂化）")
@@ -301,7 +317,7 @@ def main():
     print("  第 1 层经典逻辑：能算的先算清（命题/谓词/时序/模态/λ/图灵机/类型）")
     print("  第 2 层悖论：算不清的当第一公民（测量→注解→钻墙五选一→创生）")
     print("  第 3 层冷门：矛盾该共存（四值）/立场谁站得住（Dung）/新信息来了"
-          "怎么改（AGM）/前提结论相不相干（相干）")
+          "怎么改（AGM）/前提结论相不相干（相干）/构造性立场（直觉主义）")
     print("  数学底座：自指程序（Kleene）/真值修正（Gupta-Belnap）——借鉴标注")
     print(f"  AI 挂载：引擎 = {len(tl)} 个可调用工具——诊断留给使用者（只诊断不决策）")
     print("  只诊断不决策：把判断留给使用它的人。")

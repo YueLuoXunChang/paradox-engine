@@ -24,7 +24,7 @@ of the system (documentation library and complete mechanism library).
 > decided (self-reference and paradox) goes through a "wall pipeline" that
 > returns a five-way diagnosis (decidable / benign self-reference /
 > resonance-band self-reference / divergent wall / creatable). Zero
-> third-party dependencies; `python demo.py` walks through all seventeen
+> third-party dependencies; `python demo.py` walks through all eighteen
 > capabilities in about two minutes.
 
 ---
@@ -71,10 +71,10 @@ print(r['report'])
 python demo.py
 ```
 
-`demo.py` demonstrates seventeen things (①②③ the paradox trio → ④-⑩ the
+`demo.py` demonstrates eighteen things (①②③ the paradox trio → ④-⑩ the
 classical-logic foundation → ⑪ wall pipeline → ⑫ five-step controller →
 ⑬ MT-MP-TL skeleton → ⑭ cold logics → ⑮ AI mounting → ⑯ math foundations →
-⑰ cold logics completed):
+⑰ cold logics completed → ⑱ constructive stance):
 
 | Step | Demonstration | Layer |
 |---|---|---|
@@ -95,6 +95,7 @@ classical-logic foundation → ⑪ wall pipeline → ⑫ five-step controller �
 | ⑮ AI mounting | All engine functions = AI-callable tools (function-calling schemas auto-generated) | Mounting |
 | ⑯ math foundations | Self-referential program construction (Kleene recursion theorem) + truth revision (Gupta-Belnap — scholarly anchor for resonance bands) | Borrowed |
 | ⑰ cold logics completed | Belief revision / non-monotonicity (AGM: a black swan retracts the old conclusion) + relevance logic (real conflict vs empty rhetoric) | L3 |
+| ⑱ constructive stance | Intuitionistic logic: Kripke countermodels (why excluded middle is not constructively valid) + classical-vs-intuitionistic comparison table | L3 |
 
 You can also call a mechanism directly:
 
@@ -145,7 +146,8 @@ paradox-engine/
 │   │   ├── belnap_four.py        Belnap four-valued logic (contradiction = "both", no explosion)
 │   │   ├── dung_framework.py     Dung argumentation framework (which positions stand)
 │   │   ├── agm_revision.py       AGM belief revision + non-monotonic defaults (retractable conclusions)
-│   │   └── relevance_logic.py    relevance logic (real conflict vs empty rhetoric)
+│   │   ├── relevance_logic.py    relevance logic (real conflict vs empty rhetoric)
+│   │   └── intuitionistic_logic.py intuitionistic logic (Kripke evaluation / countermodel search / comparison)
 │   └── classical/             ← Classical-logic foundation (L1: decision/proof/computation/types)
 │       ├── propositional.py       propositional logic (validity/counterexample/satisfiable/tautology)
 │       ├── nd_propositional.py    natural deduction ND (proof trees, classical/intuitionistic)
@@ -159,7 +161,7 @@ paradox-engine/
 │       └── stlc.py                simply typed lambda calculus (type checking, blocks self-application)
 │       (each component ships with a test_*.py formal test)
 │   └── cli.py                 ← command-line entry (--text/--json/--file/--tools)
-├── demo.py                  ← 2-minute tour (seventeen steps)
+├── demo.py                  ← 2-minute tour (eighteen steps)
 ├── pyproject.toml           ← pip packaging (provides the `paradox-engine` command)
 ├── docs/
 │   ├── mechanisms.md             layered capability index (self-test N + formal M per component)
@@ -269,9 +271,12 @@ can be discussed, compared, and traced.
   positions can withstand attack) + **AGM belief revision / non-monotonicity**
   (does the old conclusion survive new information — minimal retraction +
   defeasible defaults) + **relevance logic** (do premises and conclusion share
-  a variable — real conflict vs empty rhetoric) — external consensus is
-  labeled and kept in the "borrowed" section, never mixed into the
-  original-work section;
+  a variable — real conflict vs empty rhetoric) + Gupta-Belnap truth revision
+  (oscillating revision sequences) + **intuitionistic logic** (constructive
+  stance: Kripke countermodels + a classical-vs-intuitionistic comparison —
+  excluded middle, double-negation elimination and Peirce's law all fail
+  constructively) — external consensus is labeled and kept in the "borrowed"
+  section, never mixed into the original-work section;
 - **AI mounting layer**: all components wrapped as function-calling tools
   (schemas auto-generated from PORTS, zero hand-maintained drift) + `call_tool`
   dispatch — an AI receives the tool list and can call the whole engine;
@@ -284,15 +289,15 @@ can be discussed, compared, and traced.
 
 **Extending (see docs/ROADMAP.md)**: arithmetic hierarchy / decidable
 fragments (a precise map of the walls; borrowed, sources labeled) →
-intuitionistic logic (constructive stance, optional).
+wall-pipeline branches B/C (added when a real pain point appears).
 
 ### Test status
 
-- **706 formal assertions pass** (29 test files), covering every mechanism
+- **753 formal assertions pass** (30 test files), covering every mechanism
   component plus the controller/scenario/AI-tool layers;
 - Every component is self-contained: `python engine/<layer>/<name>.py` runs
   its self-test; `python engine/<layer>/test_<name>.py` runs its formal tests;
-- Demo: `python demo.py` walks through seventeen steps; end-to-end scenarios:
+- Demo: `python demo.py` walks through eighteen steps; end-to-end scenarios:
   `python engine/ai/ai_scenarios.py`;
 - Zero third-party dependencies — pure Python standard library (≥3.9).
 
@@ -324,10 +329,10 @@ intuitionistic logic (constructive stance, optional).
   diagnose-only-never-decide) are the author's original direction.
 - **Borrowed material**: classical consensus reused in the code (e.g. Belnap
   four-valued logic, Dung argumentation framework, AGM belief revision 1985,
-  Reiter default logic, Anderson–Belnap relevance logic 1975, and the
-  classical-logic components) is labeled with its source in the corresponding
-  file's docstring and kept in the "borrowed" section — never mixed into the
-  original-work section.
+  Reiter default logic, Anderson–Belnap relevance logic 1975, intuitionistic
+  logic (Brouwer/Heyting/Kripke 1959), and the classical-logic components) is
+  labeled with its source in the corresponding file's docstring and kept in
+  the "borrowed" section — never mixed into the original-work section.
 - References to concept cards (`formulas/*.md`) are explanatory and may be
   completed as the repository evolves.
 - **License**: **MPL-2.0 (Mozilla Public License 2.0)** — commercial use and

@@ -32,6 +32,8 @@ check("工具清单 = 全量注册表", len(tl) == len(_TOOL_REGISTRY),
 check("工具清单 ≥25 件（含数学底座）", len(tl) >= 25, str(len(tl)))
 check("工具清单 ≥27 件（含冷门 3.3/3.4 新构件）", len(tl) >= 27,
       str(len(tl)))
+check("工具清单 ≥28 件（含冷门 3.5 直觉主义）", len(tl) >= 28,
+      str(len(tl)))
 check("含新数学底座工具",
       all(n in names for n in ('recursion_theorem', 'truth_revision')),
       str(names))
@@ -42,6 +44,8 @@ check("含悖论/经典/骨架/冷门/总控全层工具",
 check("含冷门新构件工具 agm_revision/relevance_logic",
       all(n in names for n in ('agm_revision', 'relevance_logic')),
       str(names))
+check("含直觉主义工具 intuitionistic_logic",
+      'intuitionistic_logic' in names, str(names))
 check("每工具带 description", all(t['function']['description']
       for t in tl), str(tl[0]))
 check("每工具 parameters 是 object schema",
@@ -99,6 +103,13 @@ r = call_tool('relevance_logic', {'mode': 'conflict', 'prop_a': 'P∧¬P',
                                   'prop_b': 'Q∧¬Q'})
 check("相干逻辑冲突定性 → hollow_conflict（话术冲突）",
       r['result']['verdict'] == 'hollow_conflict', str(r))
+r = call_tool('intuitionistic_logic', {'mode': 'countermodel',
+                                       'formula': '¬¬P→P'})
+check("直觉主义调用 → refuted（双重否定消去非构造有效）",
+      r['result']['verdict'] == 'refuted', str(r))
+r = call_tool('intuitionistic_logic', {'mode': 'compare'})
+check("直觉主义对照表 → 6 行标志性公式",
+      len(r['result']['comparison']) == 6, str(r)[:200])
 
 # ── 用例4：总控调用（真实中文论证端到端）
 r = call_tool('controller', {
@@ -193,5 +204,5 @@ check("守卫不影响正常加载（本仓库模块仍可用）",
       _T._load_module('mechanisms.paradox_measure').PORTS.get('in') is not None)
 
 print("=" * 60)
-print(f"结果: {PASS}/45 通过")
-raise SystemExit(0 if PASS == 45 else 1)
+print(f"结果: {PASS}/49 通过")
+raise SystemExit(0 if PASS == 49 else 1)

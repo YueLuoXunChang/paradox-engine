@@ -9,9 +9,10 @@
 - **冷门逻辑补完（第 3 层 3.3/3.4）**：
   - `engine/cold/agm_revision.py`——AGM 信念修正（最小放弃 + 优先级/信念度）+ 非单调默认推理（可废止，Reiter 简化版）——T5 知识更新痛点；
   - `engine/cold/relevance_logic.py`——相干逻辑：前提与结论是否共享变量（真冲突 vs 话术冲突）——T2 增强；
-  - 两构件均逐条标注外部来源（AGM 1985 / Reiter / Anderson-Belnap 1975）归借鉴区；
-- 正式测试 2 件（`test_agm_revision.py` 48 项、`test_relevance_logic.py` 43 项）；
-- AI 挂载层注册两新工具（工具总数 25 → 27）；demo 扩到十七步（新增 ⑰ 冷门补完）。
+  - `engine/cold/intuitionistic_logic.py`——直觉主义：Kripke 求值 + 反模型搜索（完备界 2^n，界内无解才判有效）+ 经典 vs 直觉主义对照表（排中律/双重否定消去/Peirce 律非构造有效）——详规 §五收口；
+  - 三构件均逐条标注外部来源（AGM 1985 / Reiter / Anderson-Belnap 1975 / Brouwer-Heyting-Kripke 1959）归借鉴区；
+- 正式测试 3 件（`test_agm_revision.py` 48 项、`test_relevance_logic.py` 43 项、`test_intuitionistic_logic.py` 43 项）；
+- AI 挂载层注册三新工具（工具总数 25 → 28）；demo 扩到十八步（新增 ⑰ 冷门补完、⑱ 构造性立场）。
 
 ### 修复
 - **一致性判定三态化**（诚实边界）：AGM 原先把「算不动」（经典层真值表

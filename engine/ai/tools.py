@@ -90,6 +90,8 @@ _TOOL_REGISTRY = [
      'AGM 信念修正+非单调默认：新信息来了旧结论还成立吗（最小放弃/可废止）'),
     ('relevance_logic', 'cold.relevance_logic',
      '相干逻辑：前提结论是否共享变量（区分真冲突与话术冲突）'),
+    ('intuitionistic_logic', 'cold.intuitionistic_logic',
+     '直觉主义逻辑：Kripke 求值/反模型搜索（排中律为何非构造有效）+ 两系统对照'),
     ('classifier', 'control.classifier',
      '判类器：12 题型 + 复杂度 L1/L2/L3 + 路由'),
     ('controller', 'control.controller',
@@ -232,6 +234,7 @@ if __name__ == '__main__':
     assert 'paradox_measure' in names and 'controller' in names, names
     assert 'recursion_theorem' in names and 'truth_revision' in names, names
     assert 'agm_revision' in names and 'relevance_logic' in names, names
+    assert 'intuitionistic_logic' in names, names
     assert all('parameters' in t['function'] for t in tl)
     assert all('description' in t['function'] for t in tl)
     print(f'✅ 工具清单 {len(tl)} 件（schema 自动生成）')
@@ -311,6 +314,14 @@ if __name__ == '__main__':
     assert r10['result']['verdict'] == 'irrelevant_valid', r10
     print(f"✅ call_tool relevance_logic → {r10['result']['verdict']}"
           '（爆炸有效但不相干）')
+
+    # 11) call_tool：直觉主义逻辑（冷门 3.5）
+    r11 = call_tool('intuitionistic_logic', {'mode': 'countermodel',
+                                             'formula': 'P∨¬P'})
+    assert r11['verdict'] == 'ok', r11
+    assert r11['result']['verdict'] == 'refuted', r11
+    print(f"✅ call_tool intuitionistic_logic → {r11['result']['verdict']}"
+          '（排中律在构造性立场不成立）')
 
     print('=' * 62)
     print('AI 挂载层自测：全部通过 ✅')
