@@ -37,9 +37,12 @@ check("L1 不启骨架", r['route']['needs_skeleton'] is False, str(r))
 r = run({'text': '产品既要尽快上线（3周），又要完整覆盖所有合规项（12周）'})
 check("需求打架 → T2", r['main_type'] == 'T2', str(r))
 check("需求打架 → L2（含时间约束）", r['level'] == 'L2', str(r))
-check("R2-L2 管线 = μ+注解",
+check("R2-L2 管线 = μ+注解+相干检查",
       r['route']['pipeline'] == ['paradox_measure.mu1',
-                                 'paradox_annotate'], str(r))
+                                 'paradox_annotate',
+                                 'relevance_logic'], str(r))
+check("R2-L2 标记 needs_cold_logic（冷门层参与）",
+      r['route']['needs_cold_logic'] is True, str(r['route']))
 check("T2 主型 + T1/T4 副型列出",
       len(r['types']) >= 1 and r['types'][0]['type'] == 'T2', str(r))
 
@@ -69,6 +72,12 @@ r = run({'text': '同情与共情是不是一回事，边界在哪'})
 check("概念辨析 → T10", r['main_type'] == 'T10', str(r))
 r = run({'text': '广告说这款净水器净化率95%，靠不靠谱'})
 check("假设检验 → T11", r['main_type'] == 'T11', str(r))
+
+# ── 用例5b：T5 知识更新路由含 AGM 信念修正（冷门 3.3 接入）
+r = run({'text': '原来以为所有天鹅都是白的，现在发现黑天鹅，旧结论还成立吗'})
+check("知识更新 → T5", r['main_type'] == 'T5', str(r))
+check("T5 路由含 agm_revision（AGM 修正）",
+      'agm_revision' in r['route']['pipeline'], str(r['route']))
 
 # ── 用例6：复杂度打分边界
 r = run({'text': '所有 A 都支持 B，B 都支持 C，C 都支持 D，D 都支持 E'})
@@ -113,5 +122,5 @@ check("边界声明启发式非完备",
       '启发' in run({'text': '随便写'})['boundary'])
 
 print("=" * 60)
-print(f"结果: {PASS}/69 通过")
-raise SystemExit(0 if PASS == 69 else 1)
+print(f"结果: {PASS}/72 通过")
+raise SystemExit(0 if PASS == 72 else 1)

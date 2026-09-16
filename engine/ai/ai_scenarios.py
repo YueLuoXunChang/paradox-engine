@@ -24,6 +24,7 @@ for _p in (_HERE, _REPO):
     if _p not in sys.path:
         sys.path.insert(0, _p)
 
+from engine._console import ensure_utf8_console  # noqa: E402
 from engine.ai.tools import call_tool, tools  # noqa: E402
 
 
@@ -118,4 +119,5 @@ def main():
 
 
 if __name__ == '__main__':
+    ensure_utf8_console()   # Windows GBK 控制台：输出含 ✅，先自愈编码
     main()

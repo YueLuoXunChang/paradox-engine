@@ -6,7 +6,7 @@ cli.py — paradox-engine 命令行入口（AI 挂载层 · 阶段 6 扩展）
     python -m engine.cli --text "产品既要快又要稳"          # 中文诊断报告
     python -m engine.cli --text "..." --json                 # 结构化 JSON
     python -m engine.cli --file 输入.txt                     # 从文件读文本
-    python -m engine.cli --demo                              # 十五步演示
+    python -m engine.cli --demo                              # 完整演示（demo.py）
     paradox-engine --text "..."                              # 安装后 console 命令
 
 做什么：
@@ -30,6 +30,11 @@ for _p in (_HERE, _REPO):
     if _p not in sys.path:
         sys.path.insert(0, _p)
 
+try:
+    from engine._console import ensure_utf8_console
+except ImportError:  # 直接以脚本方式跑（engine/ 在 path 上）时的退路
+    from _console import ensure_utf8_console
+
 
 def _load_controller():
     try:
@@ -52,7 +57,7 @@ def build_parser():
     p.add_argument('--json', action='store_true',
                    help='输出结构化 JSON（默认给人看的中文报告）')
     p.add_argument('--demo', action='store_true',
-                   help='跑十五步演示 demo.py')
+                   help='跑完整演示 demo.py（步数见脚本自身输出）')
     p.add_argument('--tools', action='store_true',
                    help='列出全部可用工具（function-calling schema）')
     p.add_argument('--structured', type=str, default=None,
@@ -62,6 +67,7 @@ def build_parser():
 
 
 def main(argv=None):
+    ensure_utf8_console()   # Windows GBK 控制台：报告含 ⚠/✅，先自愈编码
     args = build_parser().parse_args(argv)
 
     if args.demo:

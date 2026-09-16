@@ -131,6 +131,11 @@ ADAPTER_SPECS = {
     'first_order.query': ('classical.first_order',
                           ['facts', 'rules', 'query'],
                           'T9/T1-L2 需 facts/rules/query', {}, None),
+    'ltl': ('classical.ltl', ['formula'],
+            'T4/T9-L3 需 formula（LTL 式，如 G(p→q)；path 可选）', {}, None),
+    'nd_propositional': ('classical.nd_propositional',
+                         ['premises', 'conclusion'],
+                         'T1-L3 需 premises/conclusion（证明树）', {}, None),
     # 第 2 层悖论
     'paradox_measure.mu1': ('mechanisms.paradox_measure',
                             ['wA', 'wNotA'],
@@ -166,6 +171,18 @@ ADAPTER_SPECS = {
                     '需 formula 命题公式（四值求值）', {}, None),
     'dung': ('cold.dung_framework', ['arguments', 'attacks'],
              '需 arguments/attacks（论证+攻击图）', {}, None),
+    'agm_revision': ('cold.agm_revision', ['beliefs', 'new_info'],
+                     'T5 需 beliefs（旧信念集）+ new_info（新信息）',
+                     {'mode': 'revise'}, None),
+    'relevance_logic': ('cold.relevance_logic', [],
+                        'T2 相干检查需 premises+conclusion（命题式）或 '
+                        'prop_a+prop_b（两命题）', {}, None),
+    'intuitionistic_logic': ('cold.intuitionistic_logic', ['formula'],
+                             '构造性立场需 formula（命题式）',
+                             {'mode': 'countermodel'}, None),
+    'truth_revision': ('cold.truth_revision', [],
+                       '真值修正演示（无需输入，用内置句系统）',
+                       {'mode': 'demo'}, None),
     # 第 0 层骨架
     'skeleton': ('skeleton.mtmp', ['mode'],
                  '骨架需 mode（point/thread/topology/op）', {}, None),
@@ -203,6 +220,24 @@ def _hook_wall(struct, d):
             'events': d.get('events')}, None
 
 
+def _hook_relevance(struct, d):
+    """
+    相干逻辑（冷门 3.4）：两种用法——
+      ① premises + conclusion → 相干检查（前提结论是否共享变量）；
+      ② prop_a + prop_b → 冲突定性（真冲突 vs 话术冲突）。
+    都没有 → 诚实报缺输入（不拿 A/B 硬凑：T2 的 A/B 是两方主张，
+    本身不同真≠矛盾，硬凑会把真冲突误判成"不相干"）。
+    """
+    if d.get('premises') and d.get('conclusion'):
+        return {'mode': 'relevance', 'premises': d['premises'],
+                'conclusion': d['conclusion']}, None
+    if d.get('prop_a') and d.get('prop_b'):
+        return {'mode': 'conflict', 'prop_a': d['prop_a'],
+                'prop_b': d['prop_b']}, None
+    return None, ('相干检查需 premises+conclusion（前提集/结论命题式）'
+                  '或 prop_a+prop_b（两个命题）——不硬凑输入')
+
+
 _ADAPTER_HOOKS = {
     'propositional.validity': _hook_prop_validity,
     'selfref_fixpoint': _hook_selfref,
@@ -211,6 +246,7 @@ _ADAPTER_HOOKS = {
     'skeleton': _hook_mtmp,
     'mtmp': _hook_mtmp,
     'wall_pipeline': _hook_wall,
+    'relevance_logic': _hook_relevance,
 }
 
 

@@ -63,6 +63,23 @@ results = run_all(['S01', 'S02'])
 check("结果带 actual_type", all('actual_type' in x for x in results), str(results))
 check("结果带 report（可追溯）", all(x['report'] for x in results),
       str(results[:1]))
+check("结果带 execution（跑了哪些构件——白箱）",
+      all('execution' in x for x in results), str(results[:1]))
+
+# ── 用例4b：新接线场景真跑到冷门构件（不是只对分类）
+_s8 = run_all(['S08'])[0]
+check("S08 对照通过（真冲突场景）", _s8['passed'] is True, str(_s8['diffs']))
+check("S08 真跑 relevance_logic 且判真冲突",
+      any(e['component'] == 'relevance_logic' and e['status'] == 'run'
+          and e['verdict'] == 'real_conflict' for e in _s8['execution']),
+      str(_s8['execution']))
+_s9 = run_all(['S09'])[0]
+check("S09 对照通过（知识更新场景）", _s9['passed'] is True, str(_s9['diffs']))
+check("S09 真跑 agm_revision 且判 revised",
+      any(e['component'] == 'agm_revision' and e['status'] == 'run'
+          and e['verdict'] == 'revised' for e in _s9['execution']),
+      str(_s9['execution']))
+check("场景 ≥9 个（含新接线场景）", len(SCENES) >= 9, str(len(SCENES)))
 
 # ── 用例5：诚实边界
 check("坏 action → input_pending",
@@ -72,5 +89,5 @@ check("list 给边界声明", '共识' in run({'action': 'list'})['boundary']
 check("run 边界：只诊断不决策", '只诊断' in run({'action': 'run'})['boundary'])
 
 print("=" * 60)
-print(f"结果: {PASS}/16 通过")
-raise SystemExit(0 if PASS == 16 else 1)
+print(f"结果: {PASS}/22 通过")
+raise SystemExit(0 if PASS == 22 else 1)

@@ -13,6 +13,11 @@
   - 三构件均逐条标注外部来源（AGM 1985 / Reiter / Anderson-Belnap 1975 / Brouwer-Heyting-Kripke 1959）归借鉴区；
 - 正式测试 3 件（`test_agm_revision.py` 48 项、`test_relevance_logic.py` 43 项、`test_intuitionistic_logic.py` 43 项）；
 - AI 挂载层注册三新工具（工具总数 25 → 28）；demo 扩到十八步（新增 ⑰ 冷门补完、⑱ 构造性立场）。
+- **全量回归入口 `run_tests.py`**：一条命令发现并运行全部 30 个测试文件，解析各文件自报的通过线并汇总；任何文件失败即非零退出（沉默通过不算通过）；
+- **CI**：`.github/workflows/test.yml`（Python 3.9/3.12 跑全量回归 + demo + AI 场景 + CLI 冒烟）；
+- **冷门构件接入总控路由**（原先只能手调）：T5 → `agm_revision`（最小放弃修正）、T2-L2 → `relevance_logic`（真冲突 vs 话术冲突）；`needs_cold_logic` 由硬编码 `dung` 改为按冷门构件名前缀判定（加新构件不用改标记逻辑）；
+- **补齐路由画饼**：`ltl`、`nd_propositional` 原先出现在路由表却无适配器（执行层只能报"未实现层"），现入声明表可真跑；新增不变式测试「ROUTE 里每个构件名都有适配器」；
+- **场景库 +2（共 9 个）**：S08 真冲突 vs 话术冲突（相干检查接线）、S09 天鹅黑天鹅（AGM 接线）；场景结果新增 `execution` 白箱字段（本场景实际跑了哪些构件、什么状态/结论）。
 
 ### 修复
 - **一致性判定三态化**（诚实边界）：AGM 原先把「算不动」（经典层真值表
@@ -23,6 +28,10 @@
   `import engine` 会解析到**本机另一个项目**（顶层包名同为 `engine`）的代码
   ——同名的构件会被静默误用；现入口先钉本仓库根到 `sys.path` 首位，且
   `_load_module()` 核对模块文件确在本仓库内，越界即诚实报错（新增守卫测试）;
+- **Windows 控制台编码自愈**：`paradox-engine --text "..."` 与 demo 原先在
+  默认 GBK 控制台直接 UnicodeEncodeError 崩掉（报告含 ⚠/✅）；现入口调用
+  `engine/_console.py` 把输出流设为 UTF-8，不必先设 `PYTHONIOENCODING`；
+- CLI `--demo` 帮助文案"十五步"过时（实际十八步）→ 改为不硬编步数；
 - CLI 测试里硬编码的工具数（23）改为从注册表动态取——防止再漂移。
 
 ## 2026-09-06

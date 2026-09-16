@@ -109,6 +109,8 @@ paradox-engine 最终形态：**一个分情况分层、挂上 AI 就能用的�
 → 已达成：engine/ai/tools.py（全量构件 schema 自动生成 + call_tool）
 + ai_scenarios.py 两场景（T2 论证矛盾 μ+注解五查全绿 / T9 学科建模
 撞墙+Dung）；demo ⑮ 步；工具输出带 boundary（只诊断不决策随行）。
+→ 工程化收口：`run_tests.py`（全量回归一条命令）+ `.github/workflows/test.yml`
+（CI 同款入口）+ 冷门构件接入路由（T5→AGM、T2-L2→相干）+ 控制台编码自愈。
 
 ### 阶段 7 · 冷门/边界扩展（按需）
 - ✅ Kleene 递归定理自指构造（engine/classical/recursion_theorem.py——借数学底座，标注来源，自测5组+正式16）；

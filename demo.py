@@ -28,9 +28,10 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from engine.mechanisms.paradox_measure import run as measure
-from engine.mechanisms.paradox_annotate import run as annotate
-from engine.mechanisms.converge_check import run as converge
+from engine._console import ensure_utf8_console  # noqa: E402
+from engine.mechanisms.paradox_measure import run as measure  # noqa: E402
+from engine.mechanisms.paradox_annotate import run as annotate  # noqa: E402
+from engine.mechanisms.converge_check import run as converge  # noqa: E402
 
 
 def banner(t):
@@ -326,4 +327,5 @@ def main():
 
 
 if __name__ == "__main__":
+    ensure_utf8_console()   # Windows GBK 控制台：演示含 ✅/→，先自愈编码
     main()

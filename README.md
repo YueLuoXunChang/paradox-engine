@@ -57,7 +57,8 @@ print(r['report'])
 
 ```bash
 # 克隆后，在仓库根目录
-python demo.py
+python demo.py          # 十八步演示
+python run_tests.py     # 全量回归（一条命令：30 个测试文件 / 770 项断言）
 ```
 
 `demo.py` 演示十八件事（①②③ 悖论三件套 → ④-⑩ 经典逻辑地基 → ⑪ 撞墙管线 → ⑫ 总控五步 → ⑬ MT-MP-TL 骨架 → ⑭ 冷门逻辑 → ⑮ AI 挂载 → ⑯ 数学底座 → ⑰ 冷门补完 → ⑱ 构造性立场）：
@@ -125,7 +126,7 @@ paradox-engine/
 │   │   ├── counterpoint_gen.py  对位创生第三态（对立交汇 → 候选+依据）
 │   │   └── wall_pipeline.py     撞墙管线 A（测→注→钻→看→旁→创 → 五选一诊断）
 │   ├── scenarios/             ← 场景库（真实输入+期望诊断+复核——语料回馈判类器）
-│   │   └── scenarios.py          7 场景注册表 + run_all 对照（期望 vs 实际）
+│   │   └── scenarios.py          9 场景注册表 + run_all 对照（期望 vs 实际）
 │   ├── skeleton/              ← MT-MP-TL 骨架（第 0 层：结构表达，不掺判定）
 │   │   └── mtmp.py              点/线程/拓扑（12 形态）/操作（5 种）
 │   ├── cold/                  ← 冷门逻辑（第 3 层：按痛点选，外部共识归借鉴区）
@@ -148,7 +149,9 @@ paradox-engine/
 │       （每个构件配 test_*.py 正式测试 + 公式卡）
 │   └── cli.py                 ← 命令行入口（--text/--json/--file/--tools）
 ├── demo.py                  ← 2 分钟上手演示（十八步）
+├── run_tests.py             ← 全量回归入口（一条命令，CI 同款）
 ├── pyproject.toml           ← pip 打包（paradox-engine console 命令）
+├── .github/workflows/       ← CI（跑全量回归 + 演示 + CLI 冒烟）
 ├── docs/
 │   ├── mechanisms.md            分层能力总表（每构件：自测N+正式M）
 │   ├── ROADMAP.md               分层路线（7 阶段）
@@ -242,6 +245,7 @@ run(inputs: dict) -> dict
   话术冲突）+ Gupta-Belnap 真值修正（修正序列振荡）+ **直觉主义逻辑**
   （构造性立场：Kripke 反模型 + 经典 vs 直觉主义对照——排中律/双重否定
   消去/Peirce 律在构造性立场不成立）——按痛点选，外部共识标注来源归借鉴区；
+  其中 AGM 已接入 T5 路由、相干检查已接入 T2-L2 路由（给结构化线索即真跑）；
 - **数学底座（借鉴区，标注来源）**：Kleene 递归定理自指构造（程序拿到
   自己）+ Gupta-Belnap 真值修正（共振带收敛的学界锚点——说谎者周期 2
   是教科书结论）；
@@ -254,13 +258,19 @@ run(inputs: dict) -> dict
 
 ### 测试状态
 
-- **753 项正式断言全过**（30 个测试文件），覆盖全部
+- **770 项正式断言全过**（30 个测试文件），覆盖全部
   机制构件与总控/场景/AI 工具层；
+- **一条命令跑全量回归**：`python run_tests.py`（发现 + 运行 + 汇总；
+  任一文件失败即非零退出——CI 与本地同一入口）；
+- CI：`.github/workflows/test.yml`（Python 3.9 / 3.12 上跑回归 + 演示 + CLI 冒烟）；
 - 每个构件自包含：`python engine/<层>/<名>.py` 跑自测（机制自身验证），
   `python engine/<层>/test_<名>.py` 跑正式测试；
 - 演示：`python demo.py` 十八步全过；真实场景端到端：
-  `python engine/ai/ai_scenarios.py`；
-- 零第三方依赖，纯 Python 标准库（≥3.9）。
+  `python engine/ai/ai_scenarios.py`；场景库对照：9 场景
+  （`python engine/scenarios/scenarios.py`）；
+- 零第三方依赖，纯 Python 标准库（≥3.9）；
+- Windows 控制台：CLI/demo 已自愈输出编码（无需先设 `PYTHONIOENCODING`）；
+  单独跑构件自测若遇 emoji 编码错，设 `PYTHONIOENCODING=utf-8` 即可。
 
 - 纯 Python 标准库，无第三方依赖；
 - 体系本体（落落逻辑体系：完整机制库、文档库）**不在此仓库**；这里只放

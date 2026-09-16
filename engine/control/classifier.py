@@ -206,6 +206,11 @@ def _complexity(text, hits):
 # 二、路由表（详规 §3 / 总架构 §4.1 落码——题型×复杂度 → 管线，带 reason 白箱）
 # ══════════════════════════════════════════════════════════════
 
+# 第 3 层冷门构件（needs_cold_logic 标记用；加新冷门构件只需加名字）
+_COLD_COMPONENTS = {'belnap_four', 'dung', 'truth_revision',
+                    'agm_revision', 'relevance_logic',
+                    'intuitionistic_logic'}
+
 ROUTE = {
     ('T1', 'L1'): (['propositional.validity'], '命题单机制判有效性（最小充分）'),
     ('T1', 'L2'): (['propositional.validity', 'first_order.query'],
@@ -213,8 +218,9 @@ ROUTE = {
     ('T1', 'L3'): (['first_order.query', 'nd_propositional'],
                    '复杂断言集走一阶+证明'),
     ('T2', 'L1'): (['paradox_measure.mu1'], '单对矛盾测 μ（轻量）'),
-    ('T2', 'L2'): (['paradox_measure.mu1', 'paradox_annotate'],
-                   'μ + 注解卡（冲突定位）'),
+    ('T2', 'L2'): (['paradox_measure.mu1', 'paradox_annotate',
+                    'relevance_logic'],
+                   'μ + 注解卡（冲突定位）+ 相干检查（真冲突 vs 话术冲突）'),
     ('T2', 'L3'): (['wall_pipeline'], '撞墙管线五选一（含立场分析）'),
     ('T3', 'L1'): (['propositional.consistency'], '简单关系一致性检查'),
     ('T3', 'L2'): (['first_order.query'], '关系推理（传递/对称）'),
@@ -223,8 +229,10 @@ ROUTE = {
     ('T4', 'L2'): (['converge_check'], '收敛判定四分支'),
     ('T4', 'L3'): (['ltl', 'converge_check', 'skeleton'],
                    '时序 LTL + 收敛 + 多线骨架'),
-    ('T5', 'L1'): (['propositional.consistency'], '新旧断言对比'),
-    ('T5', 'L2'): (['paradox_measure.mu1'], '新信息冲突测 μ'),
+    ('T5', 'L1'): (['propositional.consistency', 'agm_revision'],
+                   '新旧断言对比 + AGM 修正（最小放弃）'),
+    ('T5', 'L2'): (['paradox_measure.mu1', 'agm_revision'],
+                   '新信息冲突测 μ + AGM 修正（信念度先弃低者）'),
     ('T5', 'L3'): (['wall_pipeline'], '信念更新撞墙走五选一'),
     ('T6', 'L1'): (['paradox_measure.mu2'], '自指直判 μ=1'),
     ('T6', 'L2'): (['selfref_fixpoint'], '递归修正三态观察'),
@@ -290,7 +298,10 @@ def run(inputs):
     route = {'route_id': f'R{main_type[1:]}-{level}',
              'pipeline': pipeline, 'reason': reason,
              'needs_skeleton': 'skeleton' in pipeline,
-             'needs_cold_logic': 'dung' in pipeline}
+             # 冷门层标记：按**构件名前缀**判（加新冷门构件不用改这里——
+             # 原先硬写 'dung'，新增 AGM/相干/直觉主义就会漏标）
+             'needs_cold_logic': any(
+                 p.split('.')[0] in _COLD_COMPONENTS for p in pipeline)}
 
     # 输出题型明细（主型在前）
     out_types = []

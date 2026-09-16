@@ -68,7 +68,8 @@ print(r['report'])
 
 ```bash
 # After cloning, from the repository root
-python demo.py
+python demo.py          # eighteen-step tour
+python run_tests.py     # full regression (30 test files / 770 assertions)
 ```
 
 `demo.py` demonstrates eighteen things (①②③ the paradox trio → ④-⑩ the
@@ -139,7 +140,7 @@ paradox-engine/
 │   │   ├── counterpoint_gen.py   counterpoint generation (opposites → third state candidate)
 │   │   └── wall_pipeline.py      wall pipeline A (measure→annotate→drill→view→bypass→create → 5-way verdict)
 │   ├── scenarios/             ← Scenario library (real input + expected diagnosis + review — corpus feedback)
-│   │   └── scenarios.py          7-scenario registry + run_all comparison (expected vs actual)
+│   │   └── scenarios.py          9-scenario registry + run_all comparison (expected vs actual)
 │   ├── skeleton/              ← MT-MP-TL skeleton (L0: structure only, no judging)
 │   │   └── mtmp.py               points/threads/topology (12 shapes)/operations (5 kinds)
 │   ├── cold/                  ← Cold logics (L3: chosen by need; external consensus marked as borrowed)
@@ -162,7 +163,9 @@ paradox-engine/
 │       (each component ships with a test_*.py formal test)
 │   └── cli.py                 ← command-line entry (--text/--json/--file/--tools)
 ├── demo.py                  ← 2-minute tour (eighteen steps)
+├── run_tests.py             ← full-regression entry (one command, same as CI)
 ├── pyproject.toml           ← pip packaging (provides the `paradox-engine` command)
+├── .github/workflows/       ← CI (full suite + demo + CLI smoke)
 ├── docs/
 │   ├── mechanisms.md             layered capability index (self-test N + formal M per component)
 │   ├── ROADMAP.md                layered roadmap
@@ -276,7 +279,9 @@ can be discussed, compared, and traced.
   stance: Kripke countermodels + a classical-vs-intuitionistic comparison —
   excluded middle, double-negation elimination and Peirce's law all fail
   constructively) — external consensus is labeled and kept in the "borrowed"
-  section, never mixed into the original-work section;
+  section, never mixed into the original-work section; AGM is wired into the T5
+  route and the relevance check into the T2-L2 route (they really run once
+  structured clues are supplied);
 - **AI mounting layer**: all components wrapped as function-calling tools
   (schemas auto-generated from PORTS, zero hand-maintained drift) + `call_tool`
   dispatch — an AI receives the tool list and can call the whole engine;
@@ -293,13 +298,21 @@ wall-pipeline branches B/C (added when a real pain point appears).
 
 ### Test status
 
-- **753 formal assertions pass** (30 test files), covering every mechanism
+- **770 formal assertions pass** (30 test files), covering every mechanism
   component plus the controller/scenario/AI-tool layers;
+- **One command runs the whole suite**: `python run_tests.py` (discover + run +
+  summarize; a single failing file yields a non-zero exit — the same entry
+  point CI uses);
+- CI: `.github/workflows/test.yml` (Python 3.9 / 3.12: full suite + demo + CLI smoke);
 - Every component is self-contained: `python engine/<layer>/<name>.py` runs
   its self-test; `python engine/<layer>/test_<name>.py` runs its formal tests;
 - Demo: `python demo.py` walks through eighteen steps; end-to-end scenarios:
-  `python engine/ai/ai_scenarios.py`;
-- Zero third-party dependencies — pure Python standard library (≥3.9).
+  `python engine/ai/ai_scenarios.py`; scenario comparison: 9 scenes
+  (`python engine/scenarios/scenarios.py`);
+- Zero third-party dependencies — pure Python standard library (≥3.9);
+- Windows consoles: the CLI and demo fix their own output encoding (no need to
+  set `PYTHONIOENCODING` first); for a bare component self-test set
+  `PYTHONIOENCODING=utf-8` if emoji output raises an encoding error.
 
 - Pure Python standard library, zero third-party dependencies;
 - The full body of the system (Luoluo Logic System: complete mechanism

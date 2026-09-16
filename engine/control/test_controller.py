@@ -114,7 +114,49 @@ pipe2 = r2['classification']['route']['pipeline']
 check("复杂对立文本 → 管线含创生件",
       any('counterpoint' in p for p in pipe2), str(pipe2))
 
-# ── 用例9：诚实边界
+# ── 用例9：冷门新构件接线（T5 AGM / T2 相干）+ 适配器完备性不变式
+r = run({'text': '原来以为所有天鹅都是白的，现在发现黑天鹅，旧结论还成立吗',
+         'structured': {'beliefs': ['P→Q', 'P'], 'new_info': '¬Q',
+                        'priorities': {'P→Q': 1, 'P': 10}}})
+_ex = {e['component']: e for e in r['execution']}
+check("T5 管线含 agm_revision", 'agm_revision' in _ex, sorted(_ex))
+check("agm_revision 真跑 → revised",
+      _ex['agm_revision']['status'] == 'run'
+      and _ex['agm_revision']['output']['verdict'] == 'revised',
+      str(_ex.get('agm_revision')))
+check("AGM 最小放弃生效（弃 P→Q 保 P）",
+      _ex['agm_revision']['output']['dropped'] == ['P→Q'],
+      str(_ex['agm_revision']['output']))
+r2 = run({'text': '产品既要尽快上线（3周），又要完整覆盖所有合规项（12周）',
+          'structured': {'prop_a': 'P', 'prop_b': '¬P', 'wA': 5,
+                         'wNotA': 5}})
+_ex2 = {e['component']: e for e in r2['execution']}
+check("T2-L2 管线含 relevance_logic", 'relevance_logic' in _ex2,
+      sorted(_ex2))
+check("相干检查真跑 → real_conflict（真冲突）",
+      _ex2['relevance_logic']['status'] == 'run'
+      and _ex2['relevance_logic']['output']['verdict'] == 'real_conflict',
+      str(_ex2.get('relevance_logic')))
+r3 = run({'text': '产品既要尽快上线（3周），又要完整覆盖所有合规项（12周）',
+          'structured': {'A': '要快', 'B': '要稳', 'wA': 5, 'wNotA': 5}})
+_ex3 = {e['component']: e for e in r3['execution']}
+check("相干检查缺命题输入 → 诚实报缺（不拿 A/B 硬凑）",
+      _ex3['relevance_logic']['status'] == 'missing_input',
+      str(_ex3.get('relevance_logic')))
+
+# 不变式：路由表承诺的构件，执行层都得有适配器（防"路由画饼"）
+from classifier import ROUTE  # noqa: E402
+from controller import ADAPTER_SPECS  # noqa: E402
+_names = set()
+for _pipeline, _ in ROUTE.values():
+    _names |= set(_pipeline)
+check("ROUTE 里每个构件名都有适配器（无画饼路由）",
+      all(n in ADAPTER_SPECS for n in _names),
+      sorted(n for n in _names if n not in ADAPTER_SPECS))
+check("管线用到的构件都有适配器（覆盖 ≥18 件）", len(_names) >= 18,
+      str(len(_names)))
+
+# ── 用例10：诚实边界
 check("空文本 → input_pending", run({})['verdict'] == 'input_pending')
 check("非字符串 → input_pending",
       run({'text': 42})['verdict'] == 'input_pending')
@@ -125,5 +167,5 @@ check("T6 无结构化 → 至少诚实执行或缺输入",
       r['verdict'] in ('done', 'classified_only'), str(r))
 
 print("=" * 60)
-print(f"结果: {PASS}/35 通过")
-raise SystemExit(0 if PASS == 35 else 1)
+print(f"结果: {PASS}/43 通过")
+raise SystemExit(0 if PASS == 43 else 1)

@@ -15,8 +15,8 @@
 
 | 文件 | 一句话 | 状态 |
 |---|---|---|
-| engine/control/classifier.py | 判类器+复杂度+路由：12 题型信号表计分 → 主型/副型/置信度 → L1/L2/L3 → ROUTE 36 键（带 reason 白箱） | ✅ 自测6+正式69 |
-| engine/control/controller.py | 总控五步流水线：判类→复杂度→切路→真跑构件→五查判输出（中文报告+结构化对象） | ✅ 自测6+正式35 |
+| engine/control/classifier.py | 判类器+复杂度+路由：12 题型信号表计分 → 主型/副型/置信度 → L1/L2/L3 → ROUTE 36 键（带 reason 白箱；T2/T5 路由接入冷门构件） | ✅ 自测6+正式72 |
+| engine/control/controller.py | 总控五步流水线：判类→复杂度→切路→真跑构件→五查判输出（中文报告+结构化对象）；声明式 ADAPTER_SPECS（含冷门三件+ltl/nd） | ✅ 自测6+正式43 |
 
 ## 第 0 层 · MT-MP-TL 骨架（结构表达，不掺判定）
 

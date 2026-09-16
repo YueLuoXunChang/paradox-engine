@@ -1,0 +1,32 @@
+name: tests
+
+# 零第三方依赖——CI 只做一件事：跑 run_tests.py（发现 + 运行 + 汇总断言）
+# 每个测试文件自带通过线（末行「结果: N/M 通过」）；任一失败 → 退出码 1。
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.9", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: 全量回归（纯标准库）
+        run: python run_tests.py
+      - name: 端到端演示（demo + AI 场景）
+        run: |
+          python demo.py
+          python engine/ai/ai_scenarios.py
+      - name: 命令行入口冒烟
+        run: |
+          python -m engine.cli --text "既要快又要稳" --json > /dev/null
+          python -m engine.cli --tools > /dev/null

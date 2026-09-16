@@ -111,6 +111,33 @@ SCENES = [
         'note': '定义辨析——是不是一回事+边界',
         'checked': False,  # 待人工复核
     },
+    {
+        'id': 'S08',
+        'title': '真冲突 vs 话术冲突（相干性）',
+        'text': ('既要48小时内重跑全部12项数据，又要三周内完成合规审查，'
+                 '两边互相矛盾——这是真冲突还是话术冲突'),
+        'expect_type': 'T2', 'expect_level': 'L2',
+        'expect_route': 'R2-L2',
+        'structured': {'A': '48小时内重跑全部数据', 'B': '三周内完成合规审查',
+                       'wA': 5, 'wNotA': 5,
+                       'prop_a': 'P', 'prop_b': '¬P'},
+        'note': '相干检查接线场景（冷门 3.4）：给 prop_a/prop_b 走冲突定性；'
+                '期望真冲突（共享原子 P）。待人工复核。',
+        'checked': False,  # 待人工复核
+    },
+    {
+        'id': 'S09',
+        'title': '天鹅黑天鹅（AGM 最小放弃）',
+        'text': '原来以为所有天鹅都是白的，现在发现澳大利亚有黑天鹅，'
+                '旧结论还成立吗',
+        'expect_type': 'T5', 'expect_level': 'L1',
+        'expect_route': 'R5-L1',
+        'structured': {'beliefs': ['P→Q', 'P'], 'new_info': '¬Q',
+                       'priorities': {'P→Q': 1, 'P': 10}},
+        'note': 'AGM 接线场景（冷门 3.3）：给 beliefs/new_info/priorities '
+                '→ 期望 revised 且弃低信念度者。待人工复核。',
+        'checked': False,  # 待人工复核
+    },
 ]
 
 # ══════════════════════════════════════════════════════════════
@@ -163,6 +190,10 @@ def run_scene(scene):
         'expect_type': scene['expect_type'],
         'checked': scene.get('checked', False),
         'passed': len(diffs) == 0, 'diffs': diffs,
+        # 白箱：本场景实际跑了哪些构件、什么状态（不只是分类对不对）
+        'execution': [{'component': e['component'], 'status': e['status'],
+                       'verdict': (e.get('output') or {}).get('verdict')}
+                      for e in r.get('execution', [])],
         'report': r['report'],
     }
 

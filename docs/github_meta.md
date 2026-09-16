@@ -37,5 +37,8 @@ non-classical-logic
 
 - README.md 是中文主文档（含 🌐 English 切换链接 README.en.md）；
 - 不要勾选 GitHub 自动生成的 README/LICENSE/.gitignore（仓库内已有）；
-- 若要加 CI（GitHub Actions 跑测试）——仓库内暂未配置；将来可加
-  `.github/workflows/test.yml`（python -m pytest 或逐文件跑），需要时说一声。
+- CI 已配置：`.github/workflows/test.yml`（Python 3.9/3.12 跑全量回归 +
+  演示 + CLI 冒烟）——push 后仓库页 Actions 会出绿/红，README 可挂状态徽章
+  （徽章 URL 形如 `https://github.com/<用户>/paradox-engine/actions/workflows/test.yml/badge.svg`，
+  要用时再加一行即可，本文件不预先写死）；
+- 本地跑同一套回归：`python run_tests.py`（30 测试文件 / 770 断言）。
