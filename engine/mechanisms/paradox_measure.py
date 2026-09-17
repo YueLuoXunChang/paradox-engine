@@ -146,6 +146,12 @@ def run(inputs):
 # ============================================================
 
 if __name__ == "__main__":
+    try:  # 控制台自愈：Windows GBK 控制台打印 emoji（✅/⚠）会崩
+        import sys as _sys
+        _sys.stdout.reconfigure(encoding='utf-8')
+    except Exception:  # noqa: BLE001——老版本/重定向流不支持就跳过
+        pass
+
     assert abs(run({"wA": 5, "wNotA": 5, "mode": "mu1"})['mu'] - 1.0) < 1e-9
     assert abs(run({"wA": 10, "wNotA": 0, "mode": "mu1"})['mu'] - 0.0) < 1e-9
     assert run({"mode": "mu2"})['mu'] == 1.0

@@ -492,6 +492,12 @@ def run(inputs):
 # 自测
 # ============================================================
 if __name__ == '__main__':
+    try:  # 控制台自愈：Windows GBK 控制台打印 emoji（✅/⚠）会崩
+        import sys as _sys
+        _sys.stdout.reconfigure(encoding='utf-8')
+    except Exception:  # noqa: BLE001——老版本/重定向流不支持就跳过
+        pass
+
     print('=' * 62)
     print('MT-MP-TL 骨架层 · 自测（第 0 层）')
     print('=' * 62)

@@ -68,14 +68,14 @@ print(r['report'])
 
 ```bash
 # After cloning, from the repository root
-python demo.py          # eighteen-step tour
-python run_tests.py     # full regression (30 test files / 770 assertions)
+python demo.py          # nineteen-step tour
+python run_tests.py     # full regression (32 test files / 841 assertions)
 ```
 
-`demo.py` demonstrates eighteen things (①②③ the paradox trio → ④-⑩ the
+`demo.py` demonstrates nineteen things (①②③ the paradox trio → ④-⑩ the
 classical-logic foundation → ⑪ wall pipeline → ⑫ five-step controller →
 ⑬ MT-MP-TL skeleton → ⑭ cold logics → ⑮ AI mounting → ⑯ math foundations →
-⑰ cold logics completed → ⑱ constructive stance):
+⑰ cold logics completed → ⑱ constructive stance → ⑲ the precise map of the walls):
 
 | Step | Demonstration | Layer |
 |---|---|---|
@@ -97,6 +97,7 @@ classical-logic foundation → ⑪ wall pipeline → ⑫ five-step controller �
 | ⑯ math foundations | Self-referential program construction (Kleene recursion theorem) + truth revision (Gupta-Belnap — scholarly anchor for resonance bands) | Borrowed |
 | ⑰ cold logics completed | Belief revision / non-monotonicity (AGM: a black swan retracts the old conclusion) + relevance logic (real conflict vs empty rhetoric) | L3 |
 | ⑱ constructive stance | Intuitionistic logic: Kripke countermodels (why excluded middle is not constructively valid) + classical-vs-intuitionistic comparison table | L3 |
+| ⑲ precise map of the walls | Decidability map (16 fragments, each with a cited source) + arithmetic hierarchy Δ1/Σ1/Π1/Σ2/Π2 (what the engine promises per level) | Foundations |
 
 You can also call a mechanism directly:
 
@@ -159,10 +160,12 @@ paradox-engine/
 │       ├── modal.py               modal logic (Kripke semantics K/T/S4/S5)
 │       ├── lambda_calculus.py     lambda calculus (β-reduction / Y combinator)
 │       ├── turing_machine.py      Turing machine (simulation + UTM + halting demo)
-│       └── stlc.py                simply typed lambda calculus (type checking, blocks self-application)
+│       ├── stlc.py                simply typed lambda calculus (type checking, blocks self-application)
+│       ├── recursion_theorem.py   Kleene recursion theorem (self-referential construction)
+│       └── decidability_map.py    decidable fragments + arithmetic hierarchy (map of the walls)
 │       (each component ships with a test_*.py formal test)
 │   └── cli.py                 ← command-line entry (--text/--json/--file/--tools)
-├── demo.py                  ← 2-minute tour (eighteen steps)
+├── demo.py                  ← 2-minute tour (nineteen steps)
 ├── run_tests.py             ← full-regression entry (one command, same as CI)
 ├── pyproject.toml           ← pip packaging (provides the `paradox-engine` command)
 ├── .github/workflows/       ← CI (full suite + demo + CLI smoke)
@@ -290,15 +293,18 @@ can be discussed, compared, and traced.
 - **Mathematical foundations (borrowed, sources labeled)**: Kleene recursion
   theorem self-reference construction (a program that reads its own source) +
   Gupta-Belnap truth revision (the scholarly anchor for resonance-band
-  convergence — the liar's period-2 oscillation is a textbook result).
+  convergence — the liar's period-2 oscillation is a textbook result) +
+  **decidability map / arithmetic hierarchy** (16 fragments marked decidable /
+  semi-decidable / undecidable, each with a cited source; Δ1/Σ1/Π1/Σ2/Π2 with
+  an explicit statement of what the engine promises per level — "cannot be
+  computed" gets a precise name instead of a hand-wave).
 
-**Extending (see docs/ROADMAP.md)**: arithmetic hierarchy / decidable
-fragments (a precise map of the walls; borrowed, sources labeled) →
-wall-pipeline branches B/C (added when a real pain point appears).
+**Extending (see docs/ROADMAP.md)**: wall-pipeline branches B/C (added
+when a real pain point appears).
 
 ### Test status
 
-- **770 formal assertions pass** (30 test files), covering every mechanism
+- **841 formal assertions pass** (32 test files), covering every mechanism
   component plus the controller/scenario/AI-tool layers;
 - **One command runs the whole suite**: `python run_tests.py` (discover + run +
   summarize; a single failing file yields a non-zero exit — the same entry
@@ -306,13 +312,13 @@ wall-pipeline branches B/C (added when a real pain point appears).
 - CI: `.github/workflows/test.yml` (Python 3.9 / 3.12: full suite + demo + CLI smoke);
 - Every component is self-contained: `python engine/<layer>/<name>.py` runs
   its self-test; `python engine/<layer>/test_<name>.py` runs its formal tests;
-- Demo: `python demo.py` walks through eighteen steps; end-to-end scenarios:
+- Demo: `python demo.py` walks through nineteen steps; end-to-end scenarios:
   `python engine/ai/ai_scenarios.py`; scenario comparison: 9 scenes
   (`python engine/scenarios/scenarios.py`);
 - Zero third-party dependencies — pure Python standard library (≥3.9);
-- Windows consoles: the CLI and demo fix their own output encoding (no need to
-  set `PYTHONIOENCODING` first); for a bare component self-test set
-  `PYTHONIOENCODING=utf-8` if emoji output raises an encoding error.
+- Windows consoles: the CLI, the demo and **every component self-test** carry a
+  console self-heal (they set the output stream to UTF-8), so
+  `python engine/<layer>/<name>.py` just works — no `PYTHONIOENCODING` needed.
 
 - Pure Python standard library, zero third-party dependencies;
 - The full body of the system (Luoluo Logic System: complete mechanism

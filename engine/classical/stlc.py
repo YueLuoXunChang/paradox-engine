@@ -338,6 +338,12 @@ def run(inputs):
 # ============================================================
 
 if __name__ == '__main__':
+    try:  # 控制台自愈：Windows GBK 控制台打印 emoji（✅/⚠）会崩
+        import sys as _sys
+        _sys.stdout.reconfigure(encoding='utf-8')
+    except Exception:  # noqa: BLE001——老版本/重定向流不支持就跳过
+        pass
+
     print('=' * 62)
     print('简单类型 λ（STLC）构件 · 自测（经典逻辑层 1.9）')
     print('=' * 62)

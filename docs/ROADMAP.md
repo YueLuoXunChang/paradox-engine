@@ -112,14 +112,17 @@ paradox-engine 最终形态：**一个分情况分层、挂上 AI 就能用的�
 → 工程化收口：`run_tests.py`（全量回归一条命令）+ `.github/workflows/test.yml`
 （CI 同款入口）+ 冷门构件接入路由（T5→AGM、T2-L2→相干）+ 控制台编码自愈。
 
-### 阶段 7 · 冷门/边界扩展（按需）
+### 阶段 7 · 冷门/边界扩展（✅ 完成 2026-09-07）
 - ✅ Kleene 递归定理自指构造（engine/classical/recursion_theorem.py——借数学底座，标注来源，自测5组+正式16）；
 - ✅ Gupta-Belnap 真值修正（engine/cold/truth_revision.py——共振带收敛的学界锚点，自测6组+正式19）；
 - ✅ AGM 信念修正/非单调默认（engine/cold/agm_revision.py——T5 知识更新痛点，自测8组+正式48）；
 - ✅ 相干逻辑（engine/cold/relevance_logic.py——T2 增强，自测8组+正式43）；
 - ✅ 直觉主义逻辑（engine/cold/intuitionistic_logic.py——构造性立场，Kripke 反模型 + 两系统对照，自测8组+正式43）；
-- ⏳ 算术层级/可判定片段（墙的精确地图——按痛点后续）。
+- ✅ 算术层级/可判定片段（engine/classical/decidability_map.py——墙的精确地图：16 条片段标可判定性 + Δ1/Σ1/Π1/Σ2/Π2 引擎承诺，自测7组+正式51）；
+- ✅ 工程不变式（engine/test_packaging.py——路径引导/打包完备/入口自愈/版本纪律 5 条，防踩过的坑复发）。
 纪律：借来的归"经典共识/借鉴"区并记账，不混入落落原创区。
+剩余扩展（按需，不硬上）：撞墙管线 B/C 支线。
+验收：每件自测 + 正式测试 + docstring 公式卡 + 接线演示（1.6 λ / 1.7 图灵机 / 2.3 递归修正）——已达成（demo ⑯/⑲）。
 
 ---
 

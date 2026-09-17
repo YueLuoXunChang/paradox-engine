@@ -18,6 +18,9 @@
 - **冷门构件接入总控路由**（原先只能手调）：T5 → `agm_revision`（最小放弃修正）、T2-L2 → `relevance_logic`（真冲突 vs 话术冲突）；`needs_cold_logic` 由硬编码 `dung` 改为按冷门构件名前缀判定（加新构件不用改标记逻辑）；
 - **补齐路由画饼**：`ltl`、`nd_propositional` 原先出现在路由表却无适配器（执行层只能报"未实现层"），现入声明表可真跑；新增不变式测试「ROUTE 里每个构件名都有适配器」；
 - **场景库 +2（共 9 个）**：S08 真冲突 vs 话术冲突（相干检查接线）、S09 天鹅黑天鹅（AGM 接线）；场景结果新增 `execution` 白箱字段（本场景实际跑了哪些构件、什么状态/结论）。
+- **可判定片段地图 + 算术层级**（`engine/classical/decidability_map.py`——阶段 7 收口）：16 条逻辑片段标可判/半可判/不可判并逐条标出处（Church 1936 / Turing 1936 / Gödel 1931 / Presburger 1929 / Kripke 1963·1965 / Thomason 1975 / Soare / Löwenheim 1915 / Cook 1971 等）；算术层级 Δ1/Σ1/Π1/Σ2/Π2 每层写清**引擎承诺**（可判给结论、Σ1 只"枚举到才说是"、更高层不承诺）；`mode='demo'` 真跑 1.6 λ / 1.7 图灵机 / 2.3 递归修正，完成蓝图 A1 的接线验收；未实现片段诚实标 `engine_available=False`（不假装能算）；
+- **工程不变式测试**（`engine/test_packaging.py`）：路径引导（防顶层包名撞车）、打包完备（pyproject packages 覆盖所有子包）、路由无画饼、入口控制台自愈、门面版本纪律——每条对应一次真实踩坑；
+- 正式测试 2 件（`test_decidability_map.py` 51 项、`test_packaging.py` 17 项）；AI 工具注册第 29 件（`decidability_map`）；demo 扩到十九步（⑲ 墙的精确地图）。
 
 ### 修复
 - **一致性判定三态化**（诚实边界）：AGM 原先把「算不动」（经典层真值表
@@ -28,9 +31,11 @@
   `import engine` 会解析到**本机另一个项目**（顶层包名同为 `engine`）的代码
   ——同名的构件会被静默误用；现入口先钉本仓库根到 `sys.path` 首位，且
   `_load_module()` 核对模块文件确在本仓库内，越界即诚实报错（新增守卫测试）;
-- **Windows 控制台编码自愈**：`paradox-engine --text "..."` 与 demo 原先在
-  默认 GBK 控制台直接 UnicodeEncodeError 崩掉（报告含 ⚠/✅）；现入口调用
-  `engine/_console.py` 把输出流设为 UTF-8，不必先设 `PYTHONIOENCODING`；
+- **Windows 控制台编码自愈（全量）**：原先 CLI/demo 在默认 GBK 控制台直接
+  UnicodeEncodeError 崩掉（报告含 ⚠/✅）；实测**33 个可独立运行的构件里 31 个**
+  都会崩——按中文友好要求全部补上自愈（入口 `engine/_console.py`，
+  构件自测内联 reconfigure）：现在直接 `python engine/<层>/<名>.py` 即可，
+  不必先设 `PYTHONIOENCODING`；并加不变式测试防新构件漏加；
 - CLI `--demo` 帮助文案"十五步"过时（实际十八步）→ 改为不硬编步数；
 - CLI 测试里硬编码的工具数（23）改为从注册表动态取——防止再漂移。
 

@@ -92,6 +92,8 @@ _TOOL_REGISTRY = [
      '相干逻辑：前提结论是否共享变量（区分真冲突与话术冲突）'),
     ('intuitionistic_logic', 'cold.intuitionistic_logic',
      '直觉主义逻辑：Kripke 求值/反模型搜索（排中律为何非构造有效）+ 两系统对照'),
+    ('decidability_map', 'classical.decidability_map',
+     '可判定片段地图：这个问题能不能算（判定性结论/算术层级/墙的精确地图）'),
     ('classifier', 'control.classifier',
      '判类器：12 题型 + 复杂度 L1/L2/L3 + 路由'),
     ('controller', 'control.controller',
@@ -223,6 +225,12 @@ def run(inputs):
 # 自测
 # ============================================================
 if __name__ == '__main__':
+    try:  # 控制台自愈：Windows GBK 控制台打印 emoji（✅/⚠）会崩
+        import sys as _sys
+        _sys.stdout.reconfigure(encoding='utf-8')
+    except Exception:  # noqa: BLE001——老版本/重定向流不支持就跳过
+        pass
+
     print('=' * 62)
     print('AI 挂载层 · 自测（function-calling 封装）')
     print('=' * 62)
@@ -235,6 +243,7 @@ if __name__ == '__main__':
     assert 'recursion_theorem' in names and 'truth_revision' in names, names
     assert 'agm_revision' in names and 'relevance_logic' in names, names
     assert 'intuitionistic_logic' in names, names
+    assert 'decidability_map' in names, names
     assert all('parameters' in t['function'] for t in tl)
     assert all('description' in t['function'] for t in tl)
     print(f'✅ 工具清单 {len(tl)} 件（schema 自动生成）')
@@ -322,6 +331,17 @@ if __name__ == '__main__':
     assert r11['result']['verdict'] == 'refuted', r11
     print(f"✅ call_tool intuitionistic_logic → {r11['result']['verdict']}"
           '（排中律在构造性立场不成立）')
+
+    # 12) call_tool：可判定片段地图（阶段 7 数学底座）
+    r12 = call_tool('decidability_map', {'mode': 'lookup',
+                                         'system': 'halting'})
+    assert r12['verdict'] == 'ok', r12
+    assert r12['result']['verdict'] == 'found', r12
+    assert r12['result']['entry']['decidability'] == 'undecidable', r12
+    r12b = call_tool('decidability_map', {'mode': 'map'})
+    assert r12b['result']['verdict'] == 'mapped', r12b
+    print(f"✅ call_tool decidability_map → 停机 {r12['result']['entry']['decidability']}"
+          f"；地图 {len(r12b['result']['fragments'])} 条")
 
     print('=' * 62)
     print('AI 挂载层自测：全部通过 ✅')

@@ -70,8 +70,19 @@
 | engine/classical/equality_tableau.py | 等词替换 + 命题 tableau（反例模型） | ✅ 自测6+正式14 |
 | engine/classical/stlc.py | 简单类型 λ STLC（类型检查/推导，拦自应用，Curry-Howard） | ✅ 自测8+正式15 |
 | engine/classical/recursion_theorem.py | Kleene 递归定理：自指程序构造（quine/递归定理形态，借数学底座） | ✅ 自测5组+正式16 |
+| engine/classical/decidability_map.py | 可判定片段 + 算术层级（墙的精确地图）：16 条片段标判定性（逐条标源）+ Δ1/Σ1/Π1/Σ2/Π2 引擎承诺 + 与 1.6/1.7/2.3 接线演示 | ✅ 自测7组+正式51 |
 
 > 每构件完整规格见《经典逻辑层详规》（内部规划文档，未随本仓库公开）。
+
+## 工程不变式（`engine/test_packaging.py`——每条对应一次真实踩坑）
+
+| 不变式 | 防什么 |
+|---|---|
+| 引用 `engine.*` 的模块必须做 sys.path 引导 | 顶层包名撞车（本机另一项目 editable 装成 `engine`，脚本模式静默加载到别人的代码） |
+| pyproject packages 覆盖 engine 下所有含 .py 的目录 | 打包漏子包（pip 装出来少模块） |
+| ROUTE 出现的构件名必须有适配器（见 test_controller） | 路由画饼（写了构件却没适配器，只能报"未实现"） |
+| CLI/demo 入口调用控制台自愈 | GBK 控制台 UnicodeEncodeError（emoji 报告直接崩） |
+| 门面文件无「版本：vX.Y.Z」+ `__version__=0.1.0` | 版本号乱标（死命令：真发布才推进） |
 
 ## 为什么分层
 

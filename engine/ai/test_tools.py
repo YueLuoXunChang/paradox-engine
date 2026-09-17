@@ -46,6 +46,8 @@ check("含冷门新构件工具 agm_revision/relevance_logic",
       str(names))
 check("含直觉主义工具 intuitionistic_logic",
       'intuitionistic_logic' in names, str(names))
+check("含可判定片段地图工具 decidability_map",
+      'decidability_map' in names, str(names))
 check("每工具带 description", all(t['function']['description']
       for t in tl), str(tl[0]))
 check("每工具 parameters 是 object schema",
@@ -110,6 +112,14 @@ check("直觉主义调用 → refuted（双重否定消去非构造有效）",
 r = call_tool('intuitionistic_logic', {'mode': 'compare'})
 check("直觉主义对照表 → 6 行标志性公式",
       len(r['result']['comparison']) == 6, str(r)[:200])
+r = call_tool('decidability_map', {'mode': 'lookup', 'system': 'halting'})
+check("可判定地图调用 → 停机不可判定（Σ1 完全）",
+      r['result']['entry']['decidability'] == 'undecidable'
+      and 'Σ1' in r['result']['entry']['hierarchy'], str(r)[:200])
+r = call_tool('decidability_map', {'mode': 'hierarchy', 'level': 'Σ1'})
+check("可判定地图层级查询 → Σ1 引擎承诺可查",
+      r['result']['verdict'] == 'level_found'
+      and '枚举' in r['result']['level']['engine_promise'], str(r)[:200])
 
 # ── 用例4：总控调用（真实中文论证端到端）
 r = call_tool('controller', {
@@ -204,5 +214,5 @@ check("守卫不影响正常加载（本仓库模块仍可用）",
       _T._load_module('mechanisms.paradox_measure').PORTS.get('in') is not None)
 
 print("=" * 60)
-print(f"结果: {PASS}/49 通过")
-raise SystemExit(0 if PASS == 49 else 1)
+print(f"结果: {PASS}/52 通过")
+raise SystemExit(0 if PASS == 52 else 1)

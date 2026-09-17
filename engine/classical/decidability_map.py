@@ -416,6 +416,12 @@ def run(inputs):
 # 自测
 # ============================================================
 if __name__ == '__main__':
+    try:  # 控制台自愈：Windows GBK 控制台打印 emoji（✅/⚠）会崩
+        import sys as _sys
+        _sys.stdout.reconfigure(encoding='utf-8')
+    except Exception:  # noqa: BLE001——老版本/重定向流不支持就跳过
+        pass
+
     print('=' * 68)
     print('算术层级 · 可判定片段地图 · 自测（阶段 7 数学底座）')
     print('=' * 68)

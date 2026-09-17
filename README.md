@@ -57,11 +57,11 @@ print(r['report'])
 
 ```bash
 # 克隆后，在仓库根目录
-python demo.py          # 十八步演示
-python run_tests.py     # 全量回归（一条命令：30 个测试文件 / 770 项断言）
+python demo.py          # 十九步演示
+python run_tests.py     # 全量回归（一条命令：32 个测试文件 / 841 项断言）
 ```
 
-`demo.py` 演示十八件事（①②③ 悖论三件套 → ④-⑩ 经典逻辑地基 → ⑪ 撞墙管线 → ⑫ 总控五步 → ⑬ MT-MP-TL 骨架 → ⑭ 冷门逻辑 → ⑮ AI 挂载 → ⑯ 数学底座 → ⑰ 冷门补完 → ⑱ 构造性立场）：
+`demo.py` 演示十九件事（①②③ 悖论三件套 → ④-⑩ 经典逻辑地基 → ⑪ 撞墙管线 → ⑫ 总控五步 → ⑬ MT-MP-TL 骨架 → ⑭ 冷门逻辑 → ⑮ AI 挂载 → ⑯ 数学底座 → ⑰ 冷门补完 → ⑱ 构造性立场 → ⑲ 墙的精确地图）：
 
 | 步骤 | 演示 | 层 |
 |---|---|---|
@@ -83,6 +83,7 @@ python run_tests.py     # 全量回归（一条命令：30 个测试文件 / 770
 | ⑯ 数学底座 | 自指程序构造（Kleene 递归定理）+ 真值修正（Gupta-Belnap——共振带学界锚点） | 借鉴 |
 | ⑰ 冷门补完 | 信念修正/非单调（AGM：黑天鹅撤销旧结论）+ 相干逻辑（真冲突 vs 话术冲突） | 第 3 层 |
 | ⑱ 构造性立场 | 直觉主义：Kripke 反模型（排中律为何非构造有效）+ 经典 vs 直觉主义对照表 | 第 3 层 |
+| ⑲ 墙的精确地图 | 可判定片段（16 条逐条标源）+ 算术层级 Δ1/Σ1/Π1/Σ2/Π2（每层写清引擎承诺） | 数学底座 |
 
 也可以直接调机制：
 
@@ -145,10 +146,12 @@ paradox-engine/
 │       ├── modal.py              模态 □/◇（Kripke 语义 K/T/S4/S5）
 │       ├── lambda_calculus.py    λ 演算（β 归约 / Y 不动点）
 │       ├── turing_machine.py     图灵机（模拟 + UTM 自模拟 + 停机演示）
-│       └── stlc.py               简单类型 λ（类型检查，拦自应用）
+│       ├── stlc.py               简单类型 λ（类型检查，拦自应用）
+│       ├── recursion_theorem.py  Kleene 递归定理（自指程序构造）
+│       └── decidability_map.py   可判定片段 + 算术层级（墙的精确地图）
 │       （每个构件配 test_*.py 正式测试 + 公式卡）
 │   └── cli.py                 ← 命令行入口（--text/--json/--file/--tools）
-├── demo.py                  ← 2 分钟上手演示（十八步）
+├── demo.py                  ← 2 分钟上手演示（十九步）
 ├── run_tests.py             ← 全量回归入口（一条命令，CI 同款）
 ├── pyproject.toml           ← pip 打包（paradox-engine console 命令）
 ├── .github/workflows/       ← CI（跑全量回归 + 演示 + CLI 冒烟）
@@ -248,29 +251,30 @@ run(inputs: dict) -> dict
   其中 AGM 已接入 T5 路由、相干检查已接入 T2-L2 路由（给结构化线索即真跑）；
 - **数学底座（借鉴区，标注来源）**：Kleene 递归定理自指构造（程序拿到
   自己）+ Gupta-Belnap 真值修正（共振带收敛的学界锚点——说谎者周期 2
-  是教科书结论）；
+  是教科书结论）+ **可判定片段地图 / 算术层级**（16 条片段标可判/半可判/
+  不可判并逐条标出处；Δ1/Σ1/Π1/Σ2/Π2 每层写清**引擎承诺什么**——
+  "算不清"从此有精确名字，不是一句搪塞）；
 - **AI 挂载层**：全部构件封装为 function-calling 工具（schema 从 PORTS
   自动生成，零手工漂移）+ call_tool 统一分派——AI 拿到工具清单即可调用
   整个引擎；两真实场景端到端（论证矛盾检查 / 学科建模）。
 
-**扩展中（见 docs/ROADMAP.md）**：算术层级/可判定片段（墙的精确地图，
-借数学底座标注来源）→ 撞墙管线 B/C 支线（按真实痛点接入）。
+**扩展中（见 docs/ROADMAP.md）**：撞墙管线 B/C 支线（按真实痛点接入）。
 
 ### 测试状态
 
-- **770 项正式断言全过**（30 个测试文件），覆盖全部
+- **841 项正式断言全过**（32 个测试文件），覆盖全部
   机制构件与总控/场景/AI 工具层；
 - **一条命令跑全量回归**：`python run_tests.py`（发现 + 运行 + 汇总；
   任一文件失败即非零退出——CI 与本地同一入口）；
 - CI：`.github/workflows/test.yml`（Python 3.9 / 3.12 上跑回归 + 演示 + CLI 冒烟）；
 - 每个构件自包含：`python engine/<层>/<名>.py` 跑自测（机制自身验证），
   `python engine/<层>/test_<名>.py` 跑正式测试；
-- 演示：`python demo.py` 十八步全过；真实场景端到端：
+- 演示：`python demo.py` 十九步全过；真实场景端到端：
   `python engine/ai/ai_scenarios.py`；场景库对照：9 场景
   （`python engine/scenarios/scenarios.py`）；
 - 零第三方依赖，纯 Python 标准库（≥3.9）；
-- Windows 控制台：CLI/demo 已自愈输出编码（无需先设 `PYTHONIOENCODING`）；
-  单独跑构件自测若遇 emoji 编码错，设 `PYTHONIOENCODING=utf-8` 即可。
+- Windows 控制台：CLI / demo / 每个构件自测都带**控制台自愈**（自动把输出流设
+  UTF-8）——不必先设 `PYTHONIOENCODING`，直接 `python engine/<层>/<名>.py` 即可。
 
 - 纯 Python 标准库，无第三方依赖；
 - 体系本体（落落逻辑体系：完整机制库、文档库）**不在此仓库**；这里只放

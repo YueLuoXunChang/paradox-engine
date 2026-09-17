@@ -311,6 +311,30 @@ def main():
     print("  诚实边界：完备界 2^n 节点内无反模型才判「有效」；界内没找到只报"
           " not_found_in_limit——不冒充判定。")
 
+    banner("⑲ 墙的精确地图：可判定片段 + 算术层级（数学底座）")
+    print("场景：引擎说「算不清」时，凭什么这么说？——因为有张可查的墙地图：")
+    print("      哪些问题学界已证可判、哪些半可判、哪些有定理兜底说不可判。")
+    from engine.classical.decidability_map import run as dmap
+    r19a = dmap({'mode': 'map'})
+    kinds = {}
+    for e in r19a['fragments']:
+        kinds[e['decidability']] = kinds.get(e['decidability'], 0) + 1
+    print(f"  → 地图 {len(r19a['fragments'])} 条："
+          f"可判 {kinds.get('decidable', 0)} / 半可判 {kinds.get('semi_decidable', 0)}"
+          f" / 不可判 {kinds.get('undecidable', 0)}（逐条标出处）")
+    for key in ('propositional', 'halting', 'presburger'):
+        e = dmap({'mode': 'lookup', 'system': key})['entry']
+        eng = e['engine_component'] or '（引擎未实现——诚实标注）'
+        print(f"      · {e['name']}：{e['decidability']}｜{e['hierarchy']}"
+              f"｜引擎：{eng}")
+    r19b = dmap({'mode': 'hierarchy', 'level': 'Σ1'})
+    print(f"  → 层级 Σ1：{r19b['level']['engine_promise'][:40]}…")
+    r19c = dmap({'mode': 'demo'})
+    print(f"  → 接线演示 {len(r19c['fragments'])} 件："
+          f"{'、'.join(str(x['verdict']) for x in r19c['fragments'])}")
+    print("  数学底座纪律：Gödel/Church/Turing/Presburger/Kripke/Thomason/Soare"
+          "——借鉴区逐条标源；表是参考文献表不是判定过程。")
+
     print("\n" + "=" * 62)
     print("paradox-engine 的分层主张：")
     print("  总控：判类→判复杂度→切路→执行→判输出（最小充分：简单问题绝不复杂化）")
@@ -319,7 +343,8 @@ def main():
     print("  第 2 层悖论：算不清的当第一公民（测量→注解→钻墙五选一→创生）")
     print("  第 3 层冷门：矛盾该共存（四值）/立场谁站得住（Dung）/新信息来了"
           "怎么改（AGM）/前提结论相不相干（相干）/构造性立场（直觉主义）")
-    print("  数学底座：自指程序（Kleene）/真值修正（Gupta-Belnap）——借鉴标注")
+    print("  数学底座：自指程序（Kleene）/真值修正（Gupta-Belnap）/可判定片段与"
+          "算术层级（墙的精确地图）——借鉴标注")
     print(f"  AI 挂载：引擎 = {len(tl)} 个可调用工具——诊断留给使用者（只诊断不决策）")
     print("  只诊断不决策：把判断留给使用它的人。")
     print("更多：见 README.md + docs/ROADMAP.md")
