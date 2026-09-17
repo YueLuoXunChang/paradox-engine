@@ -52,7 +52,7 @@ controller.py — 总控五步流水线（判类→判复杂度→切路→执�
 # 契约修正（2026-09-07，轨 C1 工具协议冻结时发现）：`text` 原标 'str?'（可选），
 # 但构件缺 text 时其实会诚实拦截 input_pending——对外 schema 应如实标必填，
 # 否则调用方（AI 客户端/脚本）会以为可以不传。属**公共契约变更**：已重新
-# 冻结快照与 docs/tool_schema.md，并在回测 §151 记账。
+# 冻结快照与 docs/tool_schema.md，变更已记入 CHANGELOG。
 PORTS = {
     'in': {'text': 'str', 'structured': 'dict?', 'debug': 'bool?'},
     'out': {'verdict': 'str', 'classification': 'dict', 'execution': 'list',

@@ -31,7 +31,7 @@ print("场景库 · 正式测试")
 print("=" * 60)
 
 # ── 用例1：场景注册表完整性
-check("场景 ≥5 个（蓝图轨 B：≥5）", len(SCENES) >= 5, str(len(SCENES)))
+check("场景 ≥5 个（轨 B：≥5）", len(SCENES) >= 5, str(len(SCENES)))
 check("场景 ≥14 个（覆盖 12 题型后的规模）", len(SCENES) >= 14,
       str(len(SCENES)))
 ids = [s['id'] for s in SCENES]

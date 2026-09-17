@@ -1,5 +1,5 @@
 {
-  "_note": "工具协议冻结快照——工具名与参数名是对外契约（蓝图 轨 C1）；有意变更后跑 python engine/ai/freeze_tool_schema.py 重新生成，并在 CHANGELOG 与记账文档记账。",
+  "_note": "工具协议冻结快照——工具名与参数名是对外契约（轨 C1）；有意变更后跑 python engine/ai/freeze_tool_schema.py 重新生成，并在 CHANGELOG 记账。",
   "contract": {
     "agm_revision": {
       "beliefs": {

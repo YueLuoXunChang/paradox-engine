@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 test_decidability_map.py — 正式测试：算术层级 · 可判定片段地图（阶段 7）
-用例依据：蓝图 轨 A·A1（算术层级借数学底座，标注来源）+ 墙的精确地图
+用例依据：轨 A·A1（算术层级借数学底座，标注来源）+ 墙的精确地图
          验收：自测 + 正式 + 公式卡（docstring）+ 与 1.6/1.7/2.3 接线演示
 运行：python engine/classical/test_decidability_map.py
 """

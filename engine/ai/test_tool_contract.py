@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-test_tool_contract.py — 正式测试：工具协议冻结（蓝图 轨 C1）
+test_tool_contract.py — 正式测试：工具协议冻结（轨 C1）
 用例依据：轨 C1「工具协议稳定 + 调用方文档」——工具名/参数名是对外契约，
          改了要让调用方知道（快照 + 文档 + 记账），不能静默漂移。
 运行：python engine/ai/test_tool_contract.py

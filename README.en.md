@@ -69,7 +69,7 @@ print(r['report'])
 ```bash
 # After cloning, from the repository root
 python demo.py          # nineteen-step tour
-python run_tests.py     # full regression (33 test files / 866 assertions)
+python run_tests.py     # full regression (35 test files / 898 assertions)
 ```
 
 `demo.py` demonstrates nineteen things (①②③ the paradox trio → ④-⑩ the
@@ -174,6 +174,7 @@ paradox-engine/
 │   ├── ROADMAP.md                layered roadmap
 │   └── formulas/                 concept cards (×10 for the classical layer)
 ├── README.md                ← Chinese readme (this English one: README.en.md)
+├── CONTRIBUTING.md          ← contribution guide (five hard rules + pre-submit checklist)
 ├── CHANGELOG.md             ← changelog (by date — no versions until release)
 ├── NOTICE                   ← copyright / authorship / AI-collaboration notes
 └── (will grow as the author selects more parts to make public)
@@ -304,7 +305,7 @@ when a real pain point appears).
 
 ### Test status
 
-- **866 formal assertions pass** (33 test files), covering every mechanism
+- **898 formal assertions pass** (35 test files), covering every mechanism
   component plus the controller/scenario/AI-tool layers;
 - **One command runs the whole suite**: `python run_tests.py` (discover + run +
   summarize; a single failing file yields a non-zero exit — the same entry

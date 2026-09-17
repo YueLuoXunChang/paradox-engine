@@ -2,8 +2,8 @@
 """
 freeze_tool_schema.py — 工具协议冻结：生成快照 JSON + 调用方文档
 ====================================================================
-概念来源：蓝图 轨 C1（生态接口）：**工具名与参数名是对外契约**——不随意改，
-改了要记账（CHANGELOG + 回测），否则调用方（AI 客户端、脚本、上层应用）会静默
+概念来源：轨 C1（生态接口）：**工具名与参数名是对外契约**——不随意改，
+改了要记账（CHANGELOG），否则调用方（AI 客户端、脚本、上层应用）会静默
 挂掉。
 
 本脚本做什么（一句话）：
@@ -20,7 +20,7 @@ freeze_tool_schema.py — 工具协议冻结：生成快照 JSON + 调用方文�
 诚实边界：
     - 快照只冻结**契约**（工具名/参数名/类型/必填），不冻结描述文案——
       文案可改不改契约；
-    - 生成 ≠ 批准：改契约仍要在 CHANGELOG 与记账文档里记账（工具协议是
+    - 生成 ≠ 批准：改契约仍要在 CHANGELOG 里记账（工具协议是
       对外承诺，不是内部细节）。
 """
 
@@ -49,9 +49,9 @@ for _p in (_HERE, _REPO):
 _SNAPSHOT = os.path.join(_HERE, 'tool_schema_frozen.json')
 _DOC = os.path.join(_REPO, 'docs', 'tool_schema.md')
 
-_SNAPSHOT_NOTE = ('工具协议冻结快照——工具名与参数名是对外契约（蓝图 轨 C1）；'
+_SNAPSHOT_NOTE = ('工具协议冻结快照——工具名与参数名是对外契约（轨 C1）；'
                   '有意变更后跑 python engine/ai/freeze_tool_schema.py 重新生成，'
-                  '并在 CHANGELOG 与记账文档记账。')
+                  '并在 CHANGELOG 记账。')
 
 
 def contract(tool_list):
@@ -82,9 +82,9 @@ def render_markdown(tool_list):
         '',
         '> 本文件由 `python engine/ai/freeze_tool_schema.py` 从 '
         '`engine/ai/tools.py` 的注册表**自动生成**，请勿手改。',
-        '> 工具名与参数名是对外契约（蓝图 轨 C1）：有意变更须重新生成'
+        '> 工具名与参数名是对外契约（轨 C1）：有意变更须重新生成'
         '本文件与 `engine/ai/tool_schema_frozen.json`，并在 CHANGELOG 与'
-        '记账文档记账。',
+        '变更记账。',
         '',
         f'共 **{len(tool_list)}** 件工具。调用方式：',
         '',
@@ -185,7 +185,7 @@ def run(inputs):
 # ============================================================
 if __name__ == '__main__':
     print('=' * 64)
-    print('工具协议冻结 · 自测（蓝图 轨 C1）')
+    print('工具协议冻结 · 自测（轨 C1）')
     print('=' * 64)
 
     if '--check' in sys.argv:

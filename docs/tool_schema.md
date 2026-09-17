@@ -1,7 +1,7 @@
 # 工具协议（AI 可调用工具清单）
 
 > 本文件由 `python engine/ai/freeze_tool_schema.py` 从 `engine/ai/tools.py` 的注册表**自动生成**，请勿手改。
-> 工具名与参数名是对外契约（蓝图 轨 C1）：有意变更须重新生成本文件与 `engine/ai/tool_schema_frozen.json`，并在 CHANGELOG 与记账文档记账。
+> 工具名与参数名是对外契约（轨 C1）：有意变更须重新生成本文件与 `engine/ai/tool_schema_frozen.json`，并在 CHANGELOG 与变更记账。
 
 共 **29** 件工具。调用方式：
 
