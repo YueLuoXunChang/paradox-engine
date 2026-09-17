@@ -1,5 +1,8 @@
 # 统一行尾与文本处理
-* text=auto
+# 关键：**全局钉 eol=lf**——本机系统级 core.autocrlf=true（D:/Git2/etc/gitconfig）
+# 曾把 NOTICE/pyproject.toml/.gitignore/.gitattributes 检出成 CRLF；只按后缀
+# 钉规则会漏掉无后缀文件与顶层配置。全局 eol=lf 优先级高于 autocrlf。
+* text=auto eol=lf
 
 # Python
 *.py text eol=lf
@@ -10,7 +13,7 @@
 *.txt text eol=lf
 LICENSE text eol=lf
 
-# 数据/配置同样统一 LF（避免 autocrlf 在 json/yml 上另搞一套）
+# 数据/配置同样统一 LF
 *.json text eol=lf
 *.yml text eol=lf
 *.yaml text eol=lf
