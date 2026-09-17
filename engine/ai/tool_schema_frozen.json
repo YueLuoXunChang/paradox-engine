@@ -1,0 +1,568 @@
+{
+  "_note": "工具协议冻结快照——工具名与参数名是对外契约（蓝图 轨 C1）；有意变更后跑 python engine/ai/freeze_tool_schema.py 重新生成，并在 CHANGELOG 与记账文档记账。",
+  "contract": {
+    "agm_revision": {
+      "beliefs": {
+        "required": false,
+        "type": "array"
+      },
+      "defaults": {
+        "required": false,
+        "type": "array"
+      },
+      "exceptions": {
+        "required": false,
+        "type": "array"
+      },
+      "facts": {
+        "required": false,
+        "type": "array"
+      },
+      "max_beliefs": {
+        "required": false,
+        "type": "integer"
+      },
+      "mode": {
+        "required": false,
+        "type": "string"
+      },
+      "new_info": {
+        "required": false,
+        "type": "string"
+      },
+      "priorities": {
+        "required": false,
+        "type": "object"
+      }
+    },
+    "belnap_four": {
+      "assign": {
+        "required": false,
+        "type": "object"
+      },
+      "demo": {
+        "required": false,
+        "type": "boolean"
+      },
+      "formula": {
+        "required": false,
+        "type": "string"
+      }
+    },
+    "boundary_paradox": {
+      "domain": {
+        "required": false,
+        "type": "string"
+      },
+      "inside": {
+        "required": false,
+        "type": "string"
+      },
+      "mode": {
+        "required": false,
+        "type": "string"
+      },
+      "outside": {
+        "required": false,
+        "type": "string"
+      },
+      "recursive_layer": {
+        "required": false,
+        "type": "integer"
+      },
+      "wall_name": {
+        "required": false,
+        "type": "string"
+      }
+    },
+    "classifier": {
+      "debug": {
+        "required": false,
+        "type": "boolean"
+      },
+      "text": {
+        "required": false,
+        "type": "string"
+      }
+    },
+    "controller": {
+      "debug": {
+        "required": false,
+        "type": "boolean"
+      },
+      "structured": {
+        "required": false,
+        "type": "object"
+      },
+      "text": {
+        "required": true,
+        "type": "string"
+      }
+    },
+    "converge_check": {
+      "branch": {
+        "required": false,
+        "type": "string"
+      },
+      "err_fn": {
+        "required": true,
+        "type": "object"
+      },
+      "f": {
+        "required": true,
+        "type": "object"
+      },
+      "x0": {
+        "required": false,
+        "type": "number"
+      }
+    },
+    "counterpoint_gen": {
+      "antithesis": {
+        "required": false,
+        "type": "string"
+      },
+      "coupling": {
+        "required": false,
+        "type": "string"
+      },
+      "dimensions": {
+        "required": false,
+        "type": "array"
+      },
+      "thesis": {
+        "required": false,
+        "type": "string"
+      }
+    },
+    "decidability_map": {
+      "level": {
+        "required": false,
+        "type": "string"
+      },
+      "mode": {
+        "required": false,
+        "type": "string"
+      },
+      "system": {
+        "required": false,
+        "type": "string"
+      }
+    },
+    "dung_framework": {
+      "arguments": {
+        "required": false,
+        "type": "array"
+      },
+      "attacks": {
+        "required": false,
+        "type": "array"
+      },
+      "max_arguments": {
+        "required": false,
+        "type": "integer"
+      }
+    },
+    "equality_tableau": {
+      "conclusion": {
+        "required": false,
+        "type": "string"
+      },
+      "equality": {
+        "required": false,
+        "type": "array"
+      },
+      "max_expand": {
+        "required": false,
+        "type": "integer"
+      },
+      "premises": {
+        "required": false,
+        "type": "array"
+      }
+    },
+    "first_order": {
+      "facts": {
+        "required": false,
+        "type": "array"
+      },
+      "query": {
+        "required": true,
+        "type": "string"
+      },
+      "rules": {
+        "required": false,
+        "type": "array"
+      },
+      "universe": {
+        "required": false,
+        "type": "array"
+      }
+    },
+    "intuitionistic_logic": {
+      "formula": {
+        "required": false,
+        "type": "string"
+      },
+      "formulas": {
+        "required": false,
+        "type": "array"
+      },
+      "max_worlds": {
+        "required": false,
+        "type": "integer"
+      },
+      "mode": {
+        "required": false,
+        "type": "string"
+      },
+      "order": {
+        "required": false,
+        "type": "array"
+      },
+      "valuation": {
+        "required": false,
+        "type": "object"
+      },
+      "world": {
+        "required": false,
+        "type": "string"
+      },
+      "worlds": {
+        "required": false,
+        "type": "array"
+      }
+    },
+    "lambda_calculus": {
+      "church_arg": {
+        "required": false,
+        "type": "integer"
+      },
+      "expr": {
+        "required": false,
+        "type": "string"
+      },
+      "fact_n": {
+        "required": false,
+        "type": "integer"
+      },
+      "mode": {
+        "required": false,
+        "type": "string"
+      },
+      "steps_limit": {
+        "required": false,
+        "type": "integer"
+      }
+    },
+    "ltl": {
+      "formula": {
+        "required": true,
+        "type": "string"
+      },
+      "path": {
+        "required": false,
+        "type": "array"
+      }
+    },
+    "modal": {
+      "access": {
+        "required": false,
+        "type": "object"
+      },
+      "assign": {
+        "required": false,
+        "type": "object"
+      },
+      "formula": {
+        "required": true,
+        "type": "string"
+      },
+      "system": {
+        "required": false,
+        "type": "string"
+      },
+      "world": {
+        "required": false,
+        "type": "string"
+      },
+      "worlds": {
+        "required": false,
+        "type": "array"
+      }
+    },
+    "mtmp": {
+      "a": {
+        "required": false,
+        "type": "string"
+      },
+      "b": {
+        "required": false,
+        "type": "string"
+      },
+      "edges": {
+        "required": false,
+        "type": "array"
+      },
+      "kappa": {
+        "required": false,
+        "type": "number"
+      },
+      "mode": {
+        "required": false,
+        "type": "string"
+      },
+      "op": {
+        "required": false,
+        "type": "string"
+      },
+      "points": {
+        "required": false,
+        "type": "array"
+      },
+      "threads": {
+        "required": false,
+        "type": "array"
+      },
+      "verbose": {
+        "required": false,
+        "type": "boolean"
+      }
+    },
+    "nd_propositional": {
+      "conclusion": {
+        "required": false,
+        "type": "string"
+      },
+      "max_steps": {
+        "required": false,
+        "type": "integer"
+      },
+      "premises": {
+        "required": false,
+        "type": "array"
+      },
+      "system": {
+        "required": false,
+        "type": "string"
+      }
+    },
+    "observer_bypass": {
+      "detect": {
+        "required": false,
+        "type": "object"
+      },
+      "main_events": {
+        "required": false,
+        "type": "array"
+      },
+      "use_advice": {
+        "required": false,
+        "type": "boolean"
+      }
+    },
+    "paradox_annotate": {
+      "eliminable": {
+        "required": false,
+        "type": "boolean"
+      },
+      "impact": {
+        "required": false,
+        "type": "string"
+      },
+      "paradox": {
+        "required": false,
+        "type": "object"
+      },
+      "seq": {
+        "required": false,
+        "type": "integer"
+      },
+      "source": {
+        "required": false,
+        "type": "string"
+      }
+    },
+    "paradox_measure": {
+      "mode": {
+        "required": true,
+        "type": "string"
+      },
+      "wA": {
+        "required": false,
+        "type": "number"
+      },
+      "wNotA": {
+        "required": false,
+        "type": "number"
+      }
+    },
+    "propositional": {
+      "conclusion": {
+        "required": false,
+        "type": "string"
+      },
+      "formula": {
+        "required": true,
+        "type": "string"
+      },
+      "mode": {
+        "required": false,
+        "type": "string"
+      },
+      "premises": {
+        "required": false,
+        "type": "array"
+      }
+    },
+    "recursion_theorem": {
+      "mode": {
+        "required": false,
+        "type": "string"
+      },
+      "payload": {
+        "required": false,
+        "type": "string"
+      },
+      "transform": {
+        "required": false,
+        "type": "object"
+      }
+    },
+    "relevance_logic": {
+      "conclusion": {
+        "required": false,
+        "type": "string"
+      },
+      "mode": {
+        "required": false,
+        "type": "string"
+      },
+      "premises": {
+        "required": false,
+        "type": "array"
+      },
+      "prop_a": {
+        "required": false,
+        "type": "string"
+      },
+      "prop_b": {
+        "required": false,
+        "type": "string"
+      }
+    },
+    "resolution": {
+      "conclusion": {
+        "required": false,
+        "type": "string"
+      },
+      "facts": {
+        "required": false,
+        "type": "array"
+      },
+      "max_resolvents": {
+        "required": false,
+        "type": "integer"
+      },
+      "premises": {
+        "required": false,
+        "type": "array"
+      }
+    },
+    "selfref_fixpoint": {
+      "f": {
+        "required": false,
+        "type": "object"
+      },
+      "max_steps": {
+        "required": false,
+        "type": "integer"
+      },
+      "mode": {
+        "required": false,
+        "type": "string"
+      },
+      "sentence": {
+        "required": false,
+        "type": "string"
+      },
+      "state0": {
+        "required": false,
+        "type": "string"
+      },
+      "tol": {
+        "required": false,
+        "type": "number"
+      }
+    },
+    "stlc": {
+      "context": {
+        "required": false,
+        "type": "object"
+      },
+      "expected": {
+        "required": false,
+        "type": "string"
+      },
+      "expr": {
+        "required": false,
+        "type": "string"
+      }
+    },
+    "truth_revision": {
+      "max_steps": {
+        "required": false,
+        "type": "integer"
+      },
+      "mode": {
+        "required": false,
+        "type": "string"
+      },
+      "sentences": {
+        "required": false,
+        "type": "object"
+      },
+      "start": {
+        "required": false,
+        "type": "object"
+      }
+    },
+    "turing_machine": {
+      "input": {
+        "required": false,
+        "type": "string"
+      },
+      "mode": {
+        "required": false,
+        "type": "string"
+      },
+      "program": {
+        "required": false,
+        "type": "object"
+      },
+      "steps_limit": {
+        "required": false,
+        "type": "integer"
+      }
+    },
+    "wall_pipeline": {
+      "antithesis": {
+        "required": false,
+        "type": "string"
+      },
+      "events": {
+        "required": false,
+        "type": "array"
+      },
+      "thesis": {
+        "required": false,
+        "type": "string"
+      },
+      "wall": {
+        "required": false,
+        "type": "string"
+      }
+    }
+  },
+  "tool_count": 29
+}

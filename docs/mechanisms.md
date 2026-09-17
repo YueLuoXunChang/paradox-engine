@@ -10,6 +10,7 @@
 |---|---|---|
 | engine/ai/tools.py | 全量构件封装为 function-calling 工具（schema 从 PORTS 自动生成，数=注册表不硬编）+ call_tool 分派 + 跨项目污染守卫 | ✅ 自测11+正式49 |
 | engine/ai/ai_scenarios.py | 真实场景端到端：论证矛盾检查 / 学科建模（AI 决策工具链演示） | ✅ 两场景跑通 |
+| engine/ai/freeze_tool_schema.py | 工具协议冻结（轨 C1）：契约快照 tool_schema_frozen.json + 调用方文档 docs/tool_schema.md，自动生成、防漂移 | ✅ 自测 + 正式 21 |
 
 ## 总控 · 引擎大脑（判类/复杂度/路由/五步流水线）
 

@@ -69,7 +69,7 @@ print(r['report'])
 ```bash
 # After cloning, from the repository root
 python demo.py          # nineteen-step tour
-python run_tests.py     # full regression (32 test files / 841 assertions)
+python run_tests.py     # full regression (33 test files / 866 assertions)
 ```
 
 `demo.py` demonstrates nineteen things (①②③ the paradox trio → ④-⑩ the
@@ -141,7 +141,7 @@ paradox-engine/
 │   │   ├── counterpoint_gen.py   counterpoint generation (opposites → third state candidate)
 │   │   └── wall_pipeline.py      wall pipeline A (measure→annotate→drill→view→bypass→create → 5-way verdict)
 │   ├── scenarios/             ← Scenario library (real input + expected diagnosis + review — corpus feedback)
-│   │   └── scenarios.py          9-scenario registry + run_all comparison (expected vs actual)
+│   │   └── scenarios.py          14-scenario registry + run_all comparison (expected vs actual)
 │   ├── skeleton/              ← MT-MP-TL skeleton (L0: structure only, no judging)
 │   │   └── mtmp.py               points/threads/topology (12 shapes)/operations (5 kinds)
 │   ├── cold/                  ← Cold logics (L3: chosen by need; external consensus marked as borrowed)
@@ -304,7 +304,7 @@ when a real pain point appears).
 
 ### Test status
 
-- **841 formal assertions pass** (32 test files), covering every mechanism
+- **866 formal assertions pass** (33 test files), covering every mechanism
   component plus the controller/scenario/AI-tool layers;
 - **One command runs the whole suite**: `python run_tests.py` (discover + run +
   summarize; a single failing file yields a non-zero exit — the same entry
@@ -313,7 +313,7 @@ when a real pain point appears).
 - Every component is self-contained: `python engine/<layer>/<name>.py` runs
   its self-test; `python engine/<layer>/test_<name>.py` runs its formal tests;
 - Demo: `python demo.py` walks through nineteen steps; end-to-end scenarios:
-  `python engine/ai/ai_scenarios.py`; scenario comparison: 9 scenes
+  `python engine/ai/ai_scenarios.py`; scenario comparison: 14 scenes (all 12 problem types covered)
   (`python engine/scenarios/scenarios.py`);
 - Zero third-party dependencies — pure Python standard library (≥3.9);
 - Windows consoles: the CLI, the demo and **every component self-test** carry a

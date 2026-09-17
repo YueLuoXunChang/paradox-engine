@@ -138,6 +138,60 @@ SCENES = [
                 '→ 期望 revised 且弃低信念度者。待人工复核。',
         'checked': False,  # 待人工复核
     },
+    {
+        'id': 'S10',
+        'title': '三段论（所有员工都买了保险）',
+        'text': '所有员工都买了保险，小李是员工，那小李买了保险吗',
+        'expect_type': 'T1', 'expect_level': 'L1', 'expect_route': 'R1-L1',
+        'structured': {'premises': ['员工→有保险', '员工'],
+                       'conclusion': '有保险'},
+        'note': '命题真值：形式化「员工→有保险, 员工 ⊢ 有保险」→ 期望 valid。'
+                '待人工复核。',
+        'checked': False,  # 待人工复核
+    },
+    {
+        'id': 'S11',
+        'title': '关系环（A 依赖 B 依赖 C 依赖 A）',
+        'text': 'A 依赖 B，B 依赖 C，C 又依赖 A——这个循环能成立吗',
+        'expect_type': 'T3', 'expect_level': 'L2', 'expect_route': 'R3-L2',
+        'structured': None,
+        'note': '关系结构：依赖环 → 走一阶关系推理（缺 facts/rules/query 时'
+                '诚实报缺，不硬判）。待人工复核。',
+        'checked': False,  # 待人工复核
+    },
+    {
+        'id': 'S12',
+        'title': '折价递推（每周减半）',
+        'text': '这批货每过一周折价一半，几周后低于成本价',
+        'expect_type': 'T4', 'expect_level': 'L1', 'expect_route': 'R4-L1',
+        'structured': None,
+        'note': '演化/递推：几何衰减 → 走收敛判定（缺 f/err_fn 诚实报缺）。'
+                '待人工复核。',
+        'checked': False,  # 待人工复核
+    },
+    {
+        'id': 'S13',
+        'title': '证据冲突（两份研究结论相反）',
+        'text': '研究说这种肥料增产有效，另一份研究说无效，数据也互相矛盾',
+        'expect_type': 'T8', 'expect_level': 'L2', 'expect_route': 'R8-L2',
+        'structured': {'wA': 5, 'wNotA': 5},
+        'note': '证据冲突 → μ₄ 证据冲突熵测度。**本场景曾判错**（原判 T2）：'
+                'T8 信号表只认「数据显示/报告说」这类固定短语，真实说法'
+                '「研究说…另一份研究说…数据也互相矛盾」全漏；已按语料回馈扩表'
+                '（回测 §151）→ 现判 T8。待人工复核。',
+        'checked': False,  # 待人工复核
+    },
+    {
+        'id': 'S14',
+        'title': '无信号输入（未分类兜底）',
+        'text': '帮我看一下这个东西',
+        'expect_type': 'T12', 'expect_level': 'L1',
+        'expect_route': 'R12-L1',
+        'structured': None,
+        'note': '未分类：走通用最小管线并诚实标注置信度 low——引擎不硬编题型'
+                '（验证兜底路径）。待人工复核。',
+        'checked': False,  # 待人工复核
+    },
 ]
 
 # ══════════════════════════════════════════════════════════════

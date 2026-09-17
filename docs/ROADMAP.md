@@ -109,6 +109,11 @@ paradox-engine 最终形态：**一个分情况分层、挂上 AI 就能用的�
 → 已达成：engine/ai/tools.py（全量构件 schema 自动生成 + call_tool）
 + ai_scenarios.py 两场景（T2 论证矛盾 μ+注解五查全绿 / T9 学科建模
 撞墙+Dung）；demo ⑮ 步；工具输出带 boundary（只诊断不决策随行）。
+→ 生态接口收口（轨 C1，2026-09-07）：工具协议冻结——`freeze_tool_schema.py`
+从活注册表生成契约快照（`engine/ai/tool_schema_frozen.json`）+ 调用方文档
+（`docs/tool_schema.md`，29 工具契约表）；`test_tool_contract.py` 21 项防漂移
+（契约改了要让调用方知道，不能静默改）。**工具名/参数名 = 对外契约**：有意
+变更须重新冻结并在 CHANGELOG 与记账文档记账。
 → 工程化收口：`run_tests.py`（全量回归一条命令）+ `.github/workflows/test.yml`
 （CI 同款入口）+ 冷门构件接入路由（T5→AGM、T2-L2→相干）+ 控制台编码自愈。
 
@@ -180,12 +185,14 @@ paradox-engine 最终形态：**一个分情况分层、挂上 AI 就能用的�
 ### 6.2 四轨演进（并行）
 
 - **轨 A 技术深化**：Kleene 递归定理自指构造 ✅ / Gupta-Belnap 真值修正 ✅ /
-  算术层级（借数学底座，标注来源）→ AGM 非单调 / 相干（按痛点）→
-  判类器语料增补 → 状态化机制试点；
-- **轨 B 应用化**：场景库目录化（场景=输入+期望+实际+复核）→ 判类误判
-  回馈闭环 → 建模姿态定型；
-- **轨 C 生态接口**：工具 schema 冻结 + 多轮状态 → CLI 入口 →（待授权）
-  Web/API/LLM 对接；
+  算术层级与可判定片段地图 ✅ → AGM 非单调 ✅ / 相干 ✅ / 直觉主义 ✅ →
+  判类器语料增补 ✅（场景库覆盖 12 题型，T8 误判已闭环）→ 状态化机制试点（按需）；
+- **轨 B 应用化**：场景库目录化 ✅（14 场景：输入+期望+实际+复核）→ 判类误判
+  回馈闭环 ✅（S13 T8 判错 → 扩信号表 → 回归；测试加「覆盖 12 题型」不变式）
+  → 建模姿态定型（按需）；
+- **轨 C 生态接口**：工具 schema 冻结 ✅（`freeze_tool_schema.py` + 快照 +
+  `docs/tool_schema.md` + `test_tool_contract.py` 防漂移）→ 多轮状态（按需）
+  → CLI 入口 ✅ →（待授权）Web/API/LLM 对接；
 - **轨 D 开源治理**：LICENSE 授权口径（待作者拍板）→ 贡献者路径 → 文档
   外向化抽查。
 

@@ -31,7 +31,9 @@ print("场景库 · 正式测试")
 print("=" * 60)
 
 # ── 用例1：场景注册表完整性
-check("场景 ≥7 个（蓝图轨 B：≥5）", len(SCENES) >= 5, str(len(SCENES)))
+check("场景 ≥5 个（蓝图轨 B：≥5）", len(SCENES) >= 5, str(len(SCENES)))
+check("场景 ≥14 个（覆盖 12 题型后的规模）", len(SCENES) >= 14,
+      str(len(SCENES)))
 ids = [s['id'] for s in SCENES]
 check("场景 id 唯一", len(ids) == len(set(ids)), str(ids))
 check("每场景有 text/expect_type",
@@ -40,6 +42,11 @@ check("期望判类合法 T1-T12",
       all(s['expect_type'].startswith('T') for s in SCENES))
 check("已复核 ≥4（checked 标记）",
       sum(1 for s in SCENES if s.get('checked')) >= 4)
+# 语料回馈闭环要求：场景库覆盖全部 12 题型（否则判类器某型没有真实语料把关）
+_covered = {s['expect_type'] for s in SCENES}
+_all_types = {f'T{i}' for i in range(1, 13)}
+check("场景覆盖 T1-T12 全部 12 题型（判类语料无盲区）",
+      _all_types <= _covered, f"缺: {sorted(_all_types - _covered)}")
 
 # ── 用例2：全场景对照（期望 vs 实际）
 r = run({'action': 'run'})
@@ -95,5 +102,5 @@ check("list 给边界声明", '共识' in run({'action': 'list'})['boundary']
 check("run 边界：只诊断不决策", '只诊断' in run({'action': 'run'})['boundary'])
 
 print("=" * 60)
-print(f"结果: {PASS}/22 通过")
-raise SystemExit(0 if PASS == 22 else 1)
+print(f"结果: {PASS}/24 通过")
+raise SystemExit(0 if PASS == 24 else 1)

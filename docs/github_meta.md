@@ -41,12 +41,12 @@ non-classical-logic
   演示 + CLI 冒烟）——push 后仓库页 Actions 会出绿/红，README 可挂状态徽章
   （徽章 URL 形如 `https://github.com/<用户>/paradox-engine/actions/workflows/test.yml/badge.svg`，
   要用时再加一行即可，本文件不预先写死）；
-- 本地跑同一套回归：`python run_tests.py`（32 测试文件 / 841 断言）。
+- 本地跑同一套回归：`python run_tests.py`（33 测试文件 / 866 断言）。
 
 ## 仓库页可展示的状态行（About/议题里可直接用）
 
 - 分层引擎：总控 + 第 0/1/2/3 层 + 数学底座 + AI 挂载（29 个可调用工具）；
-- 零第三方依赖（纯标准库，Python ≥3.9）；841 项正式断言 + CI 全绿；
+- 零第三方依赖（纯标准库，Python ≥3.9）；866 项正式断言 + CI 全绿；
 - 冷门逻辑六件齐（Belnap 四值 / Dung / 真值修正 / AGM / 相干 / 直觉主义）
   + 可判定片段地图（16 条，逐条标源）；
 - 诚实边界：能算的算清，算不清的测量+注解+报告——**只诊断不决策**。

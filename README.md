@@ -58,7 +58,7 @@ print(r['report'])
 ```bash
 # 克隆后，在仓库根目录
 python demo.py          # 十九步演示
-python run_tests.py     # 全量回归（一条命令：32 个测试文件 / 841 项断言）
+python run_tests.py     # 全量回归（一条命令：33 个测试文件 / 866 项断言）
 ```
 
 `demo.py` 演示十九件事（①②③ 悖论三件套 → ④-⑩ 经典逻辑地基 → ⑪ 撞墙管线 → ⑫ 总控五步 → ⑬ MT-MP-TL 骨架 → ⑭ 冷门逻辑 → ⑮ AI 挂载 → ⑯ 数学底座 → ⑰ 冷门补完 → ⑱ 构造性立场 → ⑲ 墙的精确地图）：
@@ -127,7 +127,7 @@ paradox-engine/
 │   │   ├── counterpoint_gen.py  对位创生第三态（对立交汇 → 候选+依据）
 │   │   └── wall_pipeline.py     撞墙管线 A（测→注→钻→看→旁→创 → 五选一诊断）
 │   ├── scenarios/             ← 场景库（真实输入+期望诊断+复核——语料回馈判类器）
-│   │   └── scenarios.py          9 场景注册表 + run_all 对照（期望 vs 实际）
+│   │   └── scenarios.py          14 场景注册表 + run_all 对照（期望 vs 实际）
 │   ├── skeleton/              ← MT-MP-TL 骨架（第 0 层：结构表达，不掺判定）
 │   │   └── mtmp.py              点/线程/拓扑（12 形态）/操作（5 种）
 │   ├── cold/                  ← 冷门逻辑（第 3 层：按痛点选，外部共识归借鉴区）
@@ -157,6 +157,7 @@ paradox-engine/
 ├── .github/workflows/       ← CI（跑全量回归 + 演示 + CLI 冒烟）
 ├── docs/
 │   ├── mechanisms.md            分层能力总表（每构件：自测N+正式M）
+│   ├── tool_schema.md           工具协议（29 工具契约表，自动生成，供调用方）
 │   ├── ROADMAP.md               分层路线（7 阶段）
 │   └── formulas/                公式卡 ×10（第 1 层每构件一张概念说明）
 ├── README.md                ← 本文件（中英双语 + 测试状态）
@@ -262,7 +263,7 @@ run(inputs: dict) -> dict
 
 ### 测试状态
 
-- **841 项正式断言全过**（32 个测试文件），覆盖全部
+- **866 项正式断言全过**（33 个测试文件），覆盖全部
   机制构件与总控/场景/AI 工具层；
 - **一条命令跑全量回归**：`python run_tests.py`（发现 + 运行 + 汇总；
   任一文件失败即非零退出——CI 与本地同一入口）；
@@ -270,7 +271,7 @@ run(inputs: dict) -> dict
 - 每个构件自包含：`python engine/<层>/<名>.py` 跑自测（机制自身验证），
   `python engine/<层>/test_<名>.py` 跑正式测试；
 - 演示：`python demo.py` 十九步全过；真实场景端到端：
-  `python engine/ai/ai_scenarios.py`；场景库对照：9 场景
+  `python engine/ai/ai_scenarios.py`；场景库对照：14 场景（覆盖 T1-T12 全 12 题型）
   （`python engine/scenarios/scenarios.py`）；
 - 零第三方依赖，纯 Python 标准库（≥3.9）；
 - Windows 控制台：CLI / demo / 每个构件自测都带**控制台自愈**（自动把输出流设
