@@ -25,6 +25,12 @@ sys.path.insert(0, _REPO)
 
 PASS = 0
 
+try:  # 控制台自愈：Windows GBK 控制台打印 emoji（✅/⚠）会崩
+    import sys as _sys
+    _sys.stdout.reconfigure(encoding='utf-8')
+except Exception:  # noqa: BLE001
+    pass
+
 
 def check(label, cond, detail=""):
     global PASS
@@ -110,21 +116,28 @@ check("CLI 入口调用控制台自愈", 'ensure_utf8_console()' in _cli)
 _demo = open(os.path.join(_REPO, 'demo.py'), encoding='utf-8').read()
 check("demo 入口调用控制台自愈", 'ensure_utf8_console()' in _demo)
 
-# 每个可独立运行的构件（含 __main__）都要自带控制台自愈——否则 Windows GBK
-# 控制台一跑自测就 UnicodeEncodeError（实测 31/33 曾中招）
+# 每个可独立运行的文件（构件自测含 __main__、测试文件模块级执行）都要自带
+# 控制台自愈——否则 Windows GBK 控制台一跑就 UnicodeEncodeError（实测曾中招：
+# 31/33 入口 + 31 个测试文件）
+def _has_console_guard(src):
+    return (".reconfigure(encoding='utf-8')" in src
+            or 'ensure_utf8_console(' in src)
+
+
 _no_guard = []
-_n_main = 0
+_n_covered = 0
 for p in _all:
+    name = os.path.basename(p)
     src = open(p, encoding='utf-8').read()
-    if '__main__' not in src:
+    if '__main__' not in src and not name.startswith('test_'):
         continue
-    _n_main += 1
-    if 'reconfigure' not in src:
+    _n_covered += 1
+    if not _has_console_guard(src):
         _no_guard.append(os.path.relpath(p, _REPO))
-check("含 __main__ 的构件都带控制台自愈（GBK 不崩）", not _no_guard,
+check("可独立运行的入口/测试文件都带控制台自愈（GBK 不崩）", not _no_guard,
       f"缺自愈: {sorted(_no_guard)}")
-check("自带自愈的入口数 ≥30（覆盖面）", _n_main - len(_no_guard) >= 30,
-      str(_n_main - len(_no_guard)))
+check("自带自愈的文件数 ≥60（入口 + 测试全覆盖）",
+      _n_covered - len(_no_guard) >= 60, str(_n_covered - len(_no_guard)))
 
 # ── 用例4：回归入口与 CI（一条命令 + 同一套标准）
 check("run_tests.py 存在（全量回归入口）",

@@ -15,6 +15,12 @@ from paradox_measure import run, choose_branch, _mu1, _mu2, _mu3, _mu4  # noqa: 
 
 PASS = 0
 
+try:  # 控制台自愈：Windows GBK 控制台打印 emoji（✅/⚠）会崩
+    import sys as _sys
+    _sys.stdout.reconfigure(encoding='utf-8')
+except Exception:  # noqa: BLE001
+    pass
+
 
 def check(label, cond, detail=""):
     global PASS
