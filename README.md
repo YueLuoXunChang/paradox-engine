@@ -274,6 +274,9 @@ run(inputs: dict) -> dict
   `python engine/ai/ai_scenarios.py`；场景库对照：14 场景（覆盖 T1-T12 全 12 题型）
   （`python engine/scenarios/scenarios.py`）；
 - 零第三方依赖，纯 Python 标准库（≥3.9）；
+- **行尾统一 LF**：`.gitattributes` 全局 `eol=lf`——即便 Windows 系统级
+  `core.autocrlf=true` 也不会把仓库文本文件翻成 CRLF；有不变式测试守着
+  （`test_packaging.py`：工作区文本文件不得含 CRLF，覆盖 json/yml/无后缀文件）；
 - Windows 控制台：CLI / demo / 每个构件自测都带**控制台自愈**（自动把输出流设
   UTF-8）——不必先设 `PYTHONIOENCODING`，直接 `python engine/<层>/<名>.py` 即可。
 

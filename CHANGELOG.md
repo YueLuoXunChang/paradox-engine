@@ -42,7 +42,9 @@
   构件自测内联 reconfigure）：现在直接 `python engine/<层>/<名>.py` 即可，
   不必先设 `PYTHONIOENCODING`；并加不变式测试防新构件漏加；
 - CLI `--demo` 帮助文案"十五步"过时（实际十八步）→ 改为不硬编步数；
-- CLI 测试里硬编码的工具数（23）改为从注册表动态取——防止再漂移。
+- CLI 测试里硬编码的工具数（23）改为从注册表动态取——防止再漂移；
+- **测试污染仓库**：`test_tool_contract` 的漂移模拟原本直接改写被跟踪的契约快照，且用文本模式（Windows 下整文件变 CRLF）——现改写临时文件（monkeypatch 路径），并加自检「测试未改动被跟踪快照（前后 sha256 一致）」；
+- **行尾根治**：本机**系统级** `core.autocrlf=true` 会把无后缀文件与顶层配置（NOTICE/pyproject.toml/.gitignore/.gitattributes）检出成 CRLF → `.gitattributes` 首行改为 `* text=auto eol=lf`（全局钉 LF，依据是 eol 属性优先于 autocrlf），并 `--renormalize` + 强制重放；不变式测试扩到全仓文本文件；
 
 ## 2026-09-06
 

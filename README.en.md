@@ -316,6 +316,9 @@ when a real pain point appears).
   `python engine/ai/ai_scenarios.py`; scenario comparison: 14 scenes (all 12 problem types covered)
   (`python engine/scenarios/scenarios.py`);
 - Zero third-party dependencies — pure Python standard library (≥3.9);
+- **LF line endings everywhere**: `.gitattributes` pins `eol=lf` globally, so
+  even a Windows system-level `core.autocrlf=true` cannot flip repository
+  text files to CRLF; an invariant test enforces it (`test_packaging.py`);
 - Windows consoles: the CLI, the demo and **every component self-test** carry a
   console self-heal (they set the output stream to UTF-8), so
   `python engine/<layer>/<name>.py` just works — no `PYTHONIOENCODING` needed.
