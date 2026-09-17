@@ -140,18 +140,26 @@ check("自带自愈的文件数 ≥60（入口 + 测试全覆盖）",
       _n_covered - len(_no_guard) >= 60, str(_n_covered - len(_no_guard)))
 
 # ── 用例3b：行尾纪律（.gitattributes 说 eol=lf，工作区就得真是 LF）
+# 全仓扫（不只 .py）：快照 JSON、CI yml、公式卡 md 都算——踩过坑：测试用文本
+# 模式写回被跟踪的 JSON，Windows 下整文件变 CRLF。
+_TEXT_EXT = ('.py', '.md', '.json', '.yml', '.yaml', '.toml', '.txt')
+_TEXT_NAME = ('NOTICE', '.gitignore', '.gitattributes', 'LICENSE')
 _crlf = []
 _lf_checked = 0
-for p in _all + [os.path.join(_REPO, f) for f in
-                 ('README.md', 'README.en.md', '.gitattributes')]:
-    if not os.path.exists(p):
-        continue
-    _lf_checked += 1
-    if b'\r\n' in open(p, 'rb').read():
-        _crlf.append(os.path.relpath(p, _REPO))
+for dp, dn, fn in os.walk(_REPO):
+    dn[:] = [d for d in dn if d not in ('__pycache__', 'build', '.git',
+                                        'paradox_engine.egg-info')]
+    for f in fn:
+        if not (f.endswith(_TEXT_EXT) or f in _TEXT_NAME):
+            continue
+        p = os.path.join(dp, f)
+        _lf_checked += 1
+        if b'\r\n' in open(p, 'rb').read():
+            _crlf.append(os.path.relpath(p, _REPO))
 check("工作区文本文件无 CRLF（eol=lf 真落地，不靠 stat 缓存遮掩）",
       not _crlf, f"含 CRLF: {sorted(_crlf)[:6]}")
-check("行尾检查覆盖 ≥60 个文件", _lf_checked >= 60, str(_lf_checked))
+check("行尾检查覆盖 ≥80 个文本文件（全仓含 json/yml/md）",
+      _lf_checked >= 80, str(_lf_checked))
 
 # ── 用例4：回归入口与 CI（一条命令 + 同一套标准）
 check("run_tests.py 存在（全量回归入口）",

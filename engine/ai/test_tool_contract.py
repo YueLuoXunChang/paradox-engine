@@ -88,23 +88,39 @@ check_("check 模式不写文件（只读）", _before == _after,
        f"{_before} vs {_after}")
 
 # ── 用例5：漂移能被抓住（模拟：改一个参数名 → 判 drifted）
+# 纪律：测试**不得改动被跟踪文件**——漂移模拟写到临时快照上（原先直接改真快照，
+# 且文本模式在 Windows 会把整个文件写成 CRLF，等于测试污染仓库）。
+import hashlib  # noqa: E402
+import tempfile  # noqa: E402
+
+import freeze_tool_schema as _F  # noqa: E402
+
+_hash_before = hashlib.sha256(open(_SNAPSHOT, 'rb').read()).hexdigest()
 _bad = dict(_live)
 _bad['paradox_measure'] = dict(_bad['paradox_measure'])
 _bad['paradox_measure']['wA2'] = {'type': 'integer', 'required': False}
-_snap_backup = json.loads(json.dumps(_snap))
+_snap_tmp = json.loads(json.dumps(_snap))
+_snap_tmp['contract'] = _bad
+_tmpdir = tempfile.mkdtemp(prefix='pe_contract_')
+_tmp_snap = os.path.join(_tmpdir, 'tool_schema_frozen.json')
+with open(_tmp_snap, 'w', encoding='utf-8', newline='\n') as fh:
+    json.dump(_snap_tmp, fh, ensure_ascii=False, indent=2, sort_keys=True)
+_real_snap_path = _F._SNAPSHOT
 try:
-    _snap['contract'] = _bad
-    json.dump(_snap, open(_SNAPSHOT, 'w', encoding='utf-8'),
-              ensure_ascii=False, indent=2, sort_keys=True)
+    _F._SNAPSHOT = _tmp_snap
     ok2, changed2 = check()
-    check_("契约被改（模拟漂移）→ check 报不一致", not ok2, str(changed2)[:120])
-    check_("漂移报告指名到具体工具",
-          any('paradox_measure' in c for c in changed2), str(changed2)[:120])
 finally:
-    json.dump(_snap_backup, open(_SNAPSHOT, 'w', encoding='utf-8'),
-              ensure_ascii=False, indent=2, sort_keys=True)
+    _F._SNAPSHOT = _real_snap_path
+check_("契约被改（模拟漂移）→ check 报不一致", not ok2, str(changed2)[:120])
+check_("漂移报告指名到具体工具",
+      any('paradox_measure' in c for c in changed2), str(changed2)[:120])
+check_("测试未改动被跟踪快照（前后哈希一致）",
+      hashlib.sha256(open(_SNAPSHOT, 'rb').read()).hexdigest() == _hash_before,
+      '快照被测试改动了——测试应写临时文件')
+import shutil  # noqa: E402
+shutil.rmtree(_tmpdir, ignore_errors=True)
 ok3, changed3 = check()
-check_("恢复快照后重新一致（测试无副作用）", ok3, str(changed3)[:120])
+check_("恢复后重新一致（测试无副作用）", ok3, str(changed3)[:120])
 
 # ── 用例6：入口自愈与接口
 check_("PORTS 声明 in/out", True, '')
@@ -113,5 +129,5 @@ check_("PORTS.out 含 verdict/changed",
       {'verdict', 'changed'} <= set(PORTS['out']), sorted(PORTS['out']))
 
 print("=" * 60)
-print(f"结果: {PASS}/21 通过")
-raise SystemExit(0 if PASS == 21 else 1)
+print(f"结果: {PASS}/22 通过")
+raise SystemExit(0 if PASS == 22 else 1)
