@@ -139,6 +139,20 @@ check("可独立运行的入口/测试文件都带控制台自愈（GBK 不崩�
 check("自带自愈的文件数 ≥60（入口 + 测试全覆盖）",
       _n_covered - len(_no_guard) >= 60, str(_n_covered - len(_no_guard)))
 
+# ── 用例3b：行尾纪律（.gitattributes 说 eol=lf，工作区就得真是 LF）
+_crlf = []
+_lf_checked = 0
+for p in _all + [os.path.join(_REPO, f) for f in
+                 ('README.md', 'README.en.md', '.gitattributes')]:
+    if not os.path.exists(p):
+        continue
+    _lf_checked += 1
+    if b'\r\n' in open(p, 'rb').read():
+        _crlf.append(os.path.relpath(p, _REPO))
+check("工作区文本文件无 CRLF（eol=lf 真落地，不靠 stat 缓存遮掩）",
+      not _crlf, f"含 CRLF: {sorted(_crlf)[:6]}")
+check("行尾检查覆盖 ≥60 个文件", _lf_checked >= 60, str(_lf_checked))
+
 # ── 用例4：回归入口与 CI（一条命令 + 同一套标准）
 check("run_tests.py 存在（全量回归入口）",
       os.path.exists(os.path.join(_REPO, 'run_tests.py')))
@@ -167,5 +181,5 @@ check("engine/__init__.py 的 __version__ 为 0.1.0（未发布基线）",
       __import__('engine').__version__ == '0.1.0')
 
 print("=" * 60)
-print(f"结果: {PASS}/19 通过")
-raise SystemExit(0 if PASS == 19 else 1)
+print(f"结果: {PASS}/21 通过")
+raise SystemExit(0 if PASS == 21 else 1)
