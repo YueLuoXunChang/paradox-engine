@@ -34,6 +34,23 @@ PORTS = {
 }
 
 
+def _validate():
+    """取共用输入校验工具（engine/_validate.py）。"""
+    import os
+    import sys
+    _HERE = os.path.dirname(os.path.abspath(__file__))
+    _ENGINE = os.path.dirname(_HERE)          # engine/：_validate.py 所在
+    _REPO = os.path.dirname(_ENGINE)
+    for _p in (_HERE, _ENGINE, _REPO):
+        if _p not in sys.path:
+            sys.path.insert(0, _p)
+    try:
+        from engine._validate import check_nonneg
+    except ImportError:
+        from _validate import check_nonneg
+    return check_nonneg
+
+
 def choose_branch(is_self_ref=False, has_layers=False, need_entropy=False):
     """
     做什么：按输入特征路由悖论测度分支。
@@ -121,14 +138,34 @@ def run(inputs):
     # 非法 mode 诚实拦截（2026-09-06 补：未知/拼错 mode 曾静默落 mu1——
     # 与 μ₂ 丢 else 分支同类隐患：改了分支不知道。显式报错兜测试）
     if mode not in ('mu1', 'mu2', 'mu3', 'mu4'):
-        return {'mu': None, 'branch': mode,
+        return {'verdict': 'input_pending', 'mu': None, 'branch': mode,
                 'proposition': proposition,
                 'error': f'未知分支 mode={mode!r}（应为 mu1/mu2/mu3/mu4）'
                          '——诚实拦截，不静默落默认'}
     if mode == 'mu3' and (tau_L1 is None or tau_L2 is None):
-        return {'mu': None, 'branch': mode, 'proposition': proposition,
+        return {'verdict': 'input_pending', 'mu': None, 'branch': mode,
+                'proposition': proposition,
                 'error': 'mu3 层级型需 tau_L1/tau_L2（跨层真值）——'
                          '诚实拦截，不硬算'}
+    # 数值语义校验（2026-09-07 补：原先不校验——wA=5,wNotA=-5 算出 μ=-1e10，
+    # 违反自身声明的 μ∈[0,1]；wA="五" 直接 TypeError 崩。诚实边界要求拦截而非硬算）
+    check = _validate()
+    if mode in ('mu1', 'mu4'):
+        ok, why = check(wA=wA, wNotA=wNotA)
+        if not ok:
+            return {'verdict': 'input_pending', 'mu': None, 'branch': mode,
+                    'proposition': proposition,
+                    'error': why + '——诚实拦截，不硬算（权重是证据度量，'
+                                   '负值/非数值无意义）',
+                    'boundary': '输入非法：μ 未计算（不编造数值）'}
+    elif mode == 'mu3':
+        ok, why = check(tau_L1=tau_L1, tau_L2=tau_L2)
+        if not ok:
+            return {'verdict': 'input_pending', 'mu': None, 'branch': mode,
+                    'proposition': proposition,
+                    'error': why + '——诚实拦截，不硬算',
+                    'boundary': '输入非法：μ 未计算（不编造数值）'}
+
     if mode == 'mu2':
         mu = _mu2()
     elif mode == 'mu3':
@@ -138,7 +175,15 @@ def run(inputs):
     else:  # mu1 默认
         mu = _mu1(wA, wNotA)
 
-    return {'mu': mu, 'branch': mode, 'proposition': proposition}
+    # μ 自检：落在 [0,1] 之外一律视为实现缺陷，宁可诚实报错也不给越界值
+    if not (isinstance(mu, (int, float)) and 0.0 <= float(mu) <= 1.0 + 1e-9):
+        return {'verdict': 'input_pending', 'mu': None, 'branch': mode,
+                'proposition': proposition,
+                'error': f'内部自检失败：算出 μ={mu!r} 不在 [0,1]——'
+                         '宁可诚实报错也不返回越界值（请报告此输入）',
+                'boundary': 'μ 越界：未返回（诚实边界优先于给结果）'}
+    return {'verdict': 'measured', 'mu': mu, 'branch': mode,
+            'proposition': proposition}
 
 
 # ============================================================

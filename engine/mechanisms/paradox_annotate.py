@@ -124,14 +124,32 @@ def run(inputs):
     返回:
         dict: {annotation, grade}
     """
+    # 输入校验（2026-09-07 补：原先 paradox=5/None、source=123 都会崩——
+    # AttributeError/KeyError。诚实边界：非法输入拦下并说明，不硬造注解卡）
+    _LEGAL_SOURCE = ('axiom', 'runtime', 'observer')
+    paradox = inputs.get('paradox')
+    if not isinstance(paradox, dict) or not paradox:
+        return {'verdict': 'input_pending', 'annotation': None, 'grade': None,
+                'error': '需 paradox 字典（含 A/notA 等字段）——诚实拦截，'
+                         '不硬造注解卡'}
+    source = inputs.get('source', 'runtime')
+    if source not in _LEGAL_SOURCE:
+        return {'verdict': 'input_pending', 'annotation': None, 'grade': None,
+                'error': f'source={source!r} 非法（应为 axiom/runtime/observer）'
+                         '——诚实拦截'}
+    impact = inputs.get('impact', 'local')
+    if not isinstance(impact, str):
+        return {'verdict': 'input_pending', 'annotation': None, 'grade': None,
+                'error': f'impact={impact!r} 应为字符串（local/global）'
+                         '——诚实拦截'}
     card = annotate(
-        inputs.get('paradox', {}),
-        inputs.get('source', 'runtime'),
-        inputs.get('impact', 'local'),
+        paradox,
+        source,
+        impact,
         inputs.get('eliminable', True),
         inputs.get('seq'),
     )
-    return {'annotation': card, 'grade': card['LV']}
+    return {'verdict': 'annotated', 'annotation': card, 'grade': card['LV']}
 
 
 _seq_counter = 0

@@ -30,6 +30,16 @@
 - **两项门面不变式测试**：
   - `engine/test_public_face.py`（10 项）——发布面不夹带内部残留：本机绝对路径 / 私有档案引用 / 内部文档编号 / 个人联系方式；含判据自检（正则不能写废）、允许项不误伤、排除集合固定；
   - `engine/test_docs_consistency.py`（19 项）——门面数字与实测一致：断言数 / 测试文件数 / 工具件数 / demo 步数 / 场景数 / 冷门件数 / 文件清单 / pyproject 指向。
+- **输入健壮性修复**（坏输入扫描 29 工具 × {空/错类型/负值/None} 抓到的真问题）：
+  - μ 测度（旗舰构件）：`wA=5, wNotA=-5` 曾算出 **μ = -9999999999.0**（违反自身声明的 μ∈[0,1]）、
+    `wA="五"`/`None` 直接 TypeError 崩 → 现做数值语义校验（负数/非数值/布尔一律拦下并点名说明），
+    并加 μ 自检：越界值不返回（宁可诚实报错）；
+  - 悖论注解：`paradox=5`/`None`、`source=123` 三种崩法 → 现校验并诚实拦截，输出补 `verdict`；
+  - Dung 论证框架：`arguments=5`（len 崩）、`attacks="xy"`/`[1]`（unpack 崩）→ 现校验形状、
+    重名与引用未知节点，一律诚实拦截；
+  - 新增 `engine/_validate.py`（共用输入校验：实数判定、非负校验、中文说明）；
+  - 新增正式测试 `engine/test_robustness.py`（13 项）：29 工具 × 4 类坏输入不抛异常 / 挂载层不报
+    tool_error / 构件输出都带 verdict / μ 永不越界 / 拦截时绝不给数值 / 控制器 8 类坏文本不崩。
 - **安装路径端到端验证**（`verify_install.py` + CI 一步）：真构建 wheel → 临时 venv
   离线安装 → 真跑安装后的 `paradox-engine --text/--json/--file/--tools` 与 import 接入 →
   跑随包测试。**首次验证抓到三个真问题**：① 工具契约快照 JSON 没进 wheel（setuptools

@@ -133,6 +133,41 @@ def run(inputs):
     做什么：Dung 论证框架语义——哪些立场站得住。
 
     返回 dict（见模块 docstring）。"""
+
+    # 输入校验（2026-09-07 补：原先 arguments=5 → len() 崩、attacks='xy'/[1] →
+    # unpack 崩。诚实边界：图形状不对就说不对，不乱解）
+    arguments = inputs.get('arguments')
+    attacks = inputs.get('attacks') or []
+    if not isinstance(arguments, (list, tuple)) or not arguments:
+        return {'verdict': 'input_pending', 'grounded': [], 'preferred': [],
+                'admissible_examples': [], 'conflict_pairs': [],
+                'boundary': '需 arguments 列表（论证名，如 ["a","b"]）——'
+                            '诚实拦截（字符串/数字/空都不硬解）'}
+    if not all(isinstance(a, str) and a for a in arguments):
+        return {'verdict': 'input_pending', 'grounded': [], 'preferred': [],
+                'admissible_examples': [], 'conflict_pairs': [],
+                'boundary': 'arguments 元素应为非空字符串（论证名）——诚实拦截'}
+    if len(set(arguments)) != len(arguments):
+        return {'verdict': 'input_pending', 'grounded': [], 'preferred': [],
+                'admissible_examples': [], 'conflict_pairs': [],
+                'boundary': 'arguments 有重名——诚实拦截（同一论证不该出现两次）'}
+    if not isinstance(attacks, (list, tuple)):
+        return {'verdict': 'input_pending', 'grounded': [], 'preferred': [],
+                'admissible_examples': [], 'conflict_pairs': [],
+                'boundary': 'attacks 应为列表（形如 [("a","b")]）——诚实拦截'}
+    for pair in attacks:
+        if not (isinstance(pair, (list, tuple)) and len(pair) == 2):
+            return {'verdict': 'input_pending', 'grounded': [],
+                    'preferred': [], 'admissible_examples': [],
+                    'conflict_pairs': [],
+                    'boundary': f'攻击对 {pair!r} 形状不对（应为 (攻击方, 被攻击方)）'
+                                '——诚实拦截'}
+        if pair[0] not in arguments or pair[1] not in arguments:
+            return {'verdict': 'input_pending', 'grounded': [],
+                    'preferred': [], 'admissible_examples': [],
+                    'conflict_pairs': [],
+                    'boundary': f'攻击对 {pair!r} 引用了不在 arguments 里的节点'
+                                '——诚实拦截（不隐式添加节点）'}
     args = inputs.get('arguments')
     if not args or len(args) < 2:
         return {'verdict': 'input_pending', 'grounded': [],
