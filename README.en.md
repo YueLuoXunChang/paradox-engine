@@ -167,6 +167,7 @@ paradox-engine/
 │   └── cli.py                 ← command-line entry (--text/--json/--file/--tools)
 ├── demo.py                  ← 2-minute tour (nineteen steps)
 ├── run_tests.py             ← full-regression entry (one command, same as CI)
+├── verify_install.py        ← install-path check (build wheel → venv install → run the CLI)
 ├── pyproject.toml           ← pip packaging (provides the `paradox-engine` command)
 ├── .github/workflows/       ← CI (full suite + demo + CLI smoke)
 ├── docs/
@@ -310,7 +311,8 @@ when a real pain point appears).
 - **One command runs the whole suite**: `python run_tests.py` (discover + run +
   summarize; a single failing file yields a non-zero exit — the same entry
   point CI uses);
-- CI: `.github/workflows/test.yml` (Python 3.9 / 3.12: full suite + demo + CLI smoke);
+- CI: `.github/workflows/test.yml` (Python 3.9 / 3.12: full suite + demo + CLI smoke
+  + install-path check);
 - Every component is self-contained: `python engine/<layer>/<name>.py` runs
   its self-test; `python engine/<layer>/test_<name>.py` runs its formal tests;
 - Demo: `python demo.py` walks through nineteen steps; end-to-end scenarios:

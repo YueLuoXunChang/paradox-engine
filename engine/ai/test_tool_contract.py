@@ -34,6 +34,16 @@ def check_(label, cond, detail=""):
     print(f"  ✅ {label}")
 
 
+# 源码仓判定：文档（docs/tool_schema.md）属源码仓产物，pip 安装后没有它——
+# 此时**契约快照断言照跑**（JSON 随包发布），仅把"文档相关"断言标注为源码仓专属。
+try:
+    from engine._layout import in_source_checkout
+except ImportError:
+    sys.path.insert(0, _REPO)
+    from engine._layout import in_source_checkout
+
+_IN_SRC = in_source_checkout()
+
 print("工具协议冻结 · 正式测试")
 print("=" * 60)
 
@@ -54,15 +64,19 @@ ok, changed = check()
 check_("check() 报告一致（CI 用同一判据）", ok, str(changed))
 
 # ── 用例2：文档与契约一致（文档不落后于实现）
-check_("调用方文档存在", os.path.exists(_DOC), _DOC)
-_md = open(_DOC, encoding='utf-8').read()
-check_("文档覆盖全部工具（无遗漏）", all(f'`{n}`' in _md for n in _live),
+check_("调用方文档存在（源码仓专属）", (not _IN_SRC) or os.path.exists(_DOC), _DOC)
+# 文档属源码仓产物：安装环境没有它——存在才读（断言侧已按源码仓守卫）
+_md = open(_DOC, encoding='utf-8').read() if os.path.exists(_DOC) else ''
+check_("文档覆盖全部工具（无遗漏；源码仓专属）",
+       (not _IN_SRC) or all(f'`{n}`' in _md for n in _live),
        [n for n in _live if f'`{n}`' not in _md][:5])
-check_("文档标明自动生成（勿手改）", '自动生成' in _md and '请勿手改' in _md,
-       _md[:80])
-check_("文档给出调用示例", 'call_tool(' in _md and 'from engine.ai.tools' in _md)
-check_("文档渲染函数与文件内容一致（可重生成）",
-       render_markdown(_tl).strip() == _md.strip(),
+check_("文档标明自动生成（勿手改；源码仓专属）",
+       (not _IN_SRC) or ('自动生成' in _md and '请勿手改' in _md), _md[:80])
+check_("文档给出调用示例（源码仓专属）",
+       (not _IN_SRC) or ('call_tool(' in _md
+                          and 'from engine.ai.tools' in _md))
+check_("文档渲染函数与文件内容一致（可重生成；源码仓专属）",
+       (not _IN_SRC) or render_markdown(_tl).strip() == _md.strip(),
        '文件与渲染结果不一致——跑 freeze_tool_schema.py 重新生成')
 
 # ── 用例3：契约完备性（工具名/参数名/类型/必填齐全）
@@ -79,9 +93,11 @@ check_("必填参数与 PORTS 一致（抽查 3 件）",
 check_("工具数 ≥29（对外承诺规模）", len(_live) >= 29, str(len(_live)))
 
 # ── 用例4：check=True 的只读语义（不写文件）
-_before = (os.path.getmtime(_SNAPSHOT), os.path.getmtime(_DOC))
+# 文档可能不存在（安装环境）——只对存在的文件比 mtime
+_watched = [p for p in (_SNAPSHOT, _DOC) if os.path.exists(p)]
+_before = tuple(os.path.getmtime(p) for p in _watched)
 _r = run({'check': True})
-_after = (os.path.getmtime(_SNAPSHOT), os.path.getmtime(_DOC))
+_after = tuple(os.path.getmtime(p) for p in _watched)
 check_("run(check=True) → consistent",
        _r['verdict'] == 'consistent', str(_r)[:120])
 check_("check 模式不写文件（只读）", _before == _after,

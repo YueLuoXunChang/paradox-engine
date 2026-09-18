@@ -30,6 +30,12 @@
 - **两项门面不变式测试**：
   - `engine/test_public_face.py`（10 项）——发布面不夹带内部残留：本机绝对路径 / 私有档案引用 / 内部文档编号 / 个人联系方式；含判据自检（正则不能写废）、允许项不误伤、排除集合固定；
   - `engine/test_docs_consistency.py`（19 项）——门面数字与实测一致：断言数 / 测试文件数 / 工具件数 / demo 步数 / 场景数 / 冷门件数 / 文件清单 / pyproject 指向。
+- **安装路径端到端验证**（`verify_install.py` + CI 一步）：真构建 wheel → 临时 venv
+  离线安装 → 真跑安装后的 `paradox-engine --text/--json/--file/--tools` 与 import 接入 →
+  跑随包测试。**首次验证抓到三个真问题**：① 工具契约快照 JSON 没进 wheel（setuptools
+  默认只收 .py）→ 已在 pyproject 声明 package-data；② 门面级测试在安装环境读不到仓库根
+  会崩 → 改为 `engine/_layout.in_source_checkout()` **诚实跳过**；③ 契约测试无条件读
+  `docs/tool_schema.md`、无条件比 mtime → 同为源码仓专属，现改为存在才读。
 - **发布面清理**：按作者先例去掉内部**文档编号**引用（编号型指向统一改为「轨 X」这类通用表述），并清除指向私有记账文档的死链引用（改为"记入 CHANGELOG"）——此后由 `test_public_face.py` 长期守着。
 
 ### 修复

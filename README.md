@@ -153,6 +153,7 @@ paradox-engine/
 │   └── cli.py                 ← 命令行入口（--text/--json/--file/--tools）
 ├── demo.py                  ← 2 分钟上手演示（十九步）
 ├── run_tests.py             ← 全量回归入口（一条命令，CI 同款）
+├── verify_install.py        ← 安装路径端到端验证（构建 wheel→venv 装→真跑命令行）
 ├── pyproject.toml           ← pip 打包（paradox-engine console 命令）
 ├── .github/workflows/       ← CI（跑全量回归 + 演示 + CLI 冒烟）
 ├── docs/
@@ -268,6 +269,9 @@ run(inputs: dict) -> dict
   机制构件与总控/场景/AI 工具层；
 - **一条命令跑全量回归**：`python run_tests.py`（发现 + 运行 + 汇总；
   任一文件失败即非零退出——CI 与本地同一入口）；
+- **安装路径已验证**：`python verify_install.py` 真构建 wheel → 临时 venv 装 →
+  跑安装后的 `paradox-engine --text/--json/--file/--tools` 与 import 接入
+  （CI 每次也跑这一档）；
 - CI：`.github/workflows/test.yml`（Python 3.9 / 3.12 上跑回归 + 演示 + CLI 冒烟）；
 - 每个构件自包含：`python engine/<层>/<名>.py` 跑自测（机制自身验证），
   `python engine/<层>/test_<名>.py` 跑正式测试；

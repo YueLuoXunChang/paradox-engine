@@ -37,5 +37,11 @@ packages = [
     "engine.skeleton",
 ]
 
+# 包数据：工具契约快照（JSON）必须随包发布——否则装完之后
+# freeze_tool_schema.check() / test_tool_contract 找不到快照，无法核对契约。
+# （实测踩坑：setuptools 默认只收 .py，第一版 wheel 里少了这个 JSON。）
+[tool.setuptools.package-data]
+"engine.ai" = ["*.json"]
+
 [tool.setuptools.dynamic]
 version = { attr = "engine.__version__" }

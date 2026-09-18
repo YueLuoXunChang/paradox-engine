@@ -129,7 +129,17 @@ def _load_tools():
 
 
 def check():
-    """比对活注册表与冻结快照/文档是否一致。返回 (ok, changed 列表)。"""
+    """比对活注册表与冻结快照/文档是否一致。返回 (ok, changed 列表)。
+
+    分层判定（诚实边界）：
+      · **快照一致性**：任何环境都查（JSON 随包发布 = 机器可读契约）；
+      · **文档一致性**：只在源码仓查（docs/tool_schema.md 属源码仓产物，
+        pip 安装后没有它——此时跳过并说明，不报假失败也不假装通过）。
+    """
+    try:
+        from engine._layout import in_source_checkout
+    except ImportError:  # 以脚本方式直接跑时的退路
+        from _layout import in_source_checkout
     live = contract(_load_tools())
     if not os.path.exists(_SNAPSHOT):
         return False, ['快照文件不存在']
@@ -142,6 +152,8 @@ def check():
             changed.append(f'-{name}（快照有、注册表无）')
         elif live[name] != frozen[name]:
             changed.append(f'~{name}（参数契约变了）')
+    if not in_source_checkout():
+        return not changed, changed       # 非源码仓：文档一致性不适用（跳过）
     doc_ok = os.path.exists(_DOC)
     if doc_ok:
         text = io.open(_DOC, encoding='utf-8').read()

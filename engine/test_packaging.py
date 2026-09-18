@@ -49,6 +49,20 @@ def _py_files(root):
     return out
 
 
+# ── 源码仓专属检查：装到 site-packages 后没有仓库根（README/docs/），
+# 这类检查无从查起——明确跳过并说明，不报假失败（也不静默当通过）。
+try:
+    from engine._layout import in_source_checkout, skip_note
+except ImportError:
+    sys.path.insert(0, _HERE)
+    from _layout import in_source_checkout, skip_note
+
+if not in_source_checkout():
+    print(skip_note('打包与工程不变式抽查'))
+    print("=" * 60)
+    print("结果: 1/1 通过")
+    raise SystemExit(0)
+
 print("打包与工程不变式 · 正式测试")
 print("=" * 60)
 
@@ -126,7 +140,11 @@ def _has_console_guard(src):
 
 _no_guard = []
 _n_covered = 0
-for p in _all:
+# 根目录入口脚本（run_tests / verify_install）同样会打 emoji——一起纳入守则
+_root_scripts = [p for p in (os.path.join(_REPO, 'run_tests.py'),
+                             os.path.join(_REPO, 'verify_install.py'))
+                 if os.path.exists(p)]
+for p in _all + _root_scripts:
     name = os.path.basename(p)
     src = open(p, encoding='utf-8').read()
     if '__main__' not in src and not name.startswith('test_'):

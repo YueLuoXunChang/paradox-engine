@@ -30,3 +30,5 @@ jobs:
         run: |
           python -m engine.cli --text "既要快又要稳" --json > /dev/null
           python -m engine.cli --tools > /dev/null
+      - name: 安装路径端到端（构建 wheel → 临时 venv 装 → 真跑 console 命令）
+        run: python verify_install.py --skip-tests
