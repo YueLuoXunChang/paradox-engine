@@ -65,6 +65,8 @@ paradox-engine --text "这句话是假的" --json      # structured output
 paradox-engine --scenarios                      # the scenario library (25 real cases + review status)
 paradox-engine --scene S01                      # run one case: expected vs actual + what really ran
 paradox-engine --text "..." --explain          # why this classification (scores + matched signals)
+paradox-engine --text "..." --structured '{"A":"...","B":"...","wA":5,"wNotA":5}'
+                                                # structured clues: components really run (use --suggest to see what is missing)
 paradox-engine --text "..." --suggest          # structured-clue suggestions (paste-ready; never auto-applied)
 paradox-engine --review                        # scenario review mode (evidence + mark command)
 paradox-engine --review --board --pending-only # review board: pending only (read-only)
@@ -95,7 +97,7 @@ print(r['report'])
 ```bash
 # After cloning, from the repository root
 python demo.py          # nineteen-step tour
-python run_tests.py     # full regression (41 test files / 1232 assertions)
+python run_tests.py     # full regression (42 test files / 1240 assertions)
 ```
 
 `demo.py` demonstrates nineteen things (①②③ the paradox trio → ④-⑩ the
@@ -348,7 +350,7 @@ when a real pain point appears).
 
 ### Test status
 
-- **1232 formal assertions pass** (41 test files), covering every mechanism
+- **1240 formal assertions pass** (42 test files), covering every mechanism
   component plus the controller/scenario/AI-tool layers;
 - **One command runs the whole suite**: `python run_tests.py` (discover + run +
   summarize; a single failing file yields a non-zero exit — the same entry

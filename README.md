@@ -54,6 +54,8 @@ paradox-engine --text "这句话是假的" --json      # 结构化输出
 paradox-engine --scenarios                      # 场景库（25 个真实场景 + 复核状态）
 paradox-engine --scene S01                      # 跑单场景：期望 vs 实际 + 真跑白箱
 paradox-engine --text "..." --explain          # 判类依据（主型/副型得分+命中信号+路由）
+paradox-engine --text "既要快又要稳" --structured '{"A":"要快","B":"要稳","wA":5,"wNotA":5}'
+                                                # 给结构化线索：构件才真跑（线索缺什么用 --suggest 看）
 paradox-engine --text "既要快又要稳" --suggest  # 结构化线索建议（含可粘贴命令，建议不自动应用）
 paradox-engine --review                        # 场景复核模式（逐条给依据+落笔命令）
 paradox-engine --review --board --pending-only # 复核看板：只看待复核（只读，落笔仍是你的判断）
@@ -84,7 +86,7 @@ print(r['report'])
 ```bash
 # 克隆后，在仓库根目录
 python demo.py          # 十九步演示
-python run_tests.py     # 全量回归（一条命令：41 个测试文件 / 1232 项断言）
+python run_tests.py     # 全量回归（一条命令：42 个测试文件 / 1240 项断言）
 ```
 
 `demo.py` 演示十九件事（①②③ 悖论三件套 → ④-⑩ 经典逻辑地基 → ⑪ 撞墙管线 → ⑫ 总控五步 → ⑬ MT-MP-TL 骨架 → ⑭ 冷门逻辑 → ⑮ AI 挂载 → ⑯ 数学底座 → ⑰ 冷门补完 → ⑱ 构造性立场 → ⑲ 墙的精确地图）：
@@ -302,7 +304,7 @@ run(inputs: dict) -> dict
 
 ### 测试状态
 
-- **1232 项正式断言全过**（41 个测试文件），覆盖全部
+- **1240 项正式断言全过**（42 个测试文件），覆盖全部
   机制构件与总控/场景/AI 工具层；
 - **一条命令跑全量回归**：`python run_tests.py`（发现 + 运行 + 汇总；
   任一文件失败即非零退出——CI 与本地同一入口）；
