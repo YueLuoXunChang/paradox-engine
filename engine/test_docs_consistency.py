@@ -159,6 +159,34 @@ check("英文 README 的 demo 步数与实测一致（英文数字）",
       (f'{_EN_NUM.get(_demo_steps, _demo_steps)}-step' in _en
        or f'{_EN_NUM.get(_demo_steps, _demo_steps)} steps' in _en),
       [m.group(0) for m in re.finditer(r'[a-z]+-step\w*|[a-z]+ steps', _en)])
+# ── ④ 目录树完整性：新增引擎模块别忘了登记进 README 中英的结构树
+#    （复验时发现：这段新加的 session.py / clue_suggester.py / review_marks.py
+#      等模块一个都没进树——数字都同步了，索引却漏了）
+def _tree_names(doc):
+    names = set()
+    for line in _read(doc).split('\n'):
+        m = re.search(r'[├└]──\s*([^\s←]+)', line)
+        if m:
+            names.add(m.group(1).rstrip('/'))
+    return names
+
+
+import subprocess as _sp  # noqa: E402
+_tracked = _sp.run(['git', 'ls-files'], cwd=_REPO, capture_output=True,
+                   text=True, encoding='utf-8').stdout.split()
+_mods = [f for f in _tracked
+         if f.startswith('engine/') and f.endswith('.py')
+         and '/test_' not in f
+         and not os.path.basename(f).startswith(('test_', '_'))
+         and not f.endswith('__init__.py')]
+_miss_zh = [f for f in _mods
+            if os.path.basename(f) not in _tree_names('README.md')]
+_miss_en = [f for f in _mods
+            if os.path.basename(f) not in _tree_names('README.en.md')]
+check("README 中英目录树都列全引擎模块（新模块别忘登记）",
+      not _miss_zh and not _miss_en,
+      "中文缺 %s；英文缺 %s" % (_miss_zh, _miss_en))
+
 check("demo 步数 ≥19（⑲ 墙的精确地图在位）", _demo_steps >= 19,
       str(_demo_steps))
 # 横幅顺序也必须对：插错位置（比如插到演示中段）时步数照样是 20，
@@ -207,5 +235,5 @@ check("README 断言声明不多不少（= 实测）",
       all(c == _total_asserts for c in _zh_claims), str(_zh_claims))
 
 print("=" * 60)
-print(f"结果: {PASS}/20 通过")
-raise SystemExit(0 if PASS == 20 else 1)
+print(f"结果: {PASS}/21 通过")
+raise SystemExit(0 if PASS == 21 else 1)

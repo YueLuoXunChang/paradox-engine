@@ -101,7 +101,7 @@ print(r['report'])
 ```bash
 # After cloning, from the repository root
 python demo.py          # twenty-step tour
-python run_tests.py     # full regression (45 test files / 1348 assertions)
+python run_tests.py     # full regression (45 test files / 1349 assertions)
 ```
 
 `demo.py` demonstrates twenty things (①②③ the paradox trio → ④-⑩ the
@@ -161,10 +161,13 @@ paradox-engine/
 ├── engine/
 │   ├── ai/                     ← AI mounting (engine functions = function-calling tools)
 │   │   ├── tools.py              schemas auto-generated from all components + call_tool
+│   │   ├── freeze_tool_schema.py tool-contract snapshot + drift check
 │   │   └── ai_scenarios.py       two end-to-end real scenarios (argument conflict / modeling)
 │   ├── control/               ← Controller (the "brain": classify/complexity/route/five-step pipeline)
 │   │   ├── classifier.py         12 problem-type classifier + L1/L2/L3 complexity + ROUTE (36 keys)
-│   │   └── controller.py         five-step pipeline: classify→complexity→route→execute→judge
+│   │   ├── controller.py         five-step pipeline: classify→complexity→route→execute→judge
+│   │   ├── session.py            multi-turn session ledger (import/batch overview/review evidence/ledger+brief)
+│   │   └── clue_suggester.py     structured-clue suggestions (paste-ready, never auto-applied)
 │   ├── mechanisms/            ← Paradox mechanisms (L2: run(inputs)->dict + PORTS + self-test)
 │   │   ├── paradox_measure.py    paradox strength μ (four branches)
 │   │   ├── paradox_annotate.py   paradox annotation (8-field card + P-A/B/C grades)
@@ -175,7 +178,8 @@ paradox-engine/
 │   │   ├── counterpoint_gen.py   counterpoint generation (opposites → third state candidate)
 │   │   └── wall_pipeline.py      wall pipeline A (measure→annotate→drill→view→bypass→create → 5-way verdict)
 │   ├── scenarios/             ← Scenario library (real input + expected diagnosis + review — corpus feedback)
-│   │   └── scenarios.py          28-scenario registry + run_all comparison (expected vs actual)
+│   │   ├── scenarios.py          28-scenario registry + run_all comparison (expected vs actual)
+│   │   └── review_marks.py       review verdicts written back to the registry (checked/review only)
 │   ├── skeleton/              ← MT-MP-TL skeleton (L0: structure only, no judging)
 │   │   └── mtmp.py               points/threads/topology (12 shapes)/operations (5 kinds)
 │   ├── cold/                  ← Cold logics (L3: chosen by need; external consensus marked as borrowed)
@@ -183,6 +187,7 @@ paradox-engine/
 │   │   ├── dung_framework.py     Dung argumentation framework (which positions stand)
 │   │   ├── agm_revision.py       AGM belief revision + non-monotonic defaults (retractable conclusions)
 │   │   ├── relevance_logic.py    relevance logic (real conflict vs empty rhetoric)
+│   │   ├── truth_revision.py     Gupta-Belnap truth revision (revision-sequence oscillation)
 │   │   └── intuitionistic_logic.py intuitionistic logic (Kripke evaluation / countermodel search / comparison)
 │   └── classical/             ← Classical-logic foundation (L1: decision/proof/computation/types)
 │       ├── propositional.py       propositional logic (validity/counterexample/satisfiable/tautology)
@@ -356,7 +361,7 @@ when a real pain point appears).
 
 ### Test status
 
-- **1348 formal assertions pass** (45 test files), covering every mechanism
+- **1349 formal assertions pass** (45 test files), covering every mechanism
   component plus the controller/scenario/AI-tool layers;
 - **One command runs the whole suite**: `python run_tests.py` (discover + run +
   summarize; a single failing file yields a non-zero exit — the same entry

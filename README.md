@@ -90,7 +90,7 @@ print(r['report'])
 ```bash
 # 克隆后，在仓库根目录
 python demo.py          # 二十步演示
-python run_tests.py     # 全量回归（一条命令：45 个测试文件 / 1348 项断言）
+python run_tests.py     # 全量回归（一条命令：45 个测试文件 / 1349 项断言）
 ```
 
 `demo.py` 演示二十件事（①②③ 悖论三件套 → ④-⑩ 经典逻辑地基 → ⑪ 撞墙管线 → ⑫ 总控五步 → ⑬ MT-MP-TL 骨架 → ⑭ 冷门逻辑 → ⑮ AI 挂载 → ⑯ 数学底座 → ⑰ 冷门补完 → ⑱ 构造性立场 → ⑲ 墙的精确地图 → ⑳ 工作台）：
@@ -146,10 +146,13 @@ paradox-engine/
 ├── engine/
 │   ├── ai/                     ← AI 挂载（引擎函数 = function-calling 工具集）
 │   │   ├── tools.py              全量构件 schema 自动生成 + call_tool 分派
+│   │   ├── freeze_tool_schema.py 工具契约快照 + 漂移检查（防接口悄悄变）
 │   │   └── ai_scenarios.py       两真实场景端到端演示（论证矛盾/学科建模）
 │   ├── control/               ← 总控（引擎大脑：判类/复杂度/路由/五步流水线）
 │   │   ├── classifier.py        12 题型判类 + L1/L2/L3 复杂度 + ROUTE 36 键
-│   │   └── controller.py        总控五步：判类→复杂度→切路→执行→判输出
+│   │   ├── controller.py        总控五步：判类→复杂度→切路→执行→判输出
+│   │   ├── session.py           多轮会话台账（材料逐段导入/批次汇总/复核依据/台账与简报）
+│   │   └── clue_suggester.py    结构化线索建议（按实际路由给可粘贴建议，不自动应用）
 │   ├── mechanisms/            ← 悖论机制（第 2 层：run(inputs)->dict + PORTS + 自测）
 │   │   ├── paradox_measure.py   悖论测度 μ（四分支）
 │   │   ├── paradox_annotate.py  悖论注解（8 字段卡 + P-A/B/C）
@@ -160,7 +163,8 @@ paradox-engine/
 │   │   ├── counterpoint_gen.py  对位创生第三态（对立交汇 → 候选+依据）
 │   │   └── wall_pipeline.py     撞墙管线 A（测→注→钻→看→旁→创 → 五选一诊断）
 │   ├── scenarios/             ← 场景库（真实输入+期望诊断+复核——语料回馈判类器）
-│   │   └── scenarios.py          28 场景注册表 + run_all 对照（期望 vs 实际）
+│   │   ├── scenarios.py          28 场景注册表 + run_all 对照（期望 vs 实际）
+│   │   └── review_marks.py       复核落笔（结论写回场景表，只改 checked/review）
 │   ├── skeleton/              ← MT-MP-TL 骨架（第 0 层：结构表达，不掺判定）
 │   │   └── mtmp.py              点/线程/拓扑（12 形态）/操作（5 种）
 │   ├── cold/                  ← 冷门逻辑（第 3 层：按痛点选，外部共识归借鉴区）
@@ -168,6 +172,7 @@ paradox-engine/
 │   │   ├── dung_framework.py     Dung 论证框架（哪些立场站得住）
 │   │   ├── agm_revision.py       AGM 信念修正 + 非单调默认（旧结论可撤销）
 │   │   ├── relevance_logic.py    相干逻辑（真冲突 vs 话术冲突）
+│   │   ├── truth_revision.py     Gupta-Belnap 真值修正（修正序列振荡）
 │   │   └── intuitionistic_logic.py 直觉主义（Kripke 求值/反模型搜索/两系统对照）
 │   └── classical/             ← 经典逻辑地基（第 1 层：判定/证明/可计算/类型）
 │       ├── propositional.py      命题逻辑（有效/反例/可满足/重言式）
@@ -309,7 +314,7 @@ run(inputs: dict) -> dict
 
 ### 测试状态
 
-- **1348 项正式断言全过**（45 个测试文件），覆盖全部
+- **1349 项正式断言全过**（45 个测试文件），覆盖全部
   机制构件与总控/场景/AI 工具层；
 - **一条命令跑全量回归**：`python run_tests.py`（发现 + 运行 + 汇总；
   任一文件失败即非零退出——CI 与本地同一入口）；
