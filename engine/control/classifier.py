@@ -43,7 +43,7 @@ PORTS = {
 }
 
 # ══════════════════════════════════════════════════════════════
-# 一、题型信号表（详规 §1.1——中文关键词/结构 → 题型 → 权重）
+# 一、题型信号表（详规——中文关键词/结构 → 题型 → 权重）
 # 每型：name 中文名 + signals 信号（命中一条 +weight 一次）
 # ══════════════════════════════════════════════════════════════
 
@@ -102,7 +102,7 @@ _STOP_NOUNS = ('这个', '那个', '我们', '你们', '他们', '问题', '情�
 
 
 def _classify(text):
-    """题型计分（详规 §1.1：命中信号 += weight 一次/信号去重）。"""
+    """题型计分（详规：命中信号 += weight 一次/信号去重）。"""
     hits = []
     for tid, spec in TYPE_DEFS.items():
         score = 0
@@ -165,7 +165,7 @@ def _count_relations(text):
 
 
 def _complexity(text, hits):
-    """复杂度打分（详规 §2.1 / 总架构 §3.2）。返回 dict。"""
+    """复杂度打分（详规 / 总架构）。返回 dict。"""
     n = _count_entities(text)
     m = _count_relations(text)
     entity_tier = 1 if n <= 3 else (2 if n <= 10 else 3)
@@ -174,7 +174,7 @@ def _complexity(text, hits):
 
     flags = []
     tids = {h['type'] for h in hits}
-    # 结构加分（总架构 §3.2）
+    # 结构加分（总架构）
     if 'T4' in tids:
         score += 1
         flags.append('演化+1')
@@ -194,18 +194,18 @@ def _complexity(text, hits):
 
     level = 'L1' if score <= 3 else ('L2' if score <= 7 else 'L3')
 
-    # 题型修正（总架构 §4.1 落码）：T9 学科题目"罕见 L1"——术语密集即建模
+    # 题型修正（总架构 落码）：T9 学科题目"罕见 L1"——术语密集即建模
     # 全量候选。命中 ≥4 学科信号（术语密集+多实体结构）→ L3；
     # 命中 3 → L2。诚实标注为规则修正，非打分公式产物。
     t9_hits = sum(1 for h in hits if h['type'] == 'T9'
                   for _ in h['signals'])
     if 'T9' in tids and t9_hits >= 4:
         level = 'L3'
-        flags.append('T9学科密集→L3（总架构 §4.1 规则）')
+        flags.append('T9学科密集→L3（总架构 规则）')
     elif 'T9' in tids and t9_hits == 3:
         if level == 'L1':
             level = 'L2'
-        flags.append('T9学科信号3→L2（总架构 §4.1 规则）')
+        flags.append('T9学科信号3→L2（总架构 规则）')
 
     return {'entity_est': n, 'relation_est': m, 'entity_tier': entity_tier,
             'relation_tier': relation_tier, 'score': score, 'level': level,
@@ -213,7 +213,7 @@ def _complexity(text, hits):
 
 
 # ══════════════════════════════════════════════════════════════
-# 二、路由表（详规 §3 / 总架构 §4.1 落码——题型×复杂度 → 管线，带 reason 白箱）
+# 二、路由表（详规 / 总架构 落码——题型×复杂度 → 管线，带 reason 白箱）
 # ══════════════════════════════════════════════════════════════
 
 # 第 3 层冷门构件（needs_cold_logic 标记用；加新冷门构件只需加名字）

@@ -101,7 +101,7 @@ print(r['report'])
 ```bash
 # After cloning, from the repository root
 python demo.py          # twenty-step tour
-python run_tests.py     # full regression (45 test files / 1349 assertions)
+python run_tests.py     # full regression (45 test files / 1350 assertions)
 ```
 
 `demo.py` demonstrates twenty things (①②③ the paradox trio → ④-⑩ the
@@ -361,7 +361,7 @@ when a real pain point appears).
 
 ### Test status
 
-- **1349 formal assertions pass** (45 test files), covering every mechanism
+- **1350 formal assertions pass** (45 test files), covering every mechanism
   component plus the controller/scenario/AI-tool layers;
 - **One command runs the whole suite**: `python run_tests.py` (discover + run +
   summarize; a single failing file yields a non-zero exit — the same entry

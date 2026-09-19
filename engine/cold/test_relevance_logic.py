@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 test_relevance_logic.py — 正式测试：相干逻辑（第 3 层 3.4 论证相关性）
-用例依据：详规 §4.2 判定结构（相干检查 → 再走经典有效性）+ §4.3 应用
+用例依据：详规 判定结构（相干检查 → 再走经典有效性）+ 应用
          （T2 增强：真冲突 vs 话术冲突）+ 诚实边界（算不动不冒充结论）
 运行：python engine/cold/test_relevance_logic.py
 """
@@ -45,7 +45,7 @@ check("A4 结论原子集 {Q}", ra['conclusion_atoms'] == ['Q'], ra)
 check("A5 经典有效性为 True", ra['classically_valid'] is True, ra)
 check("A6 边界声明点明共享原子", '共享' in ra['boundary'], ra['boundary'])
 
-# ── 用例B：形式有效但不相干（详规 §4.2 原文例子）
+# ── 用例B：形式有效但不相干（详规 原文例子）
 rb = run({'premises': ['P'], 'conclusion': 'Q∨¬Q'})
 check("B1 P ⊢ Q∨¬Q → irrelevant_valid",
       rb['verdict'] == 'irrelevant_valid', rb)
@@ -84,7 +84,7 @@ check("E1 传递链相干有效 → relevant_valid",
       re_['verdict'] == 'relevant_valid', re_)
 check("E2 共享原子含 P 与 R", set(re_['shared_atoms']) == {'P', 'R'}, re_)
 
-# ── 用例F：冲突定性（真冲突 vs 话术冲突，详规 §4.3）
+# ── 用例F：冲突定性（真冲突 vs 话术冲突，详规）
 rf1 = run({'mode': 'conflict', 'prop_a': 'P', 'prop_b': '¬P'})
 check("F1 P vs ¬P → real_conflict（真冲突）",
       rf1['verdict'] == 'real_conflict', rf1)

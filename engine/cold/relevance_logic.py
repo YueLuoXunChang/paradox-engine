@@ -7,7 +7,7 @@ Anderson & Belnap 1975《Entailment》）。本构件为借鉴实现（落落三
 借什么=相干蕴含的"前提与结论必须共享变量"要求；为什么=经典逻辑允许
 "A ⊢ B∨¬B"这类前提结论毫不相干的推理照样有效（爆炸/废话有效），
 T2 论证矛盾检查需要区分"真冲突"与"话术冲突"；怎么记账=来源归借鉴区）。
-详规：第 3 层冷门详规 §四（构件 3.4 相干逻辑：论证相关性）
+来源：体系内部冷门详规（构件 3.4 相干逻辑：论证相关性）
 
 本构件做什么（一句话）：
     给"这个推理是真有效，还是只是形式有效"一个可跑答案——两个能力：
@@ -95,7 +95,7 @@ def _result(verdict, shared, p_atoms, c_atoms, valid, counter, boundary):
 
 
 def _relevance(pl, premises, conclusion):
-    """相干检查 + 经典有效性（详规 §4.2 判定结构）。"""
+    """相干检查 + 经典有效性（详规 判定结构）。"""
     p_atoms = []
     for p in premises:
         a, err = _atoms(pl, p)
@@ -148,7 +148,7 @@ def _relevance(pl, premises, conclusion):
 
 
 def _conflict(pl, prop_a, prop_b):
-    """冲突定性：真冲突（相干）vs 话术冲突（不相干）（详规 §4.3 T2 增强）。"""
+    """冲突定性：真冲突（相干）vs 话术冲突（不相干）（详规 T2 增强）。"""
     a_atoms, err_a = _atoms(pl, prop_a)
     if err_a:
         return _result('parse_pending', [], [], [], None, None,

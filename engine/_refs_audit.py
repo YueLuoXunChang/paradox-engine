@@ -7,8 +7,8 @@ _refs_audit.py — 私有档案引用清点（只读，只列不改）
 本文件把全仓的引用清点出来——**只列不删**：清还是留是作者的口径，引擎不擅自改。
 
 怎么判（两种形态）：
-    1) 私有档案**名 + 章节号**：`详规 §五`、`《第3层冷门详规》§三`、`总架构 §3.2`、
-       `公式卡 §2.1`、`…蓝图` 这一类（档案名前后 ±30 字内出现 § 号）；
+    1) 私有档案**名 + 章节号**：档案名（详规 / 总架构 / 蓝图 / 公式源 等，
+       含书名号写法）**前后 ±30 字内出现章节号符号**，即算一处；
     2) 内部文档**编号型**指针：形如 `NN_某内部文档.md`（两位数编号打头的文档名）。
 
 **本仓内的章节引用不算**：`§6.4` 指的是本仓 docs/ROADMAP.md 的小节，读者打得开，
@@ -23,7 +23,8 @@ _HERE = os.path.dirname(os.path.abspath(__file__))
 _REPO = os.path.dirname(_HERE)
 
 # 私有档案名（读者打不开的那些）
-PRIVATE_NAMES = ('详规', '总架构', '公式卡', '蓝图', '公式源', '机制组合方案')
+# 公式卡不算：它指向**本仓** docs/formulas（读者打得开）
+PRIVATE_NAMES = ('详规', '总架构', '蓝图', '公式源', '机制组合方案')
 # 内部文档编号型指针
 NUMBERED_DOC = re.compile(r'\b\d{2}_[^\s`）)、，。]*\.md')
 _SEC = re.compile(r'§\s*[0-9一二三四五六七八九十百]+(?:\.[0-9]+)?')
@@ -79,8 +80,9 @@ def audit(root=None):
     total = 0
     for p in text_files(root):
         rel = os.path.relpath(p, root).replace('\\', '/')
-        if rel in ('engine/_refs_audit.py', 'engine/test_public_face.py'):
-            continue   # 本文件与发布面判据都必须**写出**这些名字，跳过
+        if rel in ('engine/_refs_audit.py', 'engine/test_public_face.py',
+                   'engine/test_refs_audit.py'):
+            continue   # 工具与判据自检必须**写出**这些名字，跳过
         hits = scan_file(p)
         if hits:
             files[rel] = hits
@@ -109,7 +111,7 @@ def report_text(root=None):
         if len(hits) > 8:
             L.append('  …还有 %d 处' % (len(hits) - 8))
     L.append('')
-    L.append('口径：同一行的同一段上下文只记一处（例如「详规 §一~§五」按一处计），'
+    L.append('口径：同一行的同一段上下文只记一处（同一行同段的多个章节号按一处计），'
              '所以本工具的数字**偏保守**——不会比实际引用多；'
              '逐条命令的宽松扫描可能比这里多 1〜2 处，差在口径不在漏计。')
     L.append('说明：发布面判据文件自身写的「允许项样例」不计入（它必须写出'

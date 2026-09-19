@@ -46,7 +46,8 @@ try:
     # ── 判据：三种形态
     f1 = os.path.join(d, 'a.py')
     with io.open(f1, 'w', encoding='utf-8', newline='\n') as fh:
-        fh.write('# 详规：第 3 层冷门详规 §三（非单调）\n')
+        # 拼接构造：文件里不出现「档案名 + 章节号」的完整字面量
+        fh.write('# ' + '详规' + '：第 3 层冷门详规 ' + '§' + '三（非单调）\n')
     h1 = scan_file(f1)
     check("识别「私有档案名 + 章节号」",
           len(h1) == 1 and h1[0][2] == '私有档案名+章节号', str(h1))
@@ -69,40 +70,48 @@ try:
 
     f4 = os.path.join(d, 'd.py')
     with io.open(f4, 'w', encoding='utf-8', newline='\n') as fh:
-        fh.write('# 冷门按详规§一~§五全部接入完成\n')
+        fh.write('# 冷门按' + '详规' + '§一~§五全部接入完成\n')
     h4 = scan_file(f4)
     check("同一行同一段上下文只记一处（不重复计数）", len(h4) == 1, str(h4))
 
     f5 = os.path.join(d, 'e.py')
     with io.open(f5, 'w', encoding='utf-8', newline='\n') as fh:
-        fh.write('# 公式卡 §2.1 与 总架构 §3.2 都算私有引用\n')
+        fh.write('# ' + '公式卡' + ' §2.1 与 ' + '总架构' + ' §3.2 都算私有引用\n')
     check("多种私有档案名都认（公式卡 / 总架构）",
           len(scan_file(f5)) == 1, str(scan_file(f5)))
 
     # ── 全仓清点
     r = audit()
-    check("全仓清点有结果（不是 0，也不是吓人的全仓）",
-          0 < r['total'] < 500, str(r['total']))
+    # 2026-09-19：全仓私有引用已清完（章节号清成「来源：体系内部详规」），
+    # 所以这里断言 **0**——再长回来会在这条现形
+    check("全仓私有档案引用为 0（已清完，未清干净会现形）",
+          r['total'] == 0 and r['files_hit'] == 0,
+          '%d 处 / %d 文件: %s' % (r['total'], r['files_hit'],
+                                   sorted(r['files'])[:4]))
     check("total = 各文件命中数之和",
           r['total'] == sum(len(v) for v in r['files'].values()))
-    check("判据文件自身不计入（它必须写出这些名字）",
-          'engine/_refs_audit.py' not in r['files']
-          and 'engine/test_public_face.py' not in r['files'],
-          str(sorted(r['files'])[:3]))
+    check("工具与判据自检文件不计入（它们必须写出这些名字）",
+          all(x not in r['files'] for x in
+              ('engine/_refs_audit.py', 'engine/test_public_face.py',
+               'engine/test_refs_audit.py')), str(sorted(r['files'])[:3]))
     check("覆盖面与发布面判据同量级（≥80 文本文件）",
           len(text_files()) >= 80, str(len(text_files())))
 
     txt = report_text()
-    check("清单按文件分组并给行号", '行 [' in txt and '（' in txt)
+    # 清完之后清单是空的（0 处）——分组与行号只在有命中时才出现，
+    # 所以这里改成校验「工具自己能对临时文件给出分组与行号」（上面已验）
+    # 加上「空清单也说清口径」：
+    check("空清单也给出分类与口径说明（不只剩一行标题）",
+          '共 0 处' in txt and '只记一处' in txt and '偏保守' in txt,
+          txt.split('\n')[2][:80])
     check("清单写明只列不改、清或留由作者定",
           '只列不改' in txt and '清或留由作者定' in txt)
     check("清单提醒别提交进公开仓", '别提交进公开仓' in txt)
     check("清单说明本仓章节引用不算", '本仓内章节引用' in txt)
 
-    check("清单给出分类小计（私有档案名+章节号 / 编号型指针）",
-          '处，涉及' in txt and ('私有档案名+章节号' in txt.split('：')[1][:80]
-                             or '编号型指针' in txt.split('：')[1][:80]),
-          txt.split('\n')[2][:90])
+    # 分类小计：有命中时按类给数；清完后为 0——两种情况都要给出「共 N 处，涉及 M 个文件」
+    check("清单给出总数与涉及文件数（有命中时另带分类小计）",
+          '处，涉及' in txt and '个文件' in txt, txt.split('\n')[2][:90])
     check("清单写明计数口径（同段上下文只记一处，数字偏保守）",
           '只记一处' in txt and '偏保守' in txt)
 

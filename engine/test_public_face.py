@@ -71,9 +71,10 @@ def _local_patterns():
 
 # ── 判据（通用项 + 可选的私有名）
 # 每项：(标签, 正则, 预处理函数或 None)。预处理用于"先中性化允许表述再扫"
-# ——例如「详规 §4.2」是允许的（通用表述+章节号），把它替换成非中文占位符后，
-# 「XX §N」正则就不会误伤它；剩下的才是真·悬挂引用。
-_ALLOWED_SPEC = ('详规', '总架构', '公式卡', '公式源')
+# ——判据从 2026-09-19 起收紧：全仓已把「详规/总架构/蓝图/公式源 + 章节号」清成
+# 「来源：体系内部详规」这类表述；只有「公式卡 §N」还允许（它指向本仓 docs/formulas，
+# 读者打得开）。详见 落落验证仓 的授权与边界登记。
+_ALLOWED_SPEC = ('公式卡',)   # 只留指向**本仓** docs/formulas 的那一个
 
 
 def _neutralize_allowed(text):
@@ -175,10 +176,12 @@ check("判据自检：前向斜杠盘符路径（如 D:/x）也能抓住",
       _BANS[0][1].search('见 D:/Git/etc/gitconfig'))
 check("判据自检：通用禁止项都能被抓住（正则未写废）",
       len(_caught) >= 4, f"只抓到 {_caught}")
-check("允许项不误伤（详规 §1.1 / 公式卡 §2.1 放行——中性化后不再命中）",
-      not any(pat.search(pre('详规 §1.1 与 公式卡 §2.1') if pre
-                         else '详规 §1.1 与 公式卡 §2.1')
+check("允许项不误伤（公式卡 §2.1 放行——它指向本仓 docs/formulas）",
+      not any(pat.search(pre('公式卡 §2.1') if pre else '公式卡 §2.1')
               for _, pat, pre in _BANS))
+check("判据收紧：详规 §1.1 已不再放行（清完就不许再长回来）",
+      any(pat.search(pre('详规 §1.1') if pre else '详规 §1.1')
+          for _, pat, pre in _BANS))
 check("私有名清单是本地可选（不在仓库内=不会随发布泄露）",
       not os.path.exists(os.path.join(_REPO, '.public-face-local.txt'))
       or '.public-face-local.txt' in open(
@@ -198,5 +201,5 @@ check("被排除的本地清单确实在 .gitignore（排除才安全）",
                                        encoding='utf-8').read())
 
 print("=" * 60)
-print(f"结果: {PASS}/15 通过")
-raise SystemExit(0 if PASS == 15 else 1)
+print(f"结果: {PASS}/16 通过")
+raise SystemExit(0 if PASS == 16 else 1)

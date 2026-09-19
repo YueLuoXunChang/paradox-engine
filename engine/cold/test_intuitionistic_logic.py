@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 test_intuitionistic_logic.py — 正式测试：直觉主义逻辑（第 3 层 3.5）
-用例依据：详规 §5.1（无排中律——"没构造出来就不算真"）+ Kripke 1959 语义 +
+用例依据：详规（无排中律——"没构造出来就不算真"）+ Kripke 1959 语义 +
          BHK 解释 + 诚实边界（算不动≠有效、非单调模型拒算）
 运行：python engine/cold/test_intuitionistic_logic.py
 """

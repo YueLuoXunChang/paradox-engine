@@ -45,7 +45,7 @@ def _upgrade(grade):
 
 def grade(source, impact='local', eliminable=True):
     """
-    做什么：悖论分级（公式源 §2.1 分级判断流程）。
+    做什么：悖论分级（体系内部公式源：分级判断流程）。
 
     规则：
         ① 来源定基础级: axiom→P-A, runtime→P-B, observer→P-C
@@ -70,7 +70,7 @@ def grade(source, impact='local', eliminable=True):
 
 def annotate(paradox, source, impact='local', eliminable=True, seq=None):
     """
-    做什么：生成 8 字段悖论注解卡片（公式源 §2.2 模板）。
+    做什么：生成 8 字段悖论注解卡片（体系内部公式源：模板）。
 
     字段: ID/LV/POS/SRC/CT/EF/ST/AN
         ID: 悖论_P-{级}_{序号:03d}
@@ -176,7 +176,7 @@ if __name__ == '__main__':
     assert grade('observer') == 'P-C', "观察→P-C"
     print("✅ P1 三级完备: axiom→P-A, runtime→P-B, observer→P-C")
 
-    # 分级升级规则（公式源 §2.1）：全局升级 / 不可消除升级
+    # 分级升级规则（体系内部公式源）：全局升级 / 不可消除升级
     assert grade('observer', impact='global') == 'P-B', "C级+全局→B级"
     assert grade('runtime', impact='global') == 'P-A', "B级+全局→A级"
     assert grade('runtime', eliminable=False) == 'P-A', "B级+不可消除→A级"
