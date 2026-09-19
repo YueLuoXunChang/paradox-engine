@@ -995,9 +995,38 @@ try:
     mb3 = session_run({'action': 'brief', 'path': pno})['markdown']
     check("没导过材料的会话不硬塞导入段（没记录就不写）",
           '材料导入与续跑' not in mb3, mb3[:400])
+    # ── 用例26：四个导出动作的坏路径口径必须一致（去重后仍是一套契约）
+    pdup = os.path.join(d, '四导出.json')
+    session_run({'action': 'add', 'path': pdup, 'text': TXT_CONFLICT})
+    session_run({'action': 'review', 'path': pdup, 'scene_id': 'S13'})
+    session_run({'action': 'progress', 'path': pdup})
+    acts = ['report', 'worksheet', 'brief', 'reconcile']
+    same_target = {a: session_run({'action': a, 'path': pdup,
+                                   'out_file': pdup})['verdict'] for a in acts}
+    check("四个导出动作：目标=会话文件时结论一致（都是 input_pending）",
+          set(same_target.values()) == {'input_pending'}, str(same_target))
+    same_dir = {a: session_run({'action': a, 'path': pdup,
+                                'out_file': d})['verdict'] for a in acts}
+    check("四个导出动作：目标是目录时结论一致（都是 path_invalid）",
+          set(same_dir.values()) == {'path_invalid'}, str(same_dir))
+    same_bad = {a: session_run({'action': a, 'path': pdup,
+                                'out_file': 5})['verdict'] for a in acts}
+    check("四个导出动作：out_file 非字符串时结论一致（都是 input_pending）",
+          set(same_bad.values()) == {'input_pending'}, str(same_bad))
+    writ = {}
+    for a in acts:
+        out = os.path.join(d, '四导出-%s.md' % a)
+        writ[a] = session_run({'action': a, 'path': pdup,
+                               'out_file': out})['verdict']
+        again = session_run({'action': a, 'path': pdup,
+                             'out_file': out})['verdict']
+        writ[a] = (writ[a], again)
+    check("四个导出动作：都能写出文件，且二次导出都不覆盖（file_exists）",
+          all(v[0].endswith('_written') and v[1] == 'file_exists'
+              for v in writ.values()), str(writ))
 finally:
     shutil.rmtree(d, ignore_errors=True)
 
 print("=" * 60)
-print(f"结果: {PASS}/231 通过")
-raise SystemExit(0 if PASS == 231 else 1)
+print(f"结果: {PASS}/235 通过")
+raise SystemExit(0 if PASS == 235 else 1)

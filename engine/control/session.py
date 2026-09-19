@@ -952,6 +952,39 @@ def _worksheet(state):
                           'ready_only': len(ready_only)}
 
 
+def _emit(state, path, md, out_file, overwrite, ready_verdict,
+          written_verdict, ready_note, written_label, **extra):
+    """导出文本的统一出口：不写文件 / 写文件 / 三类坏路径，只有这一处口径。
+
+    四个导出动作（台账/工作单/简报/对账）原先各写了一遍同样的十几行——
+    原子写、目标等于会话文件时拦下、目录/已存在/写失败三种坏路径的结论，
+    现在都收在这里，改口径只用改一处。
+    """
+    if out_file in (None, '-'):
+        return _result(ready_verdict, _summary(state), markdown=md,
+                       explanation=ready_note, **extra)
+    target = os.path.abspath(out_file)
+    if target == os.path.abspath(path):
+        return _result('input_pending', _summary(state),
+                       explanation='导出目标不能是会话文件本身——诚实拦截',
+                       **extra)
+    try:
+        _write_text(target, md, bool(overwrite))
+    except IsADirectoryError as exc:
+        return _result('path_invalid', _summary(state), explanation=str(exc),
+                       markdown=md, **extra)
+    except FileExistsError as exc:
+        return _result('file_exists', _summary(state), explanation=str(exc),
+                       markdown=md, **extra)
+    except (IOError, OSError) as exc:
+        return _result('input_pending', _summary(state), markdown=md,
+                       explanation='写%s失败：%s' % (written_label, exc),
+                       **extra)
+    return _result(written_verdict, _summary(state), markdown=md,
+                   explanation='%s已写入 %s（%d 字）'
+                               % (written_label, target, len(md)), **extra)
+
+
 def _report_md(state, session_path=None):
     """把会话导成 Markdown 台账：**只写记过的东西**，没跑的照实标。"""
     st = _summary(state)
@@ -1216,33 +1249,11 @@ def run(inputs):
                            stats=stats,
                            explanation='会话里还没记过复核依据'
                                        '（先用 --review 记）——没得对账')
-        if out_file in (None, '-'):
-            return _result('reconciled', _summary(state), markdown=md,
-                           stats=stats,
-                           explanation='对账完成：未落笔 %d / 无依据 %d / '
-                                       '方向相反 %d'
-                                       % (stats['not_marked'],
-                                          stats['no_evidence'],
-                                          stats['disagree']))
-        target = os.path.abspath(out_file)
-        if target == os.path.abspath(path):
-            return _result('input_pending', _summary(state),
-                           explanation='导出目标不能是会话文件本身——诚实拦截')
-        try:
-            _write_text(target, md, bool(inputs.get('overwrite')))
-        except IsADirectoryError as exc:
-            return _result('path_invalid', _summary(state),
-                           explanation=str(exc), markdown=md)
-        except FileExistsError as exc:
-            return _result('file_exists', _summary(state),
-                           explanation=str(exc), markdown=md)
-        except (IOError, OSError) as exc:
-            return _result('input_pending', _summary(state),
-                           explanation='写对账失败：%s' % exc, markdown=md)
-        return _result('reconciled_written', _summary(state), markdown=md,
-                       stats=stats,
-                       explanation='对账已写入 %s（%d 字）'
-                                   % (target, len(md)))
+        return _emit(state, path, md, out_file, inputs.get('overwrite'),
+                     'reconciled', 'reconciled_written',
+                     '对账完成：未落笔 %d / 无依据 %d / 方向相反 %d'
+                     % (stats['not_marked'], stats['no_evidence'],
+                        stats['disagree']), '对账', stats=stats)
 
     if action == 'brief':
         out_file = inputs.get('out_file')
@@ -1259,26 +1270,9 @@ def run(inputs):
                            explanation='会话是空的——简报会是一页空白，'
                                        '不编内容；先用 --add/--add-file 记材料、'
                                        '--review 记依据、--progress 记进度')
-        if out_file in (None, '-'):
-            return _result('brief', _summary(state), markdown=md,
-                           explanation='简报已生成（%d 字），未写文件' % len(md))
-        target = os.path.abspath(out_file)
-        if target == os.path.abspath(path):
-            return _result('input_pending', _summary(state),
-                           explanation='导出目标不能是会话文件本身——诚实拦截')
-        try:
-            _write_text(target, md, bool(inputs.get('overwrite')))
-        except IsADirectoryError as exc:
-            return _result('path_invalid', _summary(state),
-                           explanation=str(exc), markdown=md)
-        except FileExistsError as exc:
-            return _result('file_exists', _summary(state),
-                           explanation=str(exc), markdown=md)
-        except (IOError, OSError) as exc:
-            return _result('input_pending', _summary(state),
-                           explanation='写简报失败：%s' % exc, markdown=md)
-        return _result('brief_written', _summary(state), markdown=md,
-                       explanation='简报已写入 %s（%d 字）' % (target, len(md)))
+        return _emit(state, path, md, out_file, inputs.get('overwrite'),
+                     'brief', 'brief_written',
+                     '简报已生成（%d 字），未写文件' % len(md), '简报')
 
     if action == 'progress':
         try:
@@ -1314,31 +1308,11 @@ def run(inputs):
                            explanation='没有欠线索的轮次（也还有 %d 条没跑'
                                        '建议器）——不生成空工作单'
                                        % stats['no_clues'])
-        if out_file in (None, '-'):
-            return _result('worksheet', _summary(state), markdown=md,
-                           stats=stats,
-                           explanation='工作单已生成（待填 %d 条 / 未跑建议器 '
-                                       '%d 条），未写文件'
-                                       % (stats['pending'], stats['no_clues']))
-        target = os.path.abspath(out_file)
-        if target == os.path.abspath(path):
-            return _result('input_pending', _summary(state),
-                           explanation='导出目标不能是会话文件本身——诚实拦截')
-        try:
-            _write_text(target, md, bool(inputs.get('overwrite')))
-        except IsADirectoryError as exc:
-            return _result('path_invalid', _summary(state),
-                           explanation=str(exc), markdown=md)
-        except FileExistsError as exc:
-            return _result('file_exists', _summary(state),
-                           explanation=str(exc), markdown=md)
-        except (IOError, OSError) as exc:
-            return _result('input_pending', _summary(state),
-                           explanation='写工作单失败：%s' % exc, markdown=md)
-        return _result('worksheet_written', _summary(state), markdown=md,
-                       stats=stats,
-                       explanation='工作单已写入 %s（%d 字）'
-                                   % (target, len(md)))
+        return _emit(state, path, md, out_file, inputs.get('overwrite'),
+                     'worksheet', 'worksheet_written',
+                     '工作单已生成（待填 %d 条 / 未跑建议器 %d 条），未写文件'
+                     % (stats['pending'], stats['no_clues']), '工作单',
+                     stats=stats)
 
     if action == 'overview':
         ov = _overview(state)
@@ -1440,28 +1414,9 @@ def run(inputs):
                            explanation='会话是空的——导出会得到空台账，'
                                        '不编内容；先用 --add / --add-file 记材料，'
                                        '或用 --review / --progress 记复核依据与进度')
-        if out_file in (None, '-'):
-            return _result('report_ready', _summary(state), markdown=md,
-                           explanation='台账已生成（%d 字），未写文件'
-                                       % len(md))
-        target = os.path.abspath(out_file)
-        if target == os.path.abspath(path):
-            return _result('input_pending', _summary(state),
-                           explanation='导出目标不能是会话文件本身（会把它'
-                                       '覆盖掉）——诚实拦截')
-        try:
-            _write_text(target, md, bool(overwrite))
-        except IsADirectoryError as exc:
-            return _result('path_invalid', _summary(state),
-                           explanation=str(exc), markdown=md)
-        except FileExistsError as exc:
-            return _result('file_exists', _summary(state),
-                           explanation=str(exc), markdown=md)
-        except (IOError, OSError) as exc:
-            return _result('input_pending', _summary(state),
-                           explanation='写台账失败：%s' % exc, markdown=md)
-        return _result('report_written', _summary(state), markdown=md,
-                       explanation='台账已写入 %s（%d 字）' % (target, len(md)))
+        return _emit(state, path, md, out_file, overwrite, 'report_ready',
+                     'report_written',
+                     '台账已生成（%d 字），未写文件' % len(md), '台账')
 
     if action == 'review':
         scene_id = inputs.get('scene_id', 'all')
