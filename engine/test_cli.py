@@ -4,6 +4,7 @@ test_cli.py — 正式测试：命令行入口（CLI）
 用例依据：A 批包化（pip install 后 console 命令可用；--text/--json/--file/--tools）
 运行：python engine/cli/test_cli.py（或 python -m engine.cli.test_cli）
 """
+import hashlib
 import io
 import json
 import os
@@ -180,6 +181,40 @@ code, out = run_cli(
     '--structured', '{"A":"要快","B":"要稳","wA":5,"wNotA":5}')
 check("边界声明不决策", '只诊断不决策' in out or '不决策' in out, out[-300:])
 
+# ── 用例8：复核看板（只读辅助，不替人落笔）
+_scen = os.path.join(_HERE, 'scenarios', 'scenarios.py')
+_scen_sha = hashlib.sha256(io.open(_scen, 'rb').read()).hexdigest()
+code, out = run_cli('--review', '--scene', 'all', '--board')
+check("看板 exit=0", code == 0, f"exit={code}")
+check("看板有标题与表头", '复核看板' in out and '复核状态' in out, out[:160])
+check("看板列出全部场景（S01..S25 都在）",
+      all(('  S%02d ' % i) in out for i in range(1, 26)),
+      [l for l in out.split('\n') if l.startswith('  S')][:3])
+check("看板给合计与复核分布",
+      '合计' in out and '复核分布' in out, out[-260:])
+check("看板给逐条落笔命令与边界声明",
+      '--mark S05 --verdict ok' in out and '只诊断不决策' in out, out[-200:])
+code, out_p = run_cli('--review', '--scene', 'all', '--board',
+                      '--pending-only')
+check("只看待复核：已复核的不再出现",
+      code == 0 and '  S05 ' in out_p and '  S01 ' not in out_p,
+      [l for l in out_p.split('\n') if l.startswith('  S')][:3])
+check("只看待复核时总数少于全量",
+      len([l for l in out_p.split('\n') if l.startswith('  S')])
+      < len([l for l in out.split('\n') if l.startswith('  S')]))
+check("看板只读：场景表 sha256 未变",
+      hashlib.sha256(io.open(_scen, 'rb').read()).hexdigest() == _scen_sha)
+code, out = run_cli('--review', '--scene', 'S01', '--json')
+try:
+    d = json.loads(out)
+    ok_json = ('rows' in d and len(d['rows']) == 1
+               and 'review' in d['rows'][0])
+except Exception as e:  # noqa: BLE001
+    ok_json = False
+check("--review --json 仍可用且带上场景表复核记录", ok_json, out[:200])
+code, out = run_cli('--board')
+check("单给 --board 不炸（按无文本提示处理）", code == 2, f"exit={code}")
+
 print("=" * 60)
-print(f"结果: {PASS}/44 通过")
-raise SystemExit(0 if PASS == 44 else 1)
+print(f"结果: {PASS}/54 通过")
+raise SystemExit(0 if PASS == 54 else 1)

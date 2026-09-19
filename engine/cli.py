@@ -82,6 +82,12 @@ def build_parser():
     p.add_argument('--explain', action='store_true',
                    help='输出判类依据（主型/副型得分与命中信号、复杂度构成、'
                         '路由依据）——把「为什么这么判」摆出来')
+    p.add_argument('--board', action='store_true',
+                   help='配合 --review：改用看板视图（一行一个场景：'
+                        '期望/实际/对照/复核状态/输入），适合连着看一批')
+    p.add_argument('--pending-only', action='store_true',
+                   dest='pending_only',
+                   help='配合 --review：只看待复核的场景')
     p.add_argument('--review', action='store_true',
                    help='场景复核模式：逐场景给期望 vs 实际 + 命中信号 + '
                         '可粘贴的复核结论行（配 --scene 单个或 all）')
@@ -199,7 +205,19 @@ def explain_block(text):
     return '\n'.join(lines)
 
 
-def review_scenes(json_out, scene_id=None):
+def _disp_width(s):
+    """显示宽度（中文按 2 格算）——对齐用，别让表格歪。"""
+    import unicodedata
+    return sum(2 if unicodedata.east_asian_width(ch) in 'WF' else 1
+               for ch in s)
+
+
+def _pad(s, width):
+    return s + ' ' * max(0, width - _disp_width(s))
+
+
+def review_scenes(json_out, scene_id=None, board=False,
+                  pending_only=False):
     """场景复核：期望 vs 实际 + 判类命中信号 + 可粘贴的复核结论行。"""
     scenes = _scene_map()
     if scene_id and scene_id != 'all' and scene_id not in scenes:
@@ -228,13 +246,48 @@ def review_scenes(json_out, scene_id=None):
             'signals': c['types'][0]['signals'] if c['types'] else [],
             'confidence': c['confidence'],
             'checked': s.get('checked', False),
+            'review': s.get('review') or '',
             'diffs': x['diffs'],
         })
     if json_out:
         print(json.dumps({'reviewed': len(rows), 'rows': rows},
                          ensure_ascii=False, indent=2))
         return 0
+    if pending_only:
+        rows = [r for r in rows if not r['checked']]
     n_ok = sum(1 for r in rows if r['passed'])
+    if board:
+        try:
+            from engine.scenarios.review_marks import review_state
+            st = review_state()
+        except ImportError:
+            st = None
+        print('复核看板（只读；落笔仍是你的判断）：')
+        print('  ' + _pad('场景', 8) + _pad('期望', 10)
+              + _pad('实际', 10) + _pad('对照', 8) + _pad('复核状态', 24)
+              + '输入')
+        for r in rows:
+            if not r['checked']:
+                mark = '待复核'
+            elif r['review']:
+                mark = r['review'][:24]
+            else:
+                mark = '已复核（无记录）'
+            text = scenes[r['id']]['text'][:18]
+            print('  ' + _pad(r['id'], 8) + _pad(r['expect'], 10)
+                  + _pad(r['actual'], 10)
+                  + _pad('符合' if r['passed'] else '不符', 8)
+                  + _pad(mark, 24) + text)
+        print(f"  合计 {len(rows)} 个（符合 {n_ok} / 需人看 "
+              f"{len(rows) - n_ok}）")
+        if st:
+            print(f"  复核分布：正确 {st['ok']} / 误判-待修 "
+                  f"{st['wrong']} / 边界情况 {st['edge']} / 待复核 "
+                  f"{st['pending']}")
+        print('  逐条落笔：paradox-engine --mark S05 --verdict ok'
+              '（wrong=误判待修 / edge=边界情况）')
+        print('  引擎只把依据摆出来，结论仍是人的判断（只诊断不决策）。')
+        return 0
     print(f"场景复核 {len(rows)} 个（✅ 判定符合期望 {n_ok} / ⚠️ 需人看 "
           f"{len(rows) - n_ok}）")
     for r in rows:
@@ -753,7 +806,8 @@ def main(argv=None):
     if args.review:
         if args.session:
             return session_cmd(args)
-        return review_scenes(args.json, args.scene)
+        return review_scenes(args.json, args.scene, args.board,
+                            args.pending_only)
 
     if args.scenarios:
         return _run_scenarios(args.json)
