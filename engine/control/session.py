@@ -33,9 +33,11 @@ session.py — 多轮状态构件（第 0 层总控外围，工作台件）
 PORTS = {
     'in': {'action': 'str', 'path': 'str?', 'text': 'str?', 'new_info': 'str?',
            'beliefs': 'list?', 'structured': 'dict?', 'text_file': 'str?',
-           'split': 'str?', 'max_segs': 'int?', 'max_seg_chars': 'int?'},
+           'split': 'str?', 'max_segs': 'int?', 'max_seg_chars': 'int?',
+           'out_file': 'str?', 'overwrite': 'bool?'},
     'out': {'verdict': 'str', 'state': 'dict', 'turn': 'dict?',
-            'revision': 'dict?', 'imported': 'dict?', 'boundary': 'str'},
+            'revision': 'dict?', 'imported': 'dict?', 'markdown': 'str?',
+            'boundary': 'str'},
 }
 
 import io
@@ -109,6 +111,24 @@ def _load(path):
     return _normalize(data)
 
 
+def _write_text(path, text, overwrite=False):
+    """写文本（临时文件 + 替换）。目标已存在且没开 overwrite → 拒绝覆盖。"""
+    if os.path.isdir(path):
+        raise IsADirectoryError('导出路径是目录，不是文件：%s' % path)
+    if os.path.exists(path) and not overwrite:
+        raise FileExistsError('导出目标已存在（没开覆盖就不动它）：%s' % path)
+    d = os.path.dirname(os.path.abspath(path)) or '.'
+    fd, tmp = tempfile.mkstemp(dir=d, prefix='.session-', suffix='.tmp')
+    try:
+        with io.open(fd, 'w', encoding='utf-8', newline='\n') as fh:
+            fh.write(text)
+        os.replace(tmp, path)
+    except Exception:
+        if os.path.exists(tmp):
+            os.remove(tmp)
+        raise
+
+
 def _save(path, state):
     """临时文件 + 替换：写一半中断也不会留下半个 JSON。"""
     d = os.path.dirname(os.path.abspath(path)) or '.'
@@ -161,7 +181,8 @@ def _add(state, text, structured=None):
         out = e.get('output') if isinstance(e.get('output'), dict) else {}
         execution.append({'step': e.get('step'), 'component': e.get('component'),
                           'status': e.get('status'),
-                          'verdict': out.get('verdict')})   # 真跑的构件才有
+                          'verdict': out.get('verdict'),    # 真跑的构件才有
+                          'note': e.get('note') or ''})
     i = len(state['turns']) + 1
     turn = {
         'i': i, 'text': text, 'type': cls.get('main_type'),
@@ -273,6 +294,109 @@ def _add_file(state, text_file, mode='para', max_segs=200,
             'skipped_empty_blocks': empty, 'segments': len(segs)}, None
 
 
+def _report_md(state, session_path=None):
+    """把会话导成 Markdown 台账：**只写记过的东西**，没跑的照实标。"""
+    st = _summary(state)
+    L = ['# 诊断台账（paradox-engine 会话）', '']
+    L.append('- 导出时间：%s' % _now())
+    if session_path:
+        L.append('- 会话文件：`%s`' % session_path)
+    L.append('- 规模：轮次 %d · 墙事件 %d · 信念 %d 条 · 修正 %d 次'
+             % (st['turns'], st['wall_count'], len(st['beliefs']),
+                len(st['revisions'])))
+    if st['created']:
+        L.append('- 会话建立：%s（末次更新 %s）' % (st['created'],
+                                              st['updated'] or '—'))
+    L.append('')
+    if not state['turns']:
+        L.append('> 这个会话里还没有轮次——空台账，不编内容。')
+        L.append('')
+    if st['per_type']:
+        L.append('## 题型分布')
+        L.append('')
+        L.append('| 题型 | 条数 |')
+        L.append('|:--|--:|')
+        for t, n in st['per_type'].items():
+            L.append('| %s | %d |' % (t, n))
+        L.append('')
+
+    if state['turns']:
+        L.append('## 逐条诊断')
+        L.append('')
+        L.append('| # | 判类 | 复杂度 | 路由 | 五步结论 | 真跑/没跑 | 材料（开头） |')
+        L.append('|--:|:--|:--|:--|:--|:--|:--|')
+        for t in state['turns']:
+            ran = sum(1 for e in t['execution'] if e['status'] == 'run')
+            pend = len(t['execution']) - ran
+            head = t['text'].replace('\n', ' ')[:30].replace('|', '\\|')
+            L.append('| %d | %s %s | %s | %s | %s | %d/%d | %s |'
+                     % (t['i'], t['type'], t.get('type_name') or '',
+                        t['level'], t['route'], t['verdict'], ran, pend, head))
+        L.append('')
+        for t in state['turns']:
+            L.append('### %d. %s %s（%s，%s）'
+                     % (t['i'], t['type'], t.get('type_name') or '', t['level'],
+                        t['route']))
+            L.append('')
+            L.append('- 五步结论：`%s`（判类置信度 %s）'
+                     % (t['verdict'], t.get('confidence') or '—'))
+            L.append('- 材料原文：')
+            L.append('')
+            for line in (t['text'] or '').split('\n'):
+                L.append('  > %s' % line)
+            L.append('')
+            if t['execution']:
+                L.append('- 管线：')
+                for e in t['execution']:
+                    pieces = ['%s：%s' % (e['component'],
+                                          '真跑' if e['status'] == 'run'
+                                          else '没跑')]
+                    if e.get('verdict'):
+                        pieces.append('→ %s' % e['verdict'])
+                    if e.get('note'):
+                        pieces.append('（%s）' % e['note'])
+                    L.append('  - ' + ' '.join(pieces))
+                L.append('')
+
+    if state['walls']:
+        L.append('## 墙事件（撞墙族构件真跑过才记）')
+        L.append('')
+        L.append('| 轮次 | 构件 | 构件自己的 verdict |')
+        L.append('|--:|:--|:--|')
+        for w in state['walls']:
+            L.append('| %s | %s | %s |' % (w['i'], w['component'],
+                                           w.get('component_verdict') or '—'))
+        L.append('')
+
+    if state['beliefs']:
+        L.append('## 当前信念集')
+        L.append('')
+        for b in state['beliefs']:
+            L.append('- %s' % b)
+        L.append('')
+
+    if state['revisions']:
+        L.append('## 信念修正史')
+        L.append('')
+        for r in state['revisions']:
+            L.append('- 第 %d 次（%s）：新信息「%s」'
+                     % (r['i'], r['verdict'], r['new_info']))
+            L.append('  - 保留 %s / 放弃 %s（旧集合来自%s）'
+                     % (r['kept'], r['dropped'],
+                        r.get('beliefs_source') or '—'))
+            L.append('  - 修正前 %s → 修正后 %s'
+                     % (r.get('beliefs_before'), r.get('beliefs_after')))
+        L.append('')
+
+    L.append('## 边界')
+    L.append('')
+    L.append('- ' + BOUNDARY)
+    L.append('- 台账里每条都是引擎自己的输出（判类/五步结论/构件 verdict），'
+             '没有二次加工；「没跑」就是没跑，原因照实记在管线里。')
+    L.append('')
+    return '\n'.join(L)
+
+
 def run(inputs):
     """
     做什么：多轮会话——add 记一条诊断 / add_file 整篇材料逐段诊断 /
@@ -288,10 +412,12 @@ def run(inputs):
                                    % type(inputs).__name__)
     action = inputs.get('action')
     path = inputs.get('path')
-    if action not in ('add', 'add_file', 'revise', 'state', 'reset'):
+    if action not in ('add', 'add_file', 'revise', 'state', 'reset',
+                      'report'):
         return _result('input_pending', _summary(_empty()),
                        explanation='action 应为 add/add_file/revise/state/'
-                                   'reset，得到 %r——诚实拦截' % (action,))
+                                   'reset/report，得到 %r——诚实拦截'
+                                   % (action,))
     if not isinstance(path, str) or not path.strip():
         return _result('input_pending', _summary(_empty()),
                        explanation='必须给 path（会话文件路径）——不会悄悄'
@@ -376,6 +502,43 @@ def run(inputs):
                         '、'.join('%s×%d' % (k, v) for k, v in why.items())))
         return _result(verdict, _summary(state), imported=res,
                        explanation=note)
+
+    if action == 'report':
+        out_file = inputs.get('out_file')
+        overwrite = inputs.get('overwrite', False)
+        if out_file is not None and not isinstance(out_file, str):
+            return _result('input_pending', _summary(state),
+                           explanation='out_file 必须是字符串路径（或 "-" '
+                                       '表示只在结果里返回文本）')
+        md = _report_md(state, path)
+        if not state['turns'] and not state['beliefs'] \
+                and not state['revisions']:
+            return _result('nothing_to_report', _summary(state),
+                           markdown=md,
+                           explanation='会话是空的——导出会得到空台账，'
+                                       '不编内容；先用 --add / --add-file 记材料')
+        if out_file in (None, '-'):
+            return _result('report_ready', _summary(state), markdown=md,
+                           explanation='台账已生成（%d 字），未写文件'
+                                       % len(md))
+        target = os.path.abspath(out_file)
+        if target == os.path.abspath(path):
+            return _result('input_pending', _summary(state),
+                           explanation='导出目标不能是会话文件本身（会把它'
+                                       '覆盖掉）——诚实拦截')
+        try:
+            _write_text(target, md, bool(overwrite))
+        except IsADirectoryError as exc:
+            return _result('path_invalid', _summary(state),
+                           explanation=str(exc), markdown=md)
+        except FileExistsError as exc:
+            return _result('file_exists', _summary(state),
+                           explanation=str(exc), markdown=md)
+        except (IOError, OSError) as exc:
+            return _result('input_pending', _summary(state),
+                           explanation='写台账失败：%s' % exc, markdown=md)
+        return _result('report_written', _summary(state), markdown=md,
+                       explanation='台账已写入 %s（%d 字）' % (target, len(md)))
 
     # revise
     new_info = inputs.get('new_info')

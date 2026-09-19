@@ -123,6 +123,12 @@ def build_parser():
     p.add_argument('--session-reset', action='store_true',
                    dest='session_reset',
                    help='配合 --session：清空这个会话（文件保留）')
+    p.add_argument('--export', type=str, default=None, metavar='文件',
+                   help='配合 --session：把会话导成 Markdown 台账（给 "-" '
+                        '则只打印）；目标已存在时默认不覆盖')
+    p.add_argument('--export-overwrite', action='store_true',
+                   dest='export_overwrite',
+                   help='配合 --export：允许覆盖已存在的台账文件')
     return p
 
 
@@ -413,6 +419,8 @@ def session_cmd(args):
         action = 'state'
     elif args.session_reset:
         action = 'reset'
+    elif args.export is not None:
+        action = 'report'
     elif args.add_file is not None:
         action = 'add_file'
     elif args.add is not None:
@@ -426,6 +434,9 @@ def session_cmd(args):
               if args.json else msg)
         return 2
     inputs = {'action': action, 'path': args.session}
+    if action == 'report':
+        inputs['out_file'] = args.export
+        inputs['overwrite'] = args.export_overwrite
     if action == 'add_file':
         inputs['text_file'] = args.add_file
         inputs['split'] = args.split
@@ -460,6 +471,25 @@ def session_cmd(args):
                                  if b.strip()]
     r = session_run(inputs)
     st = r['state']
+    if action == 'report':
+        md = r.get('markdown') or ''
+        if r['verdict'] == 'report_ready':
+            print(md if not args.json else json.dumps(
+                {'verdict': r['verdict'], 'bytes': len(md), 'state': st,
+                 'boundary': r['boundary']}, ensure_ascii=False, indent=2))
+            return 0
+        msg = r.get('explanation') or r['verdict']
+        if r['verdict'] in ('report_written',):
+            print(json.dumps(r, ensure_ascii=False, indent=2) if args.json
+                  else '台账：' + msg)
+            return 0
+        if r['verdict'] == 'nothing_to_report':
+            print(json.dumps(r, ensure_ascii=False, indent=2) if args.json
+                  else '没导出：' + msg)
+            return 2
+        print(json.dumps(r, ensure_ascii=False, indent=2) if args.json
+              else '没导出：' + msg)
+        return 2
     if r['verdict'] in ('input_pending', 'state_corrupt', 'path_invalid',
                         'empty_session'):
         msg = r.get('explanation') or ('%s：%s' % (r['verdict'], st))
@@ -518,6 +548,7 @@ def session_guard_error(args, json_out):
         ('--add', args.add is not None),
         ('--add-file', args.add_file is not None),
         ('--revise', args.revise is not None),
+        ('--export', args.export is not None),
         ('--beliefs', bool(args.beliefs)),
         ('--session-state', args.session_state),
         ('--session-reset', args.session_reset)) if v]

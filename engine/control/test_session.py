@@ -257,9 +257,80 @@ try:
     check("全空白材料 → file_empty（不假装导入 0 段成功）",
           session_run({'action': 'add_file', 'path': pi,
                        'text_file': empty})['verdict'] == 'file_empty')
+
+    # ── 用例14：台账导出（Markdown）
+    pr = os.path.join(d, '台账源.json')
+    session_run({'action': 'add', 'path': pr, 'text': TXT_CONFLICT})
+    session_run({'action': 'add', 'path': pr, 'text': TXT_WALL,
+                 'structured': {'sentence': 'liar'}})
+    session_run({'action': 'revise', 'path': pr, 'beliefs': ['P→Q', 'P'],
+                 'new_info': '¬Q'})
+    rr = session_run({'action': 'report', 'path': pr})
+    md = rr.get('markdown') or ''
+    check("不写文件时 → report_ready 且带台账文本",
+          rr['verdict'] == 'report_ready' and md.startswith('# 诊断台账'),
+          rr['verdict'])
+    check("台账里有每一条轮次（编号 + 判类 + 原文）",
+          '### 1. T2' in md and '### 2. T6' in md and TXT_CONFLICT in md,
+          md[:120])
+    check("台账规模数字与会话汇总一致",
+          ('轮次 2' in md) and ('墙事件 1' in md)
+          and rr['state']['turns'] == 2 and rr['state']['wall_count'] == 1)
+    note0 = json.loads(text_of(pr))['turns'][0]['execution'][0]['note']
+    check("台账照实写「没跑」及原因（就是会话里记的那句，不美化）",
+          '没跑' in md and note0 and note0 in md, repr(note0[:60]))
+    check("台账有墙事件表（构件自己的 verdict）",
+          '墙事件' in md and 'liar_cycle' in md)
+    check("台账有信念集与修正史（含 before→after）",
+          '当前信念集' in md and '信念修正史' in md and '修正前' in md)
+    check("台账带边界声明（只诊断不决策）", '只诊断不决策' in md)
+
+    tout = os.path.join(d, '台账.md')
+    rw = session_run({'action': 'report', 'path': pr, 'out_file': tout})
+    check("导出到文件 → report_written",
+          rw['verdict'] == 'report_written' and os.path.exists(tout),
+          rw['verdict'])
+    body = text_of(tout)
+    check("写出的是同一份台账且行尾 LF",
+          body.startswith('# 诊断台账') and '\r' not in body)
+    check("写文件不留临时文件",
+          not [f for f in os.listdir(d) if f.startswith('.session-')])
+    again = session_run({'action': 'report', 'path': pr, 'out_file': tout})
+    check("目标已存在且没开覆盖 → file_exists（不动原文件）",
+          again['verdict'] == 'file_exists' and text_of(tout) == body,
+          again['verdict'])
+    ro = session_run({'action': 'report', 'path': pr, 'out_file': tout,
+                      'overwrite': True})
+    check("开了覆盖才重写（report_written）",
+          ro['verdict'] == 'report_written' and text_of(tout) == body)
+    same = session_run({'action': 'report', 'path': pr, 'out_file': pr})
+    check("导出目标 = 会话文件本身 → 拦下（别把台账源删了）",
+          same['verdict'] == 'input_pending'
+          and session_run({'action': 'state',
+                           'path': pr})['state']['turns'] == 2,
+          same['verdict'])
+    check("导出目标是目录 → path_invalid",
+          session_run({'action': 'report', 'path': pr,
+                       'out_file': d})['verdict'] == 'path_invalid')
+    check("out_file 非字符串 → input_pending",
+          session_run({'action': 'report', 'path': pr,
+                       'out_file': 5})['verdict'] == 'input_pending')
+    pempty = os.path.join(d, '空会话.json')
+    check("空会话 → nothing_to_report（不编内容）",
+          session_run({'action': 'report',
+                       'path': pempty})['verdict'] == 'nothing_to_report')
+    corrupt = os.path.join(d, '坏会话.json')
+    with io.open(corrupt, 'w', encoding='utf-8') as fh:
+        fh.write('{ 坏')
+    outbad = os.path.join(d, '不该出现.md')
+    rbad = session_run({'action': 'report', 'path': corrupt,
+                        'out_file': outbad})
+    check("会话损坏 → state_corrupt 且不产出台账文件",
+          rbad['verdict'] == 'state_corrupt' and not os.path.exists(outbad),
+          rbad['verdict'])
 finally:
     shutil.rmtree(d, ignore_errors=True)
 
 print("=" * 60)
-print(f"结果: {PASS}/51 通过")
-raise SystemExit(0 if PASS == 51 else 1)
+print(f"结果: {PASS}/68 通过")
+raise SystemExit(0 if PASS == 68 else 1)
