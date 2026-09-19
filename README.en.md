@@ -101,7 +101,7 @@ print(r['report'])
 ```bash
 # After cloning, from the repository root
 python demo.py          # twenty-step tour
-python run_tests.py     # full regression (47 test files / 1373 assertions)
+python run_tests.py     # full regression (48 test files / 1388 assertions)
 ```
 
 `demo.py` demonstrates twenty things (①②③ the paradox trio → ④-⑩ the
@@ -194,6 +194,7 @@ paradox-engine/
 │       ├── nd_propositional.py    natural deduction ND (proof trees, classical/intuitionistic)
 │       ├── first_order.py         first-order logic (∀/∃ finite-domain expansion)
 │       ├── monadic_fol.py         monadic predicate logic decision (decidable fragment: domain ≤ 2^k, with countermodels)
+│       ├── model_check.py         CTL model checking on an explicit Kripke structure (invariants / reachability / response)
 │       ├── resolution.py          first-order resolution (Skolem + unification + refutation)
 │       ├── equality_tableau.py    equality + tableau (countermodel)
 │       ├── ltl.py                 temporal LTL (G/F/X/U along paths)
@@ -363,7 +364,7 @@ when a real pain point appears).
 
 ### Test status
 
-- **1373 formal assertions pass** (47 test files), covering every mechanism
+- **1388 formal assertions pass** (48 test files), covering every mechanism
   component plus the controller/scenario/AI-tool layers;
 - **One command runs the whole suite**: `python run_tests.py` (discover + run +
   summarize; a single failing file yields a non-zero exit — the same entry

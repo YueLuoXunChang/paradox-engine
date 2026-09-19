@@ -111,7 +111,7 @@ paradox-engine 最终形态：**一个分情况分层、挂上 AI 就能用的�
 撞墙+Dung）；demo ⑮ 步；工具输出带 boundary（只诊断不决策随行）。
 → 生态接口收口（轨 C1，2026-09-07）：工具协议冻结——`freeze_tool_schema.py`
 从活注册表生成契约快照（`engine/ai/tool_schema_frozen.json`）+ 调用方文档
-（`docs/tool_schema.md`，30 工具契约表）；`test_tool_contract.py` 21 项防漂移
+（`docs/tool_schema.md`，31 工具契约表）；`test_tool_contract.py` 21 项防漂移
 （契约改了要让调用方知道，不能静默改）。**工具名/参数名 = 对外契约**：有意
 变更须重新冻结并在 CHANGELOG 记账。
 → 工程化收口：`run_tests.py`（全量回归一条命令）+ `.github/workflows/test.yml`

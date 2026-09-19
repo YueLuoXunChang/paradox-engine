@@ -2,7 +2,7 @@
 
 > 由 `python engine/_components_doc.py --write` 从各模块 docstring 与 `PORTS` 生成；`--check` 可在改动后比对漂移。手改这份文件会在检查里报不一致。
 
-- 构件数：**38** 个（不含下划线内部件与测试）
+- 构件数：**39** 个（不含下划线内部件与测试）
 
 ## 第 0 层 · 总控（判类/复杂度/路由/五步流水线/工作台）
 
@@ -85,6 +85,13 @@
 - 做什么：用可能世界语义判定模态公式（□ 必然 / ◇ 可能）的真假与可满足性
 - 输入端口：`worlds: list?`、`access: dict?`、`system: str?`、`assign: dict?`、`formula: str`、`world: str?`
 - 输出端口：`verdict: str`、`system: str`、`note: str`、`boundary: str`
+- 可独立运行：是（自带自测）
+
+### `engine/classical/model_check.py`
+
+- 做什么：输入一个**显式 Kripke 结构**（状态、迁移、每个状态上的原子命题）与一个
+- 输入端口：`states: list?`、`transitions: list?`、`labels: dict?`、`formula: str?`、`init: list?`
+- 输出端口：`verdict: str`、`explanation: str`、`holds_in: list`、`fails_in: list`、`sat_count: int?`、`boundary: str`
 - 可独立运行：是（自带自测）
 
 ### `engine/classical/monadic_fol.py`

@@ -291,6 +291,28 @@
         "type": "array"
       }
     },
+    "model_check": {
+      "formula": {
+        "required": false,
+        "type": "string"
+      },
+      "init": {
+        "required": false,
+        "type": "array"
+      },
+      "labels": {
+        "required": false,
+        "type": "object"
+      },
+      "states": {
+        "required": false,
+        "type": "array"
+      },
+      "transitions": {
+        "required": false,
+        "type": "array"
+      }
+    },
     "monadic_fol": {
       "formula": {
         "required": false,
@@ -574,5 +596,5 @@
       }
     }
   },
-  "tool_count": 30
+  "tool_count": 31
 }
