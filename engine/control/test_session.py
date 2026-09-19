@@ -590,9 +590,54 @@ try:
           len(rst5['state']['revisions']) == 0
           and session_run({'action': 'overview', 'path': pt5})['overview']
           ['t5']['t5_linked'] == [])
+    # ── 用例19：线索建议落账（建议只是建议，不自动应用）
+    pcl = os.path.join(d, '线索.json')
+    r_cl = session_run({'action': 'add', 'path': pcl, 'text': TXT_CONFLICT,
+                        'clues': True})
+    cl = r_cl['turn'].get('clues') or {}
+    check("--clues 时轮次记下线索建议",
+          r_cl['verdict'] == 'turn_added' and cl.get('verdict') == 'suggested',
+          str(cl))
+    check("可直接用的键来自原文（A/B 都在材料里）",
+          cl['ready'].get('A') in TXT_CONFLICT
+          and cl['ready'].get('B') in TXT_CONFLICT, str(cl.get('ready')))
+    check("还欠人给的键记下了（wA/wNotA）",
+          set(cl.get('need_human') or []) == {'wA', 'wNotA'},
+          str(cl.get('need_human')))
+    check("线索条目写明「要人确认 + 不自动应用」",
+          '要人确认' in cl.get('note', '')
+          and '不自动应用' in cl.get('note', ''), cl.get('note'))
+    r_no = session_run({'action': 'add', 'path': pcl, 'text': TXT_PLAIN})
+    check("不给 clues 就不跑建议器（默认不额外算）",
+          'clues' not in r_no['turn'], str(sorted(r_no['turn'])))
+    session_run({'action': 'add', 'path': pcl, 'text': TXT_WALL,
+                 'structured': {'sentence': 'liar'}, 'clues': True})
+    ov_cl = session_run({'action': 'overview', 'path': pcl})['overview']['clues']
+    check("汇总统计有建议的轮次数",
+          ov_cl['turns_with_clues'] == 2, str(ov_cl['turns_with_clues']))
+    check("汇总按键统计「可直接用」与「还欠人给」",
+          ov_cl['ready_keys'].get('A') == 1
+          and ov_cl['need_human_keys'].get('wA') == 1, str(ov_cl))
+    check("汇总列出仍欠线索的轮次（只统计）",
+          ov_cl['turns_pending_clues'] == [1], str(ov_cl['turns_pending_clues']))
+    check("汇总写明落账不等于落库",
+          '落账不等于落库' in ov_cl['note'], ov_cl['note'])
+    md_cl = session_run({'action': 'report', 'path': pcl})['markdown']
+    check("台账逐条段写出建议值（标注是建议）",
+          '线索建议（suggested）' in md_cl and "A = '三周上线'" in md_cl,
+          md_cl[-300:])
+    check("台账逐条段写出需人给的键", '需人给：wA、wNotA' in md_cl)
+    check("台账汇总段写出线索统计",
+          '线索建议：2 条轮次有建议' in md_cl, md_cl[:600])
+    check("线索落账不改引擎行为：没跑件数照旧为 3（没自动用建议）",
+          len([e for e in r_cl['turn']['execution']
+               if e['status'] == 'run']) == 0, str(r_cl['turn']['execution']))
+    check("clues 传非真值也不报错（按假处理）",
+          session_run({'action': 'add', 'path': pcl, 'text': TXT_PLAIN,
+                       'clues': 0})['verdict'] == 'turn_added')
 finally:
     shutil.rmtree(d, ignore_errors=True)
 
 print("=" * 60)
-print(f"结果: {PASS}/124 通过")
-raise SystemExit(0 if PASS == 124 else 1)
+print(f"结果: {PASS}/138 通过")
+raise SystemExit(0 if PASS == 138 else 1)

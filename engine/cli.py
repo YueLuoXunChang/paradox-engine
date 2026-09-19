@@ -105,6 +105,10 @@ def build_parser():
                    dest='add_file',
                    help='配合 --session：整篇材料（UTF-8 文本）逐段诊断并记账——'
                         'para=按空行分段（默认）、line=按行')
+    p.add_argument('--clues', action='store_true',
+                   help='配合 --session --add/--add-file：顺手记下结构化线索'
+                        '建议（可直接用的键 + 还欠人给的键）——建议只是建议，'
+                        '不会自动进 --structured')
     p.add_argument('--split', type=str, default='para', choices=['para', 'line'],
                    help='配合 --add-file 的分段方式（默认 para）')
     p.add_argument('--max-segs', type=int, default=200, dest='max_segs',
@@ -459,6 +463,8 @@ def session_cmd(args):
         inputs['text_file'] = args.add_file
         inputs['split'] = args.split
         inputs['max_segs'] = args.max_segs
+    if args.clues:
+        inputs['clues'] = True
     if action == 'add':
         inputs['text'] = args.add
         if args.structured_json:
@@ -529,6 +535,14 @@ def session_cmd(args):
         print(f"  执行：真跑 {len(ran)} 件"
               + (f"（{'、'.join(e['component'] for e in ran)}）" if ran else '')
               + f" / 没跑 {len(pend)} 件（缺结构化线索的照实标）")
+        cl = t.get('clues')
+        if cl:
+            print('  线索建议：'
+                  + ('、'.join('%s=%r' % kv for kv in
+                              (cl.get('ready') or {}).items()) or '无')
+                  + '；需人给：'
+                  + ('、'.join(cl.get('need_human') or []) or '无')
+                  + '（建议不自动应用）')
     elif action == 'overview':
         ov = r['overview']
         print('批次汇总（只统计引擎自己的标签，不做相似度聚类）：')
@@ -552,6 +566,20 @@ def session_cmd(args):
                                           ov['components_ran'].items()))
         for k, v in ov['not_ran_reasons'].items():
             print(f'  没跑 ×{v}：{k}')
+        cl = ov.get('clues') or {}
+        if cl.get('turns_with_clues'):
+            print('  线索建议：%d 条轮次有建议；可直接用 %s；还欠人给 %s'
+                  % (cl['turns_with_clues'],
+                     '、'.join('%s×%d' % kv for kv in
+                              (cl.get('ready_keys') or {}).items())
+                     or '无',
+                     '、'.join('%s×%d' % kv for kv in
+                              (cl.get('need_human_keys') or {}).items())
+                     or '无'))
+            if cl.get('turns_pending_clues'):
+                print('      仍欠线索的轮次：'
+                      + '、'.join(str(i) for i in
+                                  cl['turns_pending_clues']))
         t5 = ov.get('t5') or {}
         if t5.get('t5_turns'):
             print('  T5（知识更新）材料：轮次 '
@@ -582,6 +610,12 @@ def session_cmd(args):
         for it in imp['imported']:
             print(f"  {it['i']}. [{it['type']}-{it['level']}] "
                   f"{it['head']}（{it['verdict']}）")
+        cl_turns = [t for t in (r['state'].get('turn_list') or [])
+                    if t.get('clues')]
+        if cl_turns:
+            st_cl = r['state'].get('clue_stats') or {}
+            print('  线索建议：%d 条轮次有建议（详情见台账）'
+                  % len(cl_turns))
         for sk in imp['skipped']:
             print(f"  未处理 第{sk['seg']}段（{sk['reason']}，"
                   f"{sk['chars']} 字）：{sk['head']}")
@@ -620,6 +654,7 @@ def session_guard_error(args, json_out):
         ('--export', args.export is not None),
         ('--beliefs', bool(args.beliefs)),
         ('--turn', args.turn is not None),
+        ('--clues', args.clues),
         ('--session-state', args.session_state),
         ('--overview', args.overview),
         ('--session-reset', args.session_reset)) if v]

@@ -35,7 +35,7 @@ PORTS = {
            'beliefs': 'list?', 'structured': 'dict?', 'text_file': 'str?',
            'split': 'str?', 'max_segs': 'int?', 'max_seg_chars': 'int?',
            'out_file': 'str?', 'overwrite': 'bool?', 'scene_id': 'str?',
-           'turn': 'int?'},
+           'turn': 'int?', 'clues': 'bool?'},
     'out': {'verdict': 'str', 'state': 'dict', 'turn': 'dict?',
             'revision': 'dict?', 'imported': 'dict?', 'markdown': 'str?',
             'reviews': 'list?', 'overview': 'dict?',
@@ -195,7 +195,32 @@ def _summary(state):
     }
 
 
-def _add(state, text, structured=None):
+def _clues(text):
+    """跑线索建议，压成能落账的小结构；跑不了就照实记 None。"""
+    try:
+        from engine.control.clue_suggester import run as suggest
+    except ImportError:
+        try:
+            sys.path.insert(0, _HERE)
+            from clue_suggester import run as suggest  # noqa: E402
+        except ImportError as exc:
+            return {'verdict': 'unavailable', 'why': '建议器读不到（%s）'
+                                            % exc, 'ready': {},
+                    'need_human': []}
+    r = suggest({'text': text})
+    ready, need = {}, []
+    for c in r['components']:
+        for s in c['ready']:
+            ready.setdefault(s['key'], s['value'])
+        for x in c['need_human']:
+            if x['key'] not in need:
+                need.append(x['key'])
+    return {'verdict': r['verdict'], 'ready': ready,
+            'need_human': need, 'note': '启发式建议，要人确认；'
+                                        '引擎不产生逻辑式，也不自动应用'}
+
+
+def _add(state, text, structured=None, clues=False):
     inputs = {'text': text}
     if structured:
         inputs['structured'] = structured
@@ -217,6 +242,8 @@ def _add(state, text, structured=None):
         'route': route.get('route_id'), 'confidence': cls.get('confidence'),
         'verdict': r.get('verdict'), 'execution': execution, 'when': _now(),
     }
+    if clues:
+        turn['clues'] = _clues(text)   # 建议而已，落账不等于落库
     state['turns'].append(turn)
     for e in execution:
         # 撞墙族构件**真跑了**才记（没跑就没有，不假装）
@@ -280,7 +307,7 @@ def _split_material(raw, mode='para'):
 
 
 def _add_file(state, text_file, mode='para', max_segs=200,
-              max_seg_chars=2000):
+              max_seg_chars=2000, clues=False):
     """整篇材料逐段诊断并记账；返回 (导入明细, 未处理明细) 或 (None, 错误)。"""
     if not isinstance(text_file, str) or not text_file.strip():
         return None, {'verdict': 'input_pending',
@@ -319,7 +346,7 @@ def _add_file(state, text_file, mode='para', max_segs=200,
             skipped.append({'seg': k + 1, 'reason': 'too_long',
                             'chars': len(s), 'head': s[:24]})
             continue
-        turn = _add(state, s)
+        turn = _add(state, s, None, clues)
         imported.append({'i': turn['i'], 'seg': k + 1, 'chars': len(s),
                          'head': s[:24], 'type': turn['type'],
                          'level': turn['level'], 'verdict': turn['verdict']})
@@ -412,6 +439,28 @@ T5_BOUNDARY = (
     '（`--revise "¬Q" --turn N`），修正走 AGM 构件。')
 
 
+def _clue_stats(state):
+    """线索建议落账统计：多少条有建议、还欠哪些键（只统计）。"""
+    ready, need, pending = {}, {}, []
+    for t in state['turns']:
+        c = t.get('clues')
+        if not c:
+            continue
+        for k, v in (c.get('ready') or {}).items():
+            ready[k] = ready.get(k, 0) + 1
+        for k in (c.get('need_human') or []):
+            need[k] = need.get(k, 0) + 1
+        if c.get('need_human'):
+            pending.append(t['i'])
+    return {'turns_with_clues': sum(1 for t in state['turns']
+                                     if t.get('clues')),
+            'ready_keys': dict(sorted(ready.items())),
+            'need_human_keys': dict(sorted(need.items())),
+            'turns_pending_clues': pending,
+            'note': '线索建议只是建议：落账不等于落库，'
+                    '要真跑构件仍得把它写进 --structured'}
+
+
 def _t5_link(state):
     """T5 材料与信念集的对接情况（只报事实，不替人补内容）。"""
     t5 = [t['i'] for t in state['turns'] if t['type'] == 'T5']
@@ -466,6 +515,7 @@ def _overview(state):
         'reviews': len(state['reviews']),
         'beliefs': len(state['beliefs']),
         'revisions': len(state['revisions']),
+        'clues': _clue_stats(state),
         't5': _t5_link(state),
         'boundary': OVERVIEW_BOUNDARY,
     }
@@ -500,6 +550,20 @@ def _overview_md(ov):
     if ov['walls']:
         L.append('- 墙事件：' + ' · '.join('%s ×%d' % kv
                                        for kv in ov['walls'].items()))
+    cl = ov.get('clues') or {}
+    if cl.get('turns_with_clues'):
+        L.append('- 线索建议：%d 条轮次有建议' % cl['turns_with_clues'])
+        if cl.get('ready_keys'):
+            L.append('  - 可直接用：' + ' · '.join(
+                '%s×%d' % kv for kv in cl['ready_keys'].items()))
+        if cl.get('need_human_keys'):
+            L.append('  - 还欠人给：' + ' · '.join(
+                '%s×%d' % kv for kv in cl['need_human_keys'].items()))
+        if cl.get('turns_pending_clues'):
+            L.append('  - 仍欠线索的轮次：%s'
+                     % '、'.join(str(i) for i in
+                                 cl['turns_pending_clues']))
+        L.append('  - %s' % cl['note'])
     t5 = ov.get('t5') or {}
     if t5.get('t5_turns'):
         L.append('- T5（知识更新）材料：轮次 %s'
@@ -568,6 +632,15 @@ def _report_md(state, session_path=None):
             for line in (t['text'] or '').split('\n'):
                 L.append('  > %s' % line)
             L.append('')
+            cl_t = t.get('clues')
+            if cl_t:
+                L.append('- 线索建议（%s）：' % cl_t.get('verdict'))
+                for k, v in (cl_t.get('ready') or {}).items():
+                    L.append('  - %s = %r（建议，照原文用词）' % (k, v))
+                if cl_t.get('need_human'):
+                    L.append('  - 需人给：%s'
+                             % '、'.join(cl_t['need_human']))
+                L.append('')
             if t['execution']:
                 L.append('- 管线：')
                 for e in t['execution']:
@@ -744,12 +817,13 @@ def run(inputs):
             return _result('input_pending', _summary(state),
                            explanation='add 需要 text（要诊断的材料文本）'
                                        '——不接受空值')
+        clues = bool(inputs.get('clues'))
         structured = inputs.get('structured')
         if structured is not None and not isinstance(structured, dict):
             return _result('input_pending', _summary(state),
                            explanation='structured 必须是 dict（结构化线索），'
                                        '得到 %s' % type(structured).__name__)
-        turn = _add(state, text.strip(), structured)
+        turn = _add(state, text.strip(), structured, clues)
         state['updated'] = _now()
         _save(path, state)
         return _result('turn_added', _summary(state), turn=turn)
@@ -764,7 +838,7 @@ def run(inputs):
                                            '——诚实拦截' % (name, v))
         res, err = _add_file(state, inputs.get('text_file'),
                              inputs.get('split') or 'para', max_segs,
-                             max_chars)
+                             max_chars, bool(inputs.get('clues')))
         if err is not None:
             return _result(err['verdict'], _summary(state),
                            explanation=err['boundary'])
