@@ -310,6 +310,36 @@ SCENES = [
                 '通用最小管线 + 置信度 low。待人工复核。',
         'checked': False,
     },
+    {
+        'id': 'S26',
+        'title': '仓库调度互锁（关系环之二）',
+        'text': '仓储和运输互相依赖，运输又依赖调度，调度反过来依赖仓储，这个环怎么解',
+        'expect_type': 'T3', 'expect_level': 'L2', 'expect_route': 'R3-L2',
+        'structured': None,
+        'note': '关系结构：三方互锁 → 走一阶关系推理（缺 facts/rules/query 时'
+                '诚实标缺输入）。新场景，待人工复核。',
+        'checked': False,  # 待人工复核
+    },
+    {
+        'id': 'S27',
+        'title': '换水减半（演化过程之二）',
+        'text': '这个池子每换一次水就减少一半杂质，每次操作都减半，多久能干净',
+        'expect_type': 'T4', 'expect_level': 'L1', 'expect_route': 'R4-L1',
+        'structured': None,
+        'note': '演化过程：每次减半 → 走收敛判定（缺 f/err_fn 时诚实标缺输入）。'
+                '新场景，待人工复核。',
+        'checked': False,  # 待人工复核
+    },
+    {
+        'id': 'S28',
+        'title': '效率与效果（定义辨析之二）',
+        'text': '效率和效果是不是一回事，它们的边界到底在哪里',
+        'expect_type': 'T10', 'expect_level': 'L1', 'expect_route': 'R10-L1',
+        'structured': None,
+        'note': '定义辨析：两个常被混用的词 → 走一致性检查（缺 formula 时诚实标'
+                '缺输入）。新场景，待人工复核。',
+        'checked': False,  # 待人工复核
+    },
 ]
 
 # ══════════════════════════════════════════════════════════════

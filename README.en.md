@@ -62,7 +62,7 @@ cd paradox-engine && pip install .
 # Command line
 paradox-engine --text "产品既要快又要稳"
 paradox-engine --text "这句话是假的" --json      # structured output
-paradox-engine --scenarios                      # the scenario library (25 real cases + review status)
+paradox-engine --scenarios                      # the scenario library (28 real cases + review status)
 paradox-engine --scene S01                      # run one case: expected vs actual + what really ran
 paradox-engine --text "..." --explain          # why this classification (scores + matched signals)
 paradox-engine --text "..." --structured '{"A":"...","B":"...","wA":5,"wNotA":5}'
@@ -175,7 +175,7 @@ paradox-engine/
 │   │   ├── counterpoint_gen.py   counterpoint generation (opposites → third state candidate)
 │   │   └── wall_pipeline.py      wall pipeline A (measure→annotate→drill→view→bypass→create → 5-way verdict)
 │   ├── scenarios/             ← Scenario library (real input + expected diagnosis + review — corpus feedback)
-│   │   └── scenarios.py          25-scenario registry + run_all comparison (expected vs actual)
+│   │   └── scenarios.py          28-scenario registry + run_all comparison (expected vs actual)
 │   ├── skeleton/              ← MT-MP-TL skeleton (L0: structure only, no judging)
 │   │   └── mtmp.py               points/threads/topology (12 shapes)/operations (5 kinds)
 │   ├── cold/                  ← Cold logics (L3: chosen by need; external consensus marked as borrowed)

@@ -51,7 +51,7 @@ cd paradox-engine && pip install .
 # 命令行直接用
 paradox-engine --text "产品既要快又要稳"
 paradox-engine --text "这句话是假的" --json      # 结构化输出
-paradox-engine --scenarios                      # 场景库（25 个真实场景 + 复核状态）
+paradox-engine --scenarios                      # 场景库（28 个真实场景 + 复核状态）
 paradox-engine --scene S01                      # 跑单场景：期望 vs 实际 + 真跑白箱
 paradox-engine --text "..." --explain          # 判类依据（主型/副型得分+命中信号+路由）
 paradox-engine --text "既要快又要稳" --structured '{"A":"要快","B":"要稳","wA":5,"wNotA":5}'
@@ -160,7 +160,7 @@ paradox-engine/
 │   │   ├── counterpoint_gen.py  对位创生第三态（对立交汇 → 候选+依据）
 │   │   └── wall_pipeline.py     撞墙管线 A（测→注→钻→看→旁→创 → 五选一诊断）
 │   ├── scenarios/             ← 场景库（真实输入+期望诊断+复核——语料回馈判类器）
-│   │   └── scenarios.py          25 场景注册表 + run_all 对照（期望 vs 实际）
+│   │   └── scenarios.py          28 场景注册表 + run_all 对照（期望 vs 实际）
 │   ├── skeleton/              ← MT-MP-TL 骨架（第 0 层：结构表达，不掺判定）
 │   │   └── mtmp.py              点/线程/拓扑（12 形态）/操作（5 种）
 │   ├── cold/                  ← 冷门逻辑（第 3 层：按痛点选，外部共识归借鉴区）
@@ -320,7 +320,7 @@ run(inputs: dict) -> dict
 - 每个构件自包含：`python engine/<层>/<名>.py` 跑自测（机制自身验证），
   `python engine/<层>/test_<名>.py` 跑正式测试；
 - 演示：`python demo.py` 二十步全过；真实场景端到端：
-  `python engine/ai/ai_scenarios.py`；场景库对照：25 场景（T1-T12 每个题型 ≥2）
+  `python engine/ai/ai_scenarios.py`；场景库对照：28 场景（T1-T12 每个题型 ≥2）
   （`python engine/scenarios/scenarios.py`）；
 - 零第三方依赖，纯 Python 标准库（≥3.9）；
 - **行尾统一 LF**：`.gitattributes` 全局 `eol=lf`——即便 Windows 系统级
