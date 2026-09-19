@@ -626,6 +626,105 @@ def _progress(state, registry_path=None):
     return snap
 
 
+BRIEF_ENGINE_CAN = (
+    '--suggest 看线索建议', '--pending 生成欠线索工作单',
+    '--overview 看批次汇总', '--export 导台账', '--progress 记复核进度快照',
+    '--review --board 看复核看板')
+BRIEF_HUMAN_ONLY = (
+    '把工作单里的 <待填> 换成你的值（引擎不猜数）',
+    'T5（知识更新）材料的命题式（引擎不抽公式）',
+    '逐条落笔：--mark S05 --verdict ok|wrong|edge',
+    '是否推远端 / 打 tag / 定 LICENSE 口径')
+
+
+def _brief_md(state, session_path=None):
+    """一页简报：把会话里已有的记录汇总成"现在什么状态、下一步能干什么"。"""
+    ov = _overview(state)
+    cl = ov.get('clues') or {}
+    t5 = ov.get('t5') or {}
+    snaps = state['snapshots']
+    last = snaps[-1] if snaps else None
+    L = ['# 诊断简报（paradox-engine）', '']
+    L.append('- 生成时间：%s' % _now())
+    if session_path:
+        L.append('- 会话文件：`%s`' % session_path)
+    L.append('- 一句话状态：轮次 %d · 欠线索 %d 条 · 待复核 %d 个 · '
+             '复核快照 %d 次'
+             % (ov['turns'], len(cl.get('turns_pending_clues') or []),
+                (last or {}).get('unchecked', 0), len(snaps)))
+    L.append('')
+    L.append('## 这批材料（引擎判出来的）')
+    L.append('')
+    if not state['turns']:
+        L.append('- 还没有材料轮次。')
+    else:
+        L.append('- 判类分布：%s'
+                 % ' · '.join('%s %d 条' % kv
+                              for kv in ov['per_type'].items()))
+        if ov['levels']:
+            L.append('- 复杂度：%s' % ' · '.join('%s %d 条' % kv
+                                             for kv in ov['levels'].items()))
+        if ov['low_confidence_turns']:
+            L.append('- 判类置信度低（建议人看）：轮次 %s'
+                     % '、'.join(str(i) for i in ov['low_confidence_turns']))
+        if ov['components_ran']:
+            L.append('- 真跑过构件：%s'
+                     % ' · '.join('%s ×%d' % kv
+                                  for kv in ov['components_ran'].items()))
+        if ov['walls']:
+            L.append('- 墙事件：%s' % ' · '.join('%s ×%d' % kv
+                                              for kv in ov['walls'].items()))
+    L.append('')
+    L.append('## 欠什么（需人给的）')
+    L.append('')
+    owed = False
+    if cl.get('need_human_keys'):
+        owed = True
+        L.append('- 线索还欠：%s（仍欠的轮次 %s）'
+                 % (' · '.join('%s×%d' % kv
+                               for kv in cl['need_human_keys'].items()),
+                    '、'.join(str(i) for i in
+                              cl.get('turns_pending_clues') or []) or '无'))
+    if t5.get('t5_pending'):
+        owed = True
+        L.append('- T5（知识更新）还欠命题式：轮次 %s'
+                 % '、'.join(str(i) for i in t5['t5_pending']))
+    if not owed:
+        L.append('- 目前没有欠项（或者还没跑过 --clues：那就先跑一次）。')
+    L.append('')
+    L.append('## 复核到哪了')
+    L.append('')
+    if last:
+        d = last.get('delta_checked')
+        L.append('- 最近一次快照（%s）：已复核 %d / 待复核 %d%s'
+                 % (last['when'], last['checked'], last['unchecked'],
+                    '（第 1 次）' if d is None else '（较上次 %+d）' % d))
+        if last.get('newly_checked'):
+            L.append('- 上次之后新复核：%s' % '、'.join(last['newly_checked']))
+        if last.get('pending_ids'):
+            L.append('- 仍待复核：%s' % '、'.join(last['pending_ids']))
+    else:
+        L.append('- 还没记过快照——`--progress` 记一次，之后能看出进度变化。')
+    if state['reviews']:
+        L.append('- 会话里已记 %d 条复核依据（`--review` 落的）。'
+                 % len(state['reviews']))
+    L.append('')
+    L.append('## 下一步')
+    L.append('')
+    L.append('- 引擎能做：%s' % ' · '.join(BRIEF_ENGINE_CAN))
+    L.append('- 只有你能做：')
+    for h in BRIEF_HUMAN_ONLY:
+        L.append('  - %s' % h)
+    L.append('')
+    L.append('## 边界')
+    L.append('')
+    L.append('- %s' % BOUNDARY)
+    L.append('- 简报只汇总会话里已记下的东西：不推断材料同源、不替人下结论；'
+             '上面"只有你能做"那几件引擎不会代做。')
+    L.append('')
+    return '\n'.join(L)
+
+
 def _worksheet(state):
     """欠线索工作单：把待补的轮次拼成可粘贴清单（值由人填）。"""
     pending, no_clues, ready_only = [], [], []
@@ -895,7 +994,7 @@ def run(inputs):
     path = inputs.get('path')
     if action not in ('add', 'add_file', 'revise', 'state', 'reset',
                       'report', 'review', 'overview',
-                      'worksheet', 'progress'):
+                      'worksheet', 'progress', 'brief'):
         return _result('input_pending', _summary(_empty()),
                        explanation='action 应为 add/add_file/revise/state/'
                                    'reset/report/review/overview/worksheet/progress，得到 %r——诚实拦截'
@@ -927,6 +1026,42 @@ def run(inputs):
 
     if action == 'state':
         return _result('state', _summary(state))
+
+    if action == 'brief':
+        out_file = inputs.get('out_file')
+        if out_file is not None and not isinstance(out_file, str):
+            return _result('input_pending', _summary(state),
+                           explanation='out_file 必须是字符串路径（或 "-" '
+                                       '表示只在结果里返回文本）')
+        empty = not (state['turns'] or state['reviews'] or state['snapshots']
+                     or state['beliefs'] or state['revisions'])
+        md = _brief_md(state, path)
+        if empty:
+            return _result('nothing_to_report', _summary(state),
+                           markdown=md,
+                           explanation='会话是空的——简报会是一页空白，'
+                                       '不编内容；先用 --add/--add-file 记材料、'
+                                       '--review 记依据、--progress 记进度')
+        if out_file in (None, '-'):
+            return _result('brief', _summary(state), markdown=md,
+                           explanation='简报已生成（%d 字），未写文件' % len(md))
+        target = os.path.abspath(out_file)
+        if target == os.path.abspath(path):
+            return _result('input_pending', _summary(state),
+                           explanation='导出目标不能是会话文件本身——诚实拦截')
+        try:
+            _write_text(target, md, bool(inputs.get('overwrite')))
+        except IsADirectoryError as exc:
+            return _result('path_invalid', _summary(state),
+                           explanation=str(exc), markdown=md)
+        except FileExistsError as exc:
+            return _result('file_exists', _summary(state),
+                           explanation=str(exc), markdown=md)
+        except (IOError, OSError) as exc:
+            return _result('input_pending', _summary(state),
+                           explanation='写简报失败：%s' % exc, markdown=md)
+        return _result('brief_written', _summary(state), markdown=md,
+                       explanation='简报已写入 %s（%d 字）' % (target, len(md)))
 
     if action == 'progress':
         try:

@@ -765,9 +765,55 @@ try:
     check("只有快照的会话也能导台账（不算空会话）",
           session_run({'action': 'report', 'path': ppr})['verdict']
           == 'report_ready')
+    # ── 用例22：一页简报（只汇总已记下的东西）
+    pbr = os.path.join(d, '简报.json')
+    session_run({'action': 'add', 'path': pbr, 'text': TXT_CONFLICT,
+                 'clues': True})
+    session_run({'action': 'add', 'path': pbr, 'text': TXT_T5_A,
+                 'clues': True})
+    session_run({'action': 'progress', 'path': pbr})
+    sha_br = sha(pbr)
+    rb = session_run({'action': 'brief', 'path': pbr})
+    mb = rb.get('markdown') or ''
+    check("简报可生成且有标题",
+          rb['verdict'] == 'brief' and mb.startswith('# 诊断简报'), rb['verdict'])
+    for sec in ('## 这批材料', '## 欠什么', '## 复核到哪了', '## 下一步',
+                '## 边界'):
+        check(f"简报含「{sec}」段", sec in mb)
+    ov_br = session_run({'action': 'overview', 'path': pbr})['overview']
+    check("简报的判类分布与汇总一致",
+          all(('%s %d 条' % kv) in mb for kv in ov_br['per_type'].items()),
+          mb[:400])
+    check("简报写出欠线索与仍欠轮次",
+          '线索还欠' in mb and '仍欠的轮次' in mb, mb[:600])
+    check("简报写出 T5 还欠命题式",
+          'T5（知识更新）还欠命题式' in mb, mb[:700])
+    check("简报写出复核进度与仍待复核",
+          '已复核' in mb and '仍待复核' in mb)
+    check("简报把「只有你能做」与「引擎能做」分开列",
+          '只有你能做' in mb and '引擎能做' in mb and '--mark' in mb)
+    check("简报不替人决定：写明引擎不猜数、不抽公式",
+          '引擎不猜数' in mb and '引擎不抽公式' in mb)
+    check("简报只读：会话文件 sha256 未变", sha(pbr) == sha_br)
+    bout = os.path.join(d, '简报.md')
+    rb2 = session_run({'action': 'brief', 'path': pbr, 'out_file': bout})
+    check("简报可写文件且 LF",
+          rb2['verdict'] == 'brief_written' and os.path.exists(bout)
+          and '\r' not in text_of(bout), rb2['verdict'])
+    check("目标已存在且没开覆盖 → file_exists 且文件未变",
+          session_run({'action': 'brief', 'path': pbr,
+                       'out_file': bout})['verdict'] == 'file_exists'
+          and text_of(bout).startswith('# 诊断简报'))
+    check("导出目标 = 会话文件本身 → 拦下",
+          session_run({'action': 'brief', 'path': pbr,
+                       'out_file': pbr})['verdict'] == 'input_pending')
+    check("空会话 → nothing_to_report（不给空白简报）",
+          session_run({'action': 'brief',
+                       'path': os.path.join(d, '空简报.json')})['verdict']
+          == 'nothing_to_report')
 finally:
     shutil.rmtree(d, ignore_errors=True)
 
 print("=" * 60)
-print(f"结果: {PASS}/169 通过")
-raise SystemExit(0 if PASS == 169 else 1)
+print(f"结果: {PASS}/186 通过")
+raise SystemExit(0 if PASS == 186 else 1)

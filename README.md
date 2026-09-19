@@ -70,6 +70,7 @@ paradox-engine --session 会话.json --session-state                # 汇总：�
 paradox-engine --session 会话.json --overview                     # 批次汇总：判类/复杂度/置信度/构件状态
 paradox-engine --session 会话.json --pending                      # 欠线索工作单（可粘贴命令 + 待填空位）
 paradox-engine --session 会话.json --progress                     # 复核进度快照（与上次比：又复核了哪些）
+paradox-engine --session 会话.json --brief                        # 一页简报（状态/欠什么/复核到哪/下一步）
 paradox-engine --session 会话.json --export 台账.md               # 导出 Markdown 诊断台账
 
 # 或作为 Python 包 import
@@ -83,7 +84,7 @@ print(r['report'])
 ```bash
 # 克隆后，在仓库根目录
 python demo.py          # 十九步演示
-python run_tests.py     # 全量回归（一条命令：41 个测试文件 / 1215 项断言）
+python run_tests.py     # 全量回归（一条命令：41 个测试文件 / 1232 项断言）
 ```
 
 `demo.py` 演示十九件事（①②③ 悖论三件套 → ④-⑩ 经典逻辑地基 → ⑪ 撞墙管线 → ⑫ 总控五步 → ⑬ MT-MP-TL 骨架 → ⑭ 冷门逻辑 → ⑮ AI 挂载 → ⑯ 数学底座 → ⑰ 冷门补完 → ⑱ 构造性立场 → ⑲ 墙的精确地图）：
@@ -301,7 +302,7 @@ run(inputs: dict) -> dict
 
 ### 测试状态
 
-- **1215 项正式断言全过**（41 个测试文件），覆盖全部
+- **1232 项正式断言全过**（41 个测试文件），覆盖全部
   机制构件与总控/场景/AI 工具层；
 - **一条命令跑全量回归**：`python run_tests.py`（发现 + 运行 + 汇总；
   任一文件失败即非零退出——CI 与本地同一入口）；

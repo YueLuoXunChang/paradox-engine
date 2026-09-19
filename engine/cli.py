@@ -148,6 +148,14 @@ def build_parser():
     p.add_argument('--export', type=str, default=None, metavar='文件',
                    help='配合 --session：把会话导成 Markdown 台账（给 "-" '
                         '则只打印）；目标已存在时默认不覆盖')
+    p.add_argument('--brief', action='store_true',
+                   help='配合 --session：一页简报（这批材料什么状态、'
+                        '欠什么、复核到哪、下一步能干什么）——只汇总，'
+                        '不替你决定')
+    p.add_argument('--brief-out', type=str, default=None,
+                   dest='brief_out', metavar='文件',
+                   help='配合 --session --brief：把简报写到文件'
+                        '（已存在默认不覆盖）')
     p.add_argument('--progress', action='store_true',
                    help='配合 --session：记一次复核进度快照（读场景表当前'
                         '状态，与上次快照比出新复核/退回哪些）——只读，不落笔')
@@ -498,6 +506,8 @@ def session_cmd(args):
         action = 'state'
     elif args.overview:
         action = 'overview'
+    elif args.brief or args.brief_out is not None:
+        action = 'brief'
     elif args.progress:
         action = 'progress'
     elif args.pending or args.pending_out is not None:
@@ -523,6 +533,9 @@ def session_cmd(args):
     inputs = {'action': action, 'path': args.session}
     if action == 'review':
         inputs['scene_id'] = args.scene or 'all'
+    if action == 'brief':
+        inputs['out_file'] = args.brief_out
+        inputs['overwrite'] = args.export_overwrite
     if action == 'worksheet':
         inputs['out_file'] = args.pending_out
         inputs['overwrite'] = args.export_overwrite
@@ -567,6 +580,17 @@ def session_cmd(args):
                                  if b.strip()]
     r = session_run(inputs)
     st = r['state']
+    if action == 'brief':
+        if r['verdict'] == 'brief':
+            print(r.get('markdown') or '')
+            return 0
+        if r['verdict'] == 'brief_written':
+            print('简报：' + (r.get('explanation') or ''))
+            return 0
+        msg = r.get('explanation') or r['verdict']
+        print(json.dumps(r, ensure_ascii=False, indent=2) if args.json
+              else '没生成：' + msg)
+        return 0 if r['verdict'] == 'nothing_to_report' else 2
     if action == 'progress':
         if r['verdict'] == 'snapshot_taken':
             print('复核进度：' + r['explanation'])
@@ -748,6 +772,7 @@ def session_guard_error(args, json_out):
         ('--overview', args.overview),
         ('--pending', args.pending or args.pending_out is not None),
         ('--progress', args.progress),
+        ('--brief', args.brief or args.brief_out is not None),
         ('--session-reset', args.session_reset)) if v]
     if not given:
         return None
