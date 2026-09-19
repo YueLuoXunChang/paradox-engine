@@ -749,6 +749,28 @@ def _reconcile(state, registry_path=None):
     return '\n'.join(L), stats
 
 
+def _imports_summary(state):
+    """按文件汇总导入情况：累计导入多少段、最近一次从哪起、续跑起点。"""
+    per_file = {}
+    for im in state['imports']:
+        f = per_file.setdefault(im['file'], {'file': im['file'],
+                                             'records': 0, 'imported': 0,
+                                             'skipped': 0, 'mode': im['mode'],
+                                             'next_seg': None,
+                                             'last_start': im['start_seg'],
+                                             'segments': im['segments'],
+                                             'when': im['when']})
+        f['records'] += 1
+        f['imported'] += im['imported']
+        f['skipped'] += im['skipped']
+        f['mode'] = im['mode']
+        f['next_seg'] = im.get('next_seg')
+        f['last_start'] = im['start_seg']
+        f['segments'] = im['segments']
+        f['when'] = im['when']
+    return list(per_file.values())
+
+
 def _brief_md(state, session_path=None):
     """一页简报：把会话里已有的记录汇总成"现在什么状态、下一步能干什么"。"""
     ov = _overview(state)
@@ -760,11 +782,34 @@ def _brief_md(state, session_path=None):
     L.append('- 生成时间：%s' % _now())
     if session_path:
         L.append('- 会话文件：`%s`' % session_path)
+    imps = _imports_summary(state)
+    pending_files = [f for f in imps if f['next_seg']]
     L.append('- 一句话状态：轮次 %d · 欠线索 %d 条 · 待复核 %d 个 · '
-             '复核快照 %d 次'
+             '复核快照 %d 次%s'
              % (ov['turns'], len(cl.get('turns_pending_clues') or []),
-                (last or {}).get('unchecked', 0), len(snaps)))
+                (last or {}).get('unchecked', 0), len(snaps),
+                (' · 待续跑文件 %d 个' % len(pending_files))
+                if pending_files else ''))
     L.append('')
+    if imps:
+        L.append('## 材料导入与续跑')
+        L.append('')
+        for f in imps:
+            L.append('- %s（%s 分段）：按记录累计导入 %d 段、未处理 %d 段；'
+                     '最近一次从第 %d 段起（共 %d 段）'
+                     % (f['file'], f['mode'], f['imported'],
+                        f['skipped'], f['last_start'], f['segments']))
+            if f['next_seg']:
+                L.append('  - 还有没处理的段，续跑：'
+                         '`--session <会话文件> --add-file %s '
+                         '--from-seg %d --chunk 20`'
+                         % (f['file'], f['next_seg']))
+            else:
+                L.append('  - 这个文件的段都处理过了（没有续跑点）')
+        L.append('')
+        L.append('> 未处理的段都记着原因（超段数上限/单段过长），'
+                 '内容不会被静默丢掉。')
+        L.append('')
     L.append('## 这批材料（引擎判出来的）')
     L.append('')
     if not state['turns']:

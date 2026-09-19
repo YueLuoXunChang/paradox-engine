@@ -961,9 +961,43 @@ try:
     session_run({'action': 'reset', 'path': pch})
     check("reset 连导入历史一起清",
           json.loads(text_of(pch))['imports'] == [])
+    # ── 用例25：简报整合导入与续跑（有未处理段就给出续跑命令）
+    pbi = os.path.join(d, '简报导入.json')
+    session_run({'action': 'add_file', 'path': pbi, 'text_file': pk,
+                 'max_segs': 2})
+    rb1 = session_run({'action': 'brief', 'path': pbi})
+    mb1 = rb1.get('markdown') or ''
+    check("简报有「材料导入与续跑」段",
+          '## 材料导入与续跑' in mb1, mb1[:500])
+    check("简报列出文件名与按记录累计导入段数",
+          '分批材料.md' in mb1 and '累计导入 2 段' in mb1, mb1[:700])
+    check("一句话状态标出待续跑文件数",
+          '待续跑文件 1 个' in mb1, mb1[:300])
+    check("有未处理段 → 给出带 --from-seg 的续跑命令",
+          '--from-seg 3' in mb1 and '--chunk 20' in mb1, mb1[:800])
+    check("简报写明未处理段不会被静默丢掉",
+          '不会被静默丢掉' in mb1)
+    session_run({'action': 'add_file', 'path': pbi, 'text_file': pk,
+                 'max_segs': 5, 'start_seg': 3})
+    rb2 = session_run({'action': 'brief', 'path': pbi})
+    mb2 = rb2.get('markdown') or ''
+    check("导完之后不再给续跑命令，改为明说已处理过",
+          '--from-seg' not in mb2 and '都处理过了' in mb2, mb2[:800])
+    check("同一文件多条记录 → 累计导入段数按记录相加（2+3=5）",
+          '累计导入 5 段' in mb2, mb2[:800])
+    check("导完后一句话状态不再标待续跑",
+          '待续跑文件' not in mb2, mb2[:300])
+    sha_bi = sha(pbi)
+    session_run({'action': 'brief', 'path': pbi})
+    check("简报只读：会话文件 sha256 未变", sha(pbi) == sha_bi)
+    pno = os.path.join(d, '无导入简报.json')
+    session_run({'action': 'add', 'path': pno, 'text': TXT_CONFLICT})
+    mb3 = session_run({'action': 'brief', 'path': pno})['markdown']
+    check("没导过材料的会话不硬塞导入段（没记录就不写）",
+          '材料导入与续跑' not in mb3, mb3[:400])
 finally:
     shutil.rmtree(d, ignore_errors=True)
 
 print("=" * 60)
-print(f"结果: {PASS}/221 通过")
-raise SystemExit(0 if PASS == 221 else 1)
+print(f"结果: {PASS}/231 通过")
+raise SystemExit(0 if PASS == 231 else 1)
