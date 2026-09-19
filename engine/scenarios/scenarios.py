@@ -19,8 +19,10 @@ scenarios.py — 场景库（真实输入 + 期望诊断 + 复核状态）
     expect_level: 期望复杂度（L1/L2/L3）或 None（不校验）
     expect_route: 期望路由 id（如 'R2-L2'）或 None
     structured: dict 或 None——给 controller 的结构化线索（可跑真构件）
-    note: 复核备注（人工标记：正确/误判-待修/边界情况）
+    note: 场景自身的说明（为什么期望是它）
     checked: bool——是否已人工复核
+    review: str——复核记录（用 paradox-engine --mark 落笔写回，人写的判断：
+            形如「正确（2026-09-07）：期望与实际一致」；场景自身说明在 note）
 
 诚实边界：
     - 期望值是"当前共识"不是"金标准"——场景可随引擎能力演进修正

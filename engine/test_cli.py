@@ -134,16 +134,20 @@ code, out = run_cli('--review', '--scene', 'S01')
 check("--review exit=0", code == 0, f"exit={code}")
 check("--review 给期望 vs 实际 + 判类命中",
       '期望' in out and '实际' in out and '判类命中' in out, out[:250])
-check("--review 给复核状态与勾选指引",
-      '复核状态' in out and 'checked=True' in out, out[:250])
+check("--review 给复核状态与落笔指令",
+      '复核状态' in out and '--mark S01 --verdict ok' in out, out[:250])
 check("--review 声明只诊断不决策", '只诊断不决策' in out, out[-160:])
 code, out = run_cli('--review', '--scene', 'S99')
 check("--review 未知场景 → exit 2", code == 2, f"exit={code}")
 
+# ── 用例4d：复核落笔（--mark）——写回只在副本上验证，这里只测守卫与分布
 code, out = run_cli('--stats')
 check("--stats exit=0", code == 0, f"exit={code}")
 check("--stats 给场景数/通过/复核进度",
       '场景库统计' in out and '对照通过' in out and '待复核' in out,
+      out[:250])
+check("--stats 给复核分布（正确/误判待修/边界）",
+      '复核分布' in out and '误判-待修' in out and '边界情况' in out,
       out[:250])
 check("--stats 不报未完成的误判率（诚实）",
       '复核未完成' in out and '不报数' in out, out[-160:])
@@ -177,5 +181,5 @@ code, out = run_cli(
 check("边界声明不决策", '只诊断不决策' in out or '不决策' in out, out[-300:])
 
 print("=" * 60)
-print(f"结果: {PASS}/43 通过")
-raise SystemExit(0 if PASS == 43 else 1)
+print(f"结果: {PASS}/44 通过")
+raise SystemExit(0 if PASS == 44 else 1)

@@ -10,6 +10,8 @@ cli.py — paradox-engine 命令行入口（AI 挂载层 · 阶段 6 扩展）
     python -m engine.cli --scenarios                         # 列场景库（含复核状态）
     python -m engine.cli --scene S01                         # 跑单场景：期望 vs 实际
     python -m engine.cli --scene all --json                  # 全部场景，结构化输出
+    python -m engine.cli --review                            # 复核模式：期望 vs 实际
+    python -m engine.cli --mark S05 --verdict ok             # 复核落笔（写回场景表）
     paradox-engine --text "..."                              # 安装后 console 命令
 
 做什么：
@@ -79,6 +81,15 @@ def build_parser():
                         '可粘贴的复核结论行（配 --scene 单个或 all）')
     p.add_argument('--stats', action='store_true',
                    help='场景库统计：各题型场景数 / 对照通过数 / 复核进度')
+    p.add_argument('--mark', type=str, default=None, metavar='ID',
+                   help='复核落笔：把结论写回场景表（如 --mark S05；'
+                        '配 --verdict 与 --note）——作者不必手改源码')
+    p.add_argument('--verdict', type=str, default='ok',
+                   choices=['ok', 'wrong', 'edge', 'pending'],
+                   help='配合 --mark 的结论：ok=正确 / wrong=误判-待修 / '
+                        'edge=边界情况 / pending=退回待复核（默认 ok）')
+    p.add_argument('--note', type=str, default='',
+                   help='配合 --mark 的复核备注（一句话，写进场景表）')
     return p
 
 
@@ -174,7 +185,8 @@ def review_scenes(json_out, scene_id=None):
         for d in r['diffs']:
             print(f"      差异：{d}")
         print(f"      复核状态：{'已复核' if r['checked'] else '待复核'}"
-              f"——确认无误后把场景表 {r['id']} 标 checked=True")
+              f"——看完落笔：paradox-engine --mark {r['id']} --verdict ok"
+              f"（wrong=误判待修 / edge=边界情况）")
     print("  说明：复核是人的判断，引擎只把依据摆出来（只诊断不决策）。")
     return 0
 
@@ -193,16 +205,25 @@ def scenes_stats(json_out):
     checked = sum(1 for s in scenes.values() if s.get('checked'))
     per_type_passed = Counter(r['expect_type'] for r in results
                               if r['passed'])
+    try:
+        from engine.scenarios.review_marks import review_state
+    except ImportError:
+        sys.path.insert(0, os.path.join(_REPO, 'engine', 'scenarios'))
+        from review_marks import review_state
+    state = review_state()
     if json_out:
         print(json.dumps({
             'scenes': len(scenes), 'passed': passed, 'checked': checked,
             'unchecked': len(scenes) - checked,
+            'review_state': state,
             'per_type': dict(sorted(per_type.items())),
             'per_type_passed': dict(sorted(per_type_passed.items())),
         }, ensure_ascii=False, indent=2))
         return 0
     print(f"场景库统计：{len(scenes)} 个场景 / 对照通过 {passed}"
           f" / 已复核 {checked} / 待复核 {len(scenes) - checked}")
+    print(f"  复核分布：正确 {state['ok']} / 误判-待修 {state['wrong']}"
+          f" / 边界情况 {state['edge']} / 待复核 {state['pending']}")
     print("  各题型场景数（括号内为对照通过数）：")
     row = []
     for t in sorted(per_type):
@@ -298,9 +319,67 @@ def _run_scenarios(json_out, scene_id=None, explain=False):
     return 0 if report['passed'] == report['total'] else 1
 
 
+def mark_scenes(json_out, scene_id, verdict='ok', note=''):
+    """复核落笔：把人的判断写回场景表（引擎不替人下结论）。"""
+    try:
+        from engine.scenarios.review_marks import mark_scene, review_state
+    except ImportError:
+        sys.path.insert(0, os.path.join(_REPO, 'engine', 'scenarios'))
+        from review_marks import mark_scene, review_state
+    r = mark_scene(scene_id, verdict, note)
+    if not r['ok']:
+        print(json.dumps(r, ensure_ascii=False, indent=2) if json_out else
+              '复核落笔失败：' + r['error'])
+        return 2
+    st = review_state()
+
+    def _line(res, state):
+        label = {'ok': '正确', 'wrong': '误判-待修', 'edge': '边界情况',
+                 'pending': '退回待复核'}[res['verdict']]
+        head = (f"复核落笔 {res['scene']} → {label}"
+                + (f"（{res['review'].strip()}）" if res.get('review') else ''))
+        if not res['changed']:
+            head += '——场景表本来就是这个状态，未改动'
+        return (head + f"\n  当前复核分布：正确 {state['ok']} / 误判-待修 "
+                f"{state['wrong']} / 边界情况 {state['edge']} / 待复核 "
+                f"{state['pending']}")
+
+    if json_out:
+        out = dict(r)
+        out['state'] = st
+        print(json.dumps(out, ensure_ascii=False, indent=2))
+    else:
+        print(_line(r, st))
+        print('  复核是人的判断：引擎只把依据摆出来（只诊断不决策）；'
+              '写回的只有 checked 与 review 两个字段。')
+    return 0
+
+
+def mark_guard_error(args, json_out):
+    """--verdict / --note 必须配 --mark（否则就是空落笔，诚实拦下）。"""
+    if args.mark:
+        return None
+    given = [n for n, v in (('--verdict', args.verdict != 'ok'),
+                            ('--note', bool(args.note))) if v]
+    if not given:
+        return None
+    msg = ('%s 必须配 --mark ID 才有意义（例如 --mark S05 --verdict ok）'
+           % ' 与 '.join(given))
+    print(json.dumps({'error': msg}, ensure_ascii=False, indent=2)
+          if json_out else msg)
+    return 2
+
+
 def main(argv=None):
     ensure_utf8_console()   # Windows GBK 控制台：报告含 ⚠/✅，先自愈编码
     args = build_parser().parse_args(argv)
+
+    guard = mark_guard_error(args, args.json)
+    if guard is not None:
+        return guard
+
+    if args.mark:
+        return mark_scenes(args.json, args.mark, args.verdict, args.note)
 
     if args.stats:
         return scenes_stats(args.json)
