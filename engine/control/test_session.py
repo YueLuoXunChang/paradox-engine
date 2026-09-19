@@ -51,6 +51,8 @@ TXT_WALL = '这句话是假的，反复震荡，越绕越深'
 TXT_CONFLICT = '产品既要三周上线又要十二周合规，销售和研发各执一词'
 TXT_PLAIN = '帮我看看这个怎么办才好'
 # 走到 T9-L3（撞墙管线路由）的语料：学科密集 + 关系多 + 证据冲突 + 对立
+TXT_T5_A = '原来以为这个方案要十二周，现在发现三周就行'
+TXT_T5_B = '原来以为产量越高越好，现在发现成本会反超'
 TXT_WALL_PIPE = ('这道题要求建模：先说清机制与理论模型，再讨论系统演化与多条通路，'
                  '为什么产量导致成本上升，库存导致资金占用，广告导致需求波动，'
                  '汇率促进出口，税率抑制投资，监管抑制加急，审计隶属法务，'
@@ -526,9 +528,71 @@ try:
     check("会话损坏 → 汇总也诚实报 state_corrupt",
           session_run({'action': 'overview',
                        'path': st_corrupt})['verdict'] == 'state_corrupt')
+
+    # ── 用例18：T5（知识更新）材料与信念集对接（引擎不抽公式）
+    pt5 = os.path.join(d, 't5.json')
+    session_run({'action': 'add', 'path': pt5, 'text': TXT_T5_A})
+    session_run({'action': 'add', 'path': pt5, 'text': TXT_CONFLICT})
+    session_run({'action': 'add', 'path': pt5, 'text': TXT_T5_B})
+    turns_t5 = json.loads(text_of(pt5))['turns']
+    check("构造语料确实被判成 T5（否则本用例没意义）",
+          [t['type'] for t in turns_t5] == ['T5', 'T2', 'T5'],
+          str([t['type'] for t in turns_t5]))
+    ov_t5 = session_run({'action': 'overview', 'path': pt5})['overview']['t5']
+    check("汇总列出 T5 材料轮次", ov_t5['t5_turns'] == [1, 3],
+          str(ov_t5['t5_turns']))
+    check("未挂信念集时全部记「欠命题式」",
+          ov_t5['t5_pending'] == [1, 3] and ov_t5['t5_linked'] == [],
+          str(ov_t5))
+    check("边界写明引擎不抽公式（自然语言→逻辑式不在范围）",
+          '不抽公式' in ov_t5['boundary'] and '不在本引擎范围' in ov_t5['boundary'])
+    rv1 = session_run({'action': 'revise', 'path': pt5, 'beliefs': ['P→Q', 'P'],
+                       'new_info': '¬Q', 'turn': 1})
+    check("revise 可挂到指定轮次（source_turn 记下）",
+          rv1['verdict'] == 'belief_revised'
+          and rv1['revision']['source_turn'] == 1, str(rv1['revision']))
+    ov_t5b = session_run({'action': 'overview', 'path': pt5})['overview']['t5']
+    check("挂上后汇总显示已接 / 还欠",
+          ov_t5b['t5_linked'] == [1] and ov_t5b['t5_pending'] == [3]
+          and ov_t5b['linked'] == {'1': [1]}, str(ov_t5b))
+    rv2 = session_run({'action': 'revise', 'path': pt5, 'beliefs': ['P→Q', 'P'],
+                       'new_info': '¬Q', 'turn': 99})
+    check("挂到不存在的轮次 → 拦下且不加修正记录",
+          rv2['verdict'] == 'input_pending'
+          and len(json.loads(text_of(pt5))['revisions']) == 1,
+          rv2.get('explanation'))
+    for label, tv in (('字符串', '1'), ('布尔', True), ('小数', 1.5)):
+        rr3 = session_run({'action': 'revise', 'path': pt5, 'new_info': 'X',
+                           'turn': tv})
+        check(f"turn 类型错（{label}）→ input_pending",
+              rr3['verdict'] == 'input_pending', rr3.get('explanation')[:40])
+    rv3 = session_run({'action': 'revise', 'path': pt5, 'beliefs': ['P→Q', 'P'],
+                       'new_info': '¬Q'})
+    check("不挂轮次的修正照样能用（source_turn 为空）",
+          rv3['verdict'] == 'belief_revised'
+          and not rv3['revision'].get('source_turn'), str(rv3['revision']))
+    check("挂轮次不改材料记录（轮次内容一字不动）",
+          json.loads(text_of(pt5))['turns'] == turns_t5)
+    session_run({'action': 'revise', 'path': pt5, 'beliefs': ['P→Q', 'P'],
+                 'new_info': '¬Q', 'turn': 3})
+    ov_t5c = session_run({'action': 'overview', 'path': pt5})['overview']['t5']
+    check("两条 T5 都挂上后不再欠命题式",
+          ov_t5c['t5_linked'] == [1, 3] and ov_t5c['t5_pending'] == [],
+          str(ov_t5c))
+    md5 = session_run({'action': 'report', 'path': pt5})['markdown']
+    check("台账写出 T5 材料与已接/还欠",
+          'T5（知识更新）材料' in md5 and '已接信念集' in md5
+          and '还欠命题式' in md5)
+    check("台账修正史写出「挂在轮次 N」",
+          '挂在轮次 1' in md5, md5[md5.find('## 信念修正史'):][:160])
+    rst5 = session_run({'action': 'reset', 'path': pt5})
+    check("reset 之后 T5 对接状态一起清（不残留挂靠）",
+          len(rst5['state']['revisions']) == 0
+          and session_run({'action': 'overview', 'path': pt5})['overview']
+          ['t5']['t5_linked'] == [])
 finally:
     shutil.rmtree(d, ignore_errors=True)
 
 print("=" * 60)
-print(f"结果: {PASS}/108 通过")
-raise SystemExit(0 if PASS == 108 else 1)
+print(f"结果: {PASS}/124 通过")
+raise SystemExit(0 if PASS == 124 else 1)

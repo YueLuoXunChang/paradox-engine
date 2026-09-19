@@ -34,7 +34,8 @@ PORTS = {
     'in': {'action': 'str', 'path': 'str?', 'text': 'str?', 'new_info': 'str?',
            'beliefs': 'list?', 'structured': 'dict?', 'text_file': 'str?',
            'split': 'str?', 'max_segs': 'int?', 'max_seg_chars': 'int?',
-           'out_file': 'str?', 'overwrite': 'bool?', 'scene_id': 'str?'},
+           'out_file': 'str?', 'overwrite': 'bool?', 'scene_id': 'str?',
+           'turn': 'int?'},
     'out': {'verdict': 'str', 'state': 'dict', 'turn': 'dict?',
             'revision': 'dict?', 'imported': 'dict?', 'markdown': 'str?',
             'reviews': 'list?', 'overview': 'dict?',
@@ -232,7 +233,7 @@ def _add(state, text, structured=None):
     return turn
 
 
-def _revise(state, new_info, beliefs=None):
+def _revise(state, new_info, beliefs=None, turn=None):
     from_state = beliefs is None
     old = list(state['beliefs'] if from_state else beliefs)
     if not old:
@@ -247,6 +248,7 @@ def _revise(state, new_info, beliefs=None):
     # 其余情形（new_info_unsatisfiable / undecided / size_limit）信念集不动
     rec = {
         'i': len(state['revisions']) + 1, 'new_info': new_info,
+        'source_turn': turn,          # 这次修正挂在第几条材料上（可空）
         'verdict': r['verdict'], 'kept': r['kept'], 'dropped': r['dropped'],
         'beliefs_before': old,          # 真正参与这次修正的集合（可追溯）
         'beliefs_source': '会话' if from_state else '本次传入',
@@ -404,6 +406,29 @@ OVERVIEW_BOUNDARY = (
     '照样列出来给人看。')
 
 
+T5_BOUNDARY = (
+    '引擎**不抽公式**：自然语言→逻辑式自动提取不在本引擎范围。判成 T5（知识更新）'
+    '的轮次只说明「这段材料像新旧断言冲突」，要进信念集仍得人把命题式给出来'
+    '（`--revise "¬Q" --turn N`），修正走 AGM 构件。')
+
+
+def _t5_link(state):
+    """T5 材料与信念集的对接情况（只报事实，不替人补内容）。"""
+    t5 = [t['i'] for t in state['turns'] if t['type'] == 'T5']
+    linked = {}
+    for r in state['revisions']:
+        st = r.get('source_turn')
+        if st:
+            linked.setdefault(st, []).append(r['i'])
+    return {
+        't5_turns': t5,
+        'linked': {str(k): v for k, v in sorted(linked.items())},
+        't5_linked': [i for i in t5 if i in linked],
+        't5_pending': [i for i in t5 if i not in linked],
+        'boundary': T5_BOUNDARY,
+    }
+
+
 def _overview(state):
     """批次汇总：按引擎自己的标签分组计数（只统计，不判断）。"""
     per_type, by_type, levels = {}, {}, {}
@@ -441,6 +466,7 @@ def _overview(state):
         'reviews': len(state['reviews']),
         'beliefs': len(state['beliefs']),
         'revisions': len(state['revisions']),
+        't5': _t5_link(state),
         'boundary': OVERVIEW_BOUNDARY,
     }
 
@@ -474,6 +500,15 @@ def _overview_md(ov):
     if ov['walls']:
         L.append('- 墙事件：' + ' · '.join('%s ×%d' % kv
                                        for kv in ov['walls'].items()))
+    t5 = ov.get('t5') or {}
+    if t5.get('t5_turns'):
+        L.append('- T5（知识更新）材料：轮次 %s'
+                 % '、'.join(str(i) for i in t5['t5_turns']))
+        L.append('  - 已接信念集：%s'
+                 % ('、'.join(str(i) for i in t5['t5_linked']) or '无'))
+        L.append('  - 还欠命题式：%s'
+                 % ('、'.join(str(i) for i in t5['t5_pending']) or '无'))
+        L.append('  - %s' % t5['boundary'])
     L.append('- %s' % ov['boundary'])
     L.append('')
     return L
@@ -612,8 +647,10 @@ def _report_md(state, session_path=None):
         L.append('## 信念修正史')
         L.append('')
         for r in state['revisions']:
-            L.append('- 第 %d 次（%s）：新信息「%s」'
-                     % (r['i'], r['verdict'], r['new_info']))
+            src = ('（挂在轮次 %d）' % r['source_turn']
+                   if r.get('source_turn') else '')
+            L.append('- 第 %d 次（%s）：新信息「%s」%s'
+                     % (r['i'], r['verdict'], r['new_info'], src))
             L.append('  - 保留 %s / 放弃 %s（旧集合来自%s）'
                      % (r['kept'], r['dropped'],
                         r.get('beliefs_source') or '—'))
@@ -814,7 +851,18 @@ def run(inputs):
         return _result('input_pending', _summary(state),
                        explanation='beliefs 必须是列表，得到 %s'
                                    % type(beliefs).__name__)
-    rec, r = _revise(state, new_info.strip(), beliefs)
+    turn = inputs.get('turn')
+    if turn is not None:
+        if isinstance(turn, bool) or not isinstance(turn, int):
+            return _result('input_pending', _summary(state),
+                           explanation='turn 必须是轮次编号（整数），'
+                                       '得到 %s' % type(turn).__name__)
+        if not 1 <= turn <= len(state['turns']):
+            return _result('input_pending', _summary(state),
+                           explanation='轮次 %d 不存在（当前 1~%d）——'
+                                       '不挂到不存在的材料上'
+                                       % (turn, len(state['turns'])))
+    rec, r = _revise(state, new_info.strip(), beliefs, turn)
     if rec is None:
         return _result('input_pending', _summary(state),
                        explanation=r['boundary'])

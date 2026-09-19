@@ -116,6 +116,10 @@ def build_parser():
     p.add_argument('--beliefs', type=str, default=None, metavar='P,Q',
                    help='配合 --session --revise：逗号分隔的旧信念集'
                         '（不给就用会话里已有的）')
+    p.add_argument('--turn', type=int, default=None, metavar='N',
+                   help='配合 --session --revise：把这次修正挂在第 N '
+                        '条材料上（该材料判成 T5 时最有用）——'
+                        '引擎不抽公式，命题式仍要人给')
     p.add_argument('--session-state', action='store_true',
                    dest='session_state',
                    help='配合 --session：看当前会话汇总（轮次/题型分布/'
@@ -476,6 +480,8 @@ def session_cmd(args):
                 return 2
     if action == 'revise':
         inputs['new_info'] = args.revise
+        if args.turn is not None:
+            inputs['turn'] = args.turn
         if args.beliefs:
             inputs['beliefs'] = [b.strip() for b in args.beliefs.split(',')
                                  if b.strip()]
@@ -542,6 +548,16 @@ def session_cmd(args):
                                           ov['components_ran'].items()))
         for k, v in ov['not_ran_reasons'].items():
             print(f'  没跑 ×{v}：{k}')
+        t5 = ov.get('t5') or {}
+        if t5.get('t5_turns'):
+            print('  T5（知识更新）材料：轮次 '
+                  + '、'.join(str(i) for i in t5['t5_turns']))
+            print('      已接信念集：'
+                  + ('、'.join(str(i) for i in t5['t5_linked'])
+                     or '无') + '；还欠命题式：'
+                  + ('、'.join(str(i) for i in t5['t5_pending'])
+                     or '无'))
+            print('      ' + t5['boundary'])
         for k, v in ov['walls'].items():
             print(f"  墙事件 {k} ×{v}")
         print('  ' + ov['boundary'])
@@ -570,6 +586,8 @@ def session_cmd(args):
         print(f"信念修正（{rev['verdict']}）：{rev['new_info'][:40]}")
         print(f"  保留 {rev['kept']} / 放弃 {rev['dropped']}"
               f"（旧集合来自{rev['beliefs_source']}）")
+        if rev.get('source_turn'):
+            print(f"  这次修正挂在第 {rev['source_turn']} 条材料上")
     elif action == 'reset':
         print('会话已清空（文件保留）。')
     else:
@@ -597,6 +615,7 @@ def session_guard_error(args, json_out):
         ('--revise', args.revise is not None),
         ('--export', args.export is not None),
         ('--beliefs', bool(args.beliefs)),
+        ('--turn', args.turn is not None),
         ('--session-state', args.session_state),
         ('--overview', args.overview),
         ('--session-reset', args.session_reset)) if v]
