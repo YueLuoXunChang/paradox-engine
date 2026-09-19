@@ -179,6 +179,9 @@ def build_parser():
                    dest='pending_out', metavar='文件',
                    help='配合 --session --pending：把工作单写到文件'
                         '（已存在默认不覆盖，配 --export-overwrite 才盖）')
+    p.add_argument('--redact', action='store_true',
+                   help='配合 --session --export：隐私导出（材料原文只留'
+                        '字数与开头），便于把台账给别人看')
     p.add_argument('--export-overwrite', action='store_true',
                    dest='export_overwrite',
                    help='配合 --export：允许覆盖已存在的台账文件')
@@ -561,6 +564,7 @@ def session_cmd(args):
         inputs['overwrite'] = args.export_overwrite
     if action == 'report':
         inputs['out_file'] = args.export
+        inputs['redact'] = bool(args.redact)
         inputs['overwrite'] = args.export_overwrite
     if action == 'add_file':
         inputs['text_file'] = args.add_file
@@ -875,6 +879,7 @@ def session_guard_error(args, json_out):
         ('--overview', args.overview),
         ('--pending', args.pending or args.pending_out is not None),
         ('--progress', args.progress),
+        ('--redact', args.redact),
         ('--brief', args.brief or args.brief_out is not None),
         ('--reconcile', args.reconcile or args.reconcile_out is not None),
         ('--session-reset', args.session_reset)) if v]

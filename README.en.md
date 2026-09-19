@@ -88,6 +88,7 @@ paradox-engine --session s.json --progress                     # review-progress
 paradox-engine --session s.json --brief                        # one-page brief (state / owed / review / next)
 paradox-engine --session s.json --reconcile                    # reconcile session evidence vs registry marks
 paradox-engine --session s.json --export ledger.md              # export a Markdown ledger
+paradox-engine --session s.json --export ledger.md --redact     # redacted ledger (material kept as length + head)
 
 # Or import as a Python package
 from engine.control.controller import run as controller
@@ -100,7 +101,7 @@ print(r['report'])
 ```bash
 # After cloning, from the repository root
 python demo.py          # twenty-step tour
-python run_tests.py     # full regression (45 test files / 1337 assertions)
+python run_tests.py     # full regression (45 test files / 1345 assertions)
 ```
 
 `demo.py` demonstrates twenty things (①②③ the paradox trio → ④-⑩ the
@@ -355,7 +356,7 @@ when a real pain point appears).
 
 ### Test status
 
-- **1337 formal assertions pass** (45 test files), covering every mechanism
+- **1345 formal assertions pass** (45 test files), covering every mechanism
   component plus the controller/scenario/AI-tool layers;
 - **One command runs the whole suite**: `python run_tests.py` (discover + run +
   summarize; a single failing file yields a non-zero exit — the same entry

@@ -109,10 +109,11 @@ def prepare(frag, doc, idx):
     for tk in toks:
         if tk in SUBS:
             rep = SUBS[tk]
-            if rep is None:                   # 产出文件：每个示例用独立名字
+            if rep is None:                   # 产出文件：**每个示例各用一个**
                 base, ext = os.path.splitext(tk)
                 rep = os.path.join(d, '%s-%s%d%s' % (base, doc, idx, ext))
-                SUBS[tk] = rep                # 后续同名示例复用（export 只写一次）
+                # 不复用：两个示例都写同一个路径时，第二个会撞上
+                # 「已存在默认不覆盖」而退 2（那是别的用例在测的行为）
             out.append(rep)
         else:
             out.append(tk)
@@ -162,7 +163,8 @@ check("中英 README 的示例都被跑到",
       str({doc for doc, _, _ in examples}))
 
 # ── 写文件的示例确实产出文件
-made = [SUBS[k] for k in ('台账.md', 'ledger.md') if SUBS[k]]
+made = [os.path.join(d, f) for f in os.listdir(d)
+        if f.startswith(('台账-', 'ledger-')) and f.endswith('.md')]
 check("导出类示例真的写出了文件（且非空）",
       made and all(os.path.exists(p) and os.path.getsize(p) > 0
                    for p in made), str(made))

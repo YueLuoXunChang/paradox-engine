@@ -35,7 +35,8 @@ PORTS = {
            'beliefs': 'list?', 'structured': 'dict?', 'text_file': 'str?',
            'split': 'str?', 'max_segs': 'int?', 'max_seg_chars': 'int?',
            'out_file': 'str?', 'overwrite': 'bool?', 'scene_id': 'str?',
-           'turn': 'int?', 'clues': 'bool?', 'start_seg': 'int?'},
+           'turn': 'int?', 'clues': 'bool?', 'start_seg': 'int?',
+           'redact': 'bool?'},
     'out': {'verdict': 'str', 'state': 'dict', 'turn': 'dict?',
             'revision': 'dict?', 'imported': 'dict?', 'markdown': 'str?',
             'reviews': 'list?', 'overview': 'dict?',
@@ -985,13 +986,16 @@ def _emit(state, path, md, out_file, overwrite, ready_verdict,
                                % (written_label, target, len(md)), **extra)
 
 
-def _report_md(state, session_path=None):
+def _report_md(state, session_path=None, redact=False):
     """把会话导成 Markdown 台账：**只写记过的东西**，没跑的照实标。"""
     st = _summary(state)
     L = ['# 诊断台账（paradox-engine 会话）', '']
     L.append('- 导出时间：%s' % _now())
     if session_path:
         L.append('- 会话文件：`%s`' % session_path)
+    if redact:
+        L.append('- **隐私导出**：材料原文已隐去（只留字数与开头），'
+                 '用于把台账给别人看而不带材料内容')
     L.append('- 规模：轮次 %d · 墙事件 %d · 信念 %d 条 · 修正 %d 次 · '
              '复核记录 %d 条'
              % (st['turns'], st['wall_count'], len(st['beliefs']),
@@ -1023,6 +1027,9 @@ def _report_md(state, session_path=None):
             ran = sum(1 for e in t['execution'] if e['status'] == 'run')
             pend = len(t['execution']) - ran
             head = t['text'].replace('\n', ' ')[:30].replace('|', '\\|')
+            if redact:
+                head = ((t['text'].replace('\n', ' ')[:6] + '…（已隐去）')
+                        if len(t['text']) > 16 else '（已隐去，材料偏短）')
             L.append('| %d | %s %s | %s | %s | %s | %d/%d | %s |'
                      % (t['i'], t['type'], t.get('type_name') or '',
                         t['level'], t['route'], t['verdict'], ran, pend, head))
@@ -1034,11 +1041,22 @@ def _report_md(state, session_path=None):
             L.append('')
             L.append('- 五步结论：`%s`（判类置信度 %s）'
                      % (t['verdict'], t.get('confidence') or '—'))
-            L.append('- 材料原文：')
-            L.append('')
-            for line in (t['text'] or '').split('\n'):
-                L.append('  > %s' % line)
-            L.append('')
+            if redact:
+                _txt = t['text'] or ''
+                if len(_txt) <= 16:      # 短材料连开头也隐——否则等于没隐
+                    L.append('- 材料原文：已隐去（%d 字；材料偏短，'
+                             '开头也隐去）' % len(_txt))
+                else:
+                    L.append('- 材料原文：已隐去（%d 字；开头「%s…」）'
+                             % (len(_txt),
+                                _txt.replace('\n', ' ')[:8]))
+                L.append('')
+            else:
+                L.append('- 材料原文：')
+                L.append('')
+                for line in (t['text'] or '').split('\n'):
+                    L.append('  > %s' % line)
+                L.append('')
             cl_t = t.get('clues')
             if cl_t:
                 L.append('- 线索建议（%s）：' % cl_t.get('verdict'))
@@ -1406,7 +1424,7 @@ def run(inputs):
             return _result('input_pending', _summary(state),
                            explanation='out_file 必须是字符串路径（或 "-" '
                                        '表示只在结果里返回文本）')
-        md = _report_md(state, path)
+        md = _report_md(state, path, bool(inputs.get('redact')))
         if not (state['turns'] or state['beliefs'] or state['revisions']
                 or state['reviews'] or state['snapshots']):
             return _result('nothing_to_report', _summary(state),

@@ -1024,9 +1024,38 @@ try:
     check("四个导出动作：都能写出文件，且二次导出都不覆盖（file_exists）",
           all(v[0].endswith('_written') and v[1] == 'file_exists'
               for v in writ.values()), str(writ))
+    # ── 用例27：隐私导出（材料原文可隐去，便于把台账给别人看）
+    prd = os.path.join(d, '隐私.json')
+    session_run({'action': 'add', 'path': prd, 'text': TXT_CONFLICT})
+    session_run({'action': 'add', 'path': prd, 'text': '这句话是假的'})
+    full_md = session_run({'action': 'report', 'path': prd})['markdown']
+    red_md = session_run({'action': 'report', 'path': prd,
+                          'redact': True})['markdown']
+    check("普通台账带材料原文（对照组）", TXT_CONFLICT in full_md)
+    check("隐私导出：长材料原文不出现，只留字数与开头",
+          TXT_CONFLICT not in red_md and '已隐去' in red_md
+          and '开头「产品既要三周上线…' in red_md, red_md[:400])
+    check("隐私导出：短材料连开头也隐（否则短材料等于没隐）",
+          '这句话是假的' not in red_md and '材料偏短' in red_md, red_md[:600])
+    check("隐私导出头部标注（看得出一份台账被隐过）",
+          '隐私导出' in red_md, red_md[:200])
+    check("隐私导出仍保留结构与判断（轮次/判类/执行）",
+          '### 1. T2' in red_md and '### 2. T6' in red_md
+          and '| 1 |' in red_md)
+    check("隐私导出与普通导出的规模数字一致（只是隐了原文）",
+          ('轮次 2' in red_md) and ('轮次 2' in full_md))
+    sha_rd = sha(prd)
+    session_run({'action': 'report', 'path': prd, 'redact': True})
+    check("隐私导出只读：会话文件 sha256 未变", sha(prd) == sha_rd)
+    out_rd = os.path.join(d, '隐私台账.md')
+    r_rd = session_run({'action': 'report', 'path': prd, 'out_file': out_rd,
+                        'redact': True})
+    check("隐私导出能写文件且内容确实隐过",
+          r_rd['verdict'] == 'report_written'
+          and TXT_CONFLICT not in text_of(out_rd), r_rd['verdict'])
 finally:
     shutil.rmtree(d, ignore_errors=True)
 
 print("=" * 60)
-print(f"结果: {PASS}/235 通过")
-raise SystemExit(0 if PASS == 235 else 1)
+print(f"结果: {PASS}/243 通过")
+raise SystemExit(0 if PASS == 243 else 1)
