@@ -65,6 +65,7 @@ paradox-engine --session 会话.json --add-file 材料.md   # 整篇材料逐段
 paradox-engine --session 会话.json --add "这句话是假的" --structured-json '{"sentence":"liar"}'
 paradox-engine --session 会话.json --revise "¬Q" --beliefs "P→Q,P"   # 新信息 → 信念修正
 paradox-engine --session 会话.json --session-state                # 汇总：轮次/题型/墙清单/信念
+paradox-engine --session 会话.json --overview                     # 批次汇总：判类/复杂度/置信度/构件状态
 paradox-engine --session 会话.json --export 台账.md               # 导出 Markdown 诊断台账
 
 # 或作为 Python 包 import
@@ -78,7 +79,7 @@ print(r['report'])
 ```bash
 # 克隆后，在仓库根目录
 python demo.py          # 十九步演示
-python run_tests.py     # 全量回归（一条命令：39 个测试文件 / 1072 项断言）
+python run_tests.py     # 全量回归（一条命令：39 个测试文件 / 1087 项断言）
 ```
 
 `demo.py` 演示十九件事（①②③ 悖论三件套 → ④-⑩ 经典逻辑地基 → ⑪ 撞墙管线 → ⑫ 总控五步 → ⑬ MT-MP-TL 骨架 → ⑭ 冷门逻辑 → ⑮ AI 挂载 → ⑯ 数学底座 → ⑰ 冷门补完 → ⑱ 构造性立场 → ⑲ 墙的精确地图）：
@@ -288,7 +289,7 @@ run(inputs: dict) -> dict
 
 ### 测试状态
 
-- **1072 项正式断言全过**（39 个测试文件），覆盖全部
+- **1087 项正式断言全过**（39 个测试文件），覆盖全部
   机制构件与总控/场景/AI 工具层；
 - **一条命令跑全量回归**：`python run_tests.py`（发现 + 运行 + 汇总；
   任一文件失败即非零退出——CI 与本地同一入口）；

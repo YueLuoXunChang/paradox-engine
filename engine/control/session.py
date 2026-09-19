@@ -37,7 +37,7 @@ PORTS = {
            'out_file': 'str?', 'overwrite': 'bool?', 'scene_id': 'str?'},
     'out': {'verdict': 'str', 'state': 'dict', 'turn': 'dict?',
             'revision': 'dict?', 'imported': 'dict?', 'markdown': 'str?',
-            'reviews': 'list?',
+            'reviews': 'list?', 'overview': 'dict?',
             'boundary': 'str'},
 }
 
@@ -398,6 +398,87 @@ def _review_mark_of(scene_id):
     return None
 
 
+OVERVIEW_BOUNDARY = (
+    '汇总只对**引擎自己产出的标签**做计数与分组（判类/复杂度/置信度/构件状态），'
+    '不做相似度聚类、不推断材料同源、不替人下结论；低置信度就是低置信度，'
+    '照样列出来给人看。')
+
+
+def _overview(state):
+    """批次汇总：按引擎自己的标签分组计数（只统计，不判断）。"""
+    per_type, by_type, levels = {}, {}, {}
+    conf, ran, not_ran, walls = {}, {}, {}, {}
+    lows = []
+    for t in state['turns']:
+        per_type[t['type']] = per_type.get(t['type'], 0) + 1
+        by_type.setdefault(t['type'], []).append(t['i'])
+        lv = t.get('level') or '—'
+        levels[lv] = levels.get(lv, 0) + 1
+        c = t.get('confidence') or '—'
+        conf[c] = conf.get(c, 0) + 1
+        if c == 'low':
+            lows.append(t['i'])
+        for e in t['execution']:
+            if e['status'] == 'run':
+                ran[e['component']] = ran.get(e['component'], 0) + 1
+            else:
+                key = '%s：%s' % (e['status'], (e.get('note') or '')[:40])
+                not_ran[key] = not_ran.get(key, 0) + 1
+    for w in state['walls']:
+        key = '%s → %s' % (w['component'],
+                           w.get('component_verdict') or '—')
+        walls[key] = walls.get(key, 0) + 1
+    return {
+        'turns': len(state['turns']),
+        'per_type': dict(sorted(per_type.items())),
+        'by_type': {k: v for k, v in sorted(by_type.items())},
+        'levels': dict(sorted(levels.items())),
+        'confidence': dict(sorted(conf.items())),
+        'low_confidence_turns': lows,
+        'components_ran': dict(sorted(ran.items())),
+        'not_ran_reasons': dict(sorted(not_ran.items())),
+        'walls': dict(sorted(walls.items())),
+        'reviews': len(state['reviews']),
+        'beliefs': len(state['beliefs']),
+        'revisions': len(state['revisions']),
+        'boundary': OVERVIEW_BOUNDARY,
+    }
+
+
+def _overview_md(ov):
+    """汇总的 Markdown 版（台账用）。"""
+    L = ['## 批次汇总（只统计引擎自己的标签）', '']
+    L.append('- 轮次 %d · 复核记录 %d 条 · 信念 %d 条 · 修正 %d 次'
+             % (ov['turns'], ov['reviews'], ov['beliefs'], ov['revisions']))
+    if ov['per_type']:
+        L.append('- 判类分布：' + ' · '.join(
+            '%s %d 条（轮次 %s）' % (k, v, '、'.join(str(i) for i in
+                                                   ov['by_type'][k]))
+            for k, v in ov['per_type'].items()))
+    if ov['levels']:
+        L.append('- 复杂度分布：' + ' · '.join(
+            '%s %d 条' % kv for kv in ov['levels'].items()))
+    if ov['confidence']:
+        L.append('- 判类置信度：' + ' · '.join(
+            '%s %d 条' % kv for kv in ov['confidence'].items()))
+    if ov['low_confidence_turns']:
+        L.append('- 置信度低（分类存疑，建议人看）：轮次 %s'
+                 % '、'.join(str(i) for i in ov['low_confidence_turns']))
+    if ov['components_ran']:
+        L.append('- 真跑过构件：' + ' · '.join(
+            '%s ×%d' % kv for kv in ov['components_ran'].items()))
+    if ov['not_ran_reasons']:
+        L.append('- 没跑的原因（引擎自己给的说明，按原文归组）：')
+        for k, v in ov['not_ran_reasons'].items():
+            L.append('  - ×%d %s' % (v, k))
+    if ov['walls']:
+        L.append('- 墙事件：' + ' · '.join('%s ×%d' % kv
+                                       for kv in ov['walls'].items()))
+    L.append('- %s' % ov['boundary'])
+    L.append('')
+    return L
+
+
 def _report_md(state, session_path=None):
     """把会话导成 Markdown 台账：**只写记过的东西**，没跑的照实标。"""
     st = _summary(state)
@@ -416,6 +497,8 @@ def _report_md(state, session_path=None):
     if not state['turns']:
         L.append('> 这个会话里还没有轮次——空台账，不编内容。')
         L.append('')
+    L.extend(_overview_md(_overview(state)))
+
     if st['per_type']:
         L.append('## 题型分布')
         L.append('')
@@ -563,10 +646,10 @@ def run(inputs):
     action = inputs.get('action')
     path = inputs.get('path')
     if action not in ('add', 'add_file', 'revise', 'state', 'reset',
-                      'report', 'review'):
+                      'report', 'review', 'overview'):
         return _result('input_pending', _summary(_empty()),
                        explanation='action 应为 add/add_file/revise/state/'
-                                   'reset/report/review，得到 %r——诚实拦截'
+                                   'reset/report/review/overview，得到 %r——诚实拦截'
                                    % (action,))
     if not isinstance(path, str) or not path.strip():
         return _result('input_pending', _summary(_empty()),
@@ -595,6 +678,16 @@ def run(inputs):
 
     if action == 'state':
         return _result('state', _summary(state))
+
+    if action == 'overview':
+        ov = _overview(state)
+        if not state['turns'] and not state['reviews']:
+            return _result('empty_session', _summary(state),
+                           overview=ov,
+                           explanation='会话里还没有东西可汇总——'
+                                       '先用 --add/--add-file 记材料，'
+                                       '或 --review 记复核依据')
+        return _result('overview', _summary(state), overview=ov)
 
     if action == 'reset':
         n = (len(state['turns']), len(state['beliefs']),

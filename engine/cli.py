@@ -120,6 +120,10 @@ def build_parser():
                    dest='session_state',
                    help='配合 --session：看当前会话汇总（轮次/题型分布/'
                         '墙清单/信念集/修正历史）')
+    p.add_argument('--overview', action='store_true',
+                   help='配合 --session：批次汇总（按引擎自己的标签分组'
+                        '计数：判类/复杂度/置信度/构件状态/墙事件）——'
+                        '只统计不判断')
     p.add_argument('--session-reset', action='store_true',
                    dest='session_reset',
                    help='配合 --session：清空这个会话（文件保留）')
@@ -417,6 +421,8 @@ def session_cmd(args):
         from session import run as session_run
     if args.session_state:
         action = 'state'
+    elif args.overview:
+        action = 'overview'
     elif args.session_reset:
         action = 'reset'
     elif args.review:
@@ -513,6 +519,32 @@ def session_cmd(args):
         print(f"  执行：真跑 {len(ran)} 件"
               + (f"（{'、'.join(e['component'] for e in ran)}）" if ran else '')
               + f" / 没跑 {len(pend)} 件（缺结构化线索的照实标）")
+    elif action == 'overview':
+        ov = r['overview']
+        print('批次汇总（只统计引擎自己的标签，不做相似度聚类）：')
+        print(f"  轮次 {ov['turns']} · 复核记录 {ov['reviews']} 条 · "
+              f"信念 {ov['beliefs']} 条 · 修正 {ov['revisions']} 次")
+        for k, v in ov['per_type'].items():
+            print(f"  判类 {k}：{v} 条（轮次 "
+                  f"{'、'.join(str(i) for i in ov['by_type'][k])}）")
+        if ov['levels']:
+            print('  复杂度：' + ' · '.join(f'{k} {v} 条'
+                                        for k, v in ov['levels'].items()))
+        if ov['confidence']:
+            print('  判类置信度：' + ' · '.join(f'{k} {v} 条'
+                                          for k, v in ov['confidence'].items()))
+        if ov['low_confidence_turns']:
+            print('  置信度低（分类存疑，建议人看）：轮次 '
+                  + '、'.join(str(i) for i in ov['low_confidence_turns']))
+        if ov['components_ran']:
+            print('  真跑过构件：' + ' · '.join(f'{k} ×{v}'
+                                          for k, v in
+                                          ov['components_ran'].items()))
+        for k, v in ov['not_ran_reasons'].items():
+            print(f'  没跑 ×{v}：{k}')
+        for k, v in ov['walls'].items():
+            print(f"  墙事件 {k} ×{v}")
+        print('  ' + ov['boundary'])
     elif action == 'review':
         print(f"场景复核依据：{r['explanation']}")
         for row in (r.get('reviews') or []):
@@ -566,6 +598,7 @@ def session_guard_error(args, json_out):
         ('--export', args.export is not None),
         ('--beliefs', bool(args.beliefs)),
         ('--session-state', args.session_state),
+        ('--overview', args.overview),
         ('--session-reset', args.session_reset)) if v]
     if not given:
         return None

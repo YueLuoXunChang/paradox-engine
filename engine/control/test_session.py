@@ -455,9 +455,80 @@ try:
           str(rst['state']['reviews']))
     check("清空后会话文件仍是合法 JSON",
           isinstance(json.loads(text_of(ponly)), dict))
+
+    # ── 用例17：批次汇总（只统计引擎自己的标签，不判断）
+    pov = os.path.join(d, '汇总.json')
+    check("空会话 → empty_session（没东西可汇总就不编）",
+          session_run({'action': 'overview',
+                       'path': pov})['verdict'] == 'empty_session')
+    session_run({'action': 'add', 'path': pov, 'text': TXT_CONFLICT})
+    session_run({'action': 'add', 'path': pov, 'text': TXT_WALL,
+                 'structured': {'sentence': 'liar'}})
+    session_run({'action': 'add', 'path': pov, 'text': TXT_PLAIN})
+    session_run({'action': 'review', 'path': pov, 'scene_id': 'S05'})
+    sha_before_ov = sha(pov)
+    ro = session_run({'action': 'overview', 'path': pov})
+    ov = ro['overview']
+    check("汇总 → verdict=overview 且轮次数与状态一致",
+          ro['verdict'] == 'overview' and ov['turns'] == 3
+          and ov['turns'] == ro['state']['turns'], str(ov['turns']))
+    turns_json = json.loads(text_of(pov))['turns']
+    check("判类分布/分组与实际轮次一一对应",
+          ov['per_type'] == ro['state']['per_type']
+          and all(ov['by_type'][k] == [t['i'] for t in turns_json
+                                       if t['type'] == k]
+                  for k in ov['per_type']), str(ov['by_type']))
+    check("复杂度分布与各轮次 level 一致",
+          sum(ov['levels'].values()) == 3
+          and ov['levels'] == {lv: sum(1 for t in turns_json
+                                       if t['level'] == lv)
+                               for lv in {t['level'] for t in turns_json}},
+          str(ov['levels']))
+    conf_direct = {}
+    for t in turns_json:
+        c = cl({'text': t['text']})['confidence']
+        conf_direct[c] = conf_direct.get(c, 0) + 1
+    check("置信度分布与判类器直跑一致（不编）",
+          ov['confidence'] == conf_direct, str(ov['confidence']))
+    check("置信度低的轮次单独列出来（不掩盖存疑）",
+          ov['low_confidence_turns'] == [t['i'] for t in turns_json
+                                         if t['confidence'] == 'low'],
+          str(ov['low_confidence_turns']))
+    ran_direct = {}
+    for t in turns_json:
+        for e in t['execution']:
+            if e['status'] == 'run':
+                ran_direct[e['component']] = ran_direct.get(e['component'], 0) + 1
+    check("真跑构件计数与会话记录一致",
+          ov['components_ran'] == ran_direct, str(ov['components_ran']))
+    notes = [e.get('note') or '' for t in turns_json for e in t['execution']]
+    check("「没跑的原因」全部来自引擎自己的说明（不无中生有）",
+          bool(ov['not_ran_reasons']) and all(
+              any(k.split('：', 1)[1] in n for n in notes)
+              for k in ov['not_ran_reasons']), str(ov['not_ran_reasons']))
+    check("墙事件按构件+verdict 归组",
+          ov['walls'] and all('→' in k for k in ov['walls']),
+          str(ov['walls']))
+    check("复核记录条数也进汇总", ov['reviews'] == 1, str(ov['reviews']))
+    check("汇总声明不做相似度聚类（边界摆明）",
+          '不做相似度聚类' in ov['boundary']
+          and '不替人下结论' in ov['boundary'])
+    check("汇总只读：会话文件一个字节没动", sha(pov) == sha_before_ov)
+    mdo = session_run({'action': 'report', 'path': pov})['markdown']
+    check("台账里有批次汇总段且数字与汇总一致",
+          '## 批次汇总' in mdo and ('- 轮次 3' in mdo)
+          and ('判类分布' in mdo))
+    check("台账汇总段写出真跑构件与没跑原因",
+          '真跑过构件' in mdo and '没跑的原因' in mdo)
+    st_corrupt = os.path.join(d, '坏2.json')
+    with io.open(st_corrupt, 'w', encoding='utf-8') as fh:
+        fh.write('{ 坏')
+    check("会话损坏 → 汇总也诚实报 state_corrupt",
+          session_run({'action': 'overview',
+                       'path': st_corrupt})['verdict'] == 'state_corrupt')
 finally:
     shutil.rmtree(d, ignore_errors=True)
 
 print("=" * 60)
-print(f"结果: {PASS}/93 通过")
-raise SystemExit(0 if PASS == 93 else 1)
+print(f"结果: {PASS}/108 通过")
+raise SystemExit(0 if PASS == 108 else 1)
