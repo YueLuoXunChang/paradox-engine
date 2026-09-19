@@ -12,6 +12,8 @@ cli.py — paradox-engine 命令行入口（AI 挂载层 · 阶段 6 扩展）
     python -m engine.cli --scene all --json                  # 全部场景，结构化输出
     python -m engine.cli --review                            # 复核模式：期望 vs 实际
     python -m engine.cli --mark S05 --verdict ok             # 复核落笔（写回场景表）
+    python -m engine.cli --session 会话.json --add "文本"     # 多轮会话：记一条
+    python -m engine.cli --session 会话.json --session-state  # 看会话汇总
     paradox-engine --text "..."                              # 安装后 console 命令
 
 做什么：
@@ -90,6 +92,28 @@ def build_parser():
                         'edge=边界情况 / pending=退回待复核（默认 ok）')
     p.add_argument('--note', type=str, default='',
                    help='配合 --mark 的复核备注（一句话，写进场景表）')
+    p.add_argument('--session', type=str, default=None, metavar='FILE',
+                   help='多轮会话文件：逐条材料累积诊断，跨命令记住前文'
+                        '（配 --add / --revise / --state / --reset）')
+    p.add_argument('--add', type=str, default=None, metavar='文本',
+                   help='配合 --session：给一段材料跑诊断并记进会话')
+    p.add_argument('--structured-json', type=str, default=None,
+                   metavar='JSON', dest='structured_json',
+                   help='配合 --session --add：结构化线索（如 {"sentence":'
+                        '"liar"}），有它构件才真跑')
+    p.add_argument('--revise', type=str, default=None, metavar='新信息',
+                   help='配合 --session：用新信息修正会话里的信念集'
+                        '（AGM 最小放弃）')
+    p.add_argument('--beliefs', type=str, default=None, metavar='P,Q',
+                   help='配合 --session --revise：逗号分隔的旧信念集'
+                        '（不给就用会话里已有的）')
+    p.add_argument('--session-state', action='store_true',
+                   dest='session_state',
+                   help='配合 --session：看当前会话汇总（轮次/题型分布/'
+                        '墙清单/信念集/修正历史）')
+    p.add_argument('--session-reset', action='store_true',
+                   dest='session_reset',
+                   help='配合 --session：清空这个会话（文件保留）')
     return p
 
 
@@ -370,6 +394,117 @@ def mark_guard_error(args, json_out):
     return 2
 
 
+def session_cmd(args):
+    """多轮会话：add 记一条 / revise 修正信念 / state 看汇总 / reset 清空。"""
+    try:
+        from engine.control.session import run as session_run
+    except ImportError:
+        from session import run as session_run
+    if args.session_state:
+        action = 'state'
+    elif args.session_reset:
+        action = 'reset'
+    elif args.add is not None:
+        action = 'add'
+    elif args.revise is not None:
+        action = 'revise'
+    else:
+        msg = ('--session 要配一个动作：--add 文本 / --revise 新信息 / '
+               '--session-state / --session-reset')
+        print(json.dumps({'error': msg}, ensure_ascii=False, indent=2)
+              if args.json else msg)
+        return 2
+    inputs = {'action': action, 'path': args.session}
+    if action == 'add':
+        inputs['text'] = args.add
+        if args.structured_json:
+            if args.structured:
+                msg = '--structured-json 与 --structured 只能给一个'
+                print(json.dumps({'error': msg}, ensure_ascii=False, indent=2)
+                      if args.json else msg)
+                return 2
+            try:
+                inputs['structured'] = json.loads(args.structured_json)
+            except ValueError as e:
+                msg = f'--structured-json 解析失败：{e}'
+                print(json.dumps({'error': msg}, ensure_ascii=False, indent=2)
+                      if args.json else msg)
+                return 2
+        elif args.structured:
+            try:
+                inputs['structured'] = json.loads(args.structured)
+            except ValueError as e:
+                msg = f'--structured 解析失败：{e}'
+                print(json.dumps({'error': msg}, ensure_ascii=False, indent=2)
+                      if args.json else msg)
+                return 2
+    if action == 'revise':
+        inputs['new_info'] = args.revise
+        if args.beliefs:
+            inputs['beliefs'] = [b.strip() for b in args.beliefs.split(',')
+                                 if b.strip()]
+    r = session_run(inputs)
+    st = r['state']
+    if r['verdict'] in ('input_pending', 'state_corrupt', 'path_invalid',
+                        'empty_session'):
+        msg = r.get('explanation') or ('%s：%s' % (r['verdict'], st))
+        print(json.dumps(r, ensure_ascii=False, indent=2) if args.json else
+              '会话没动：' + msg)
+        return 2
+    if args.json:
+        print(json.dumps(r, ensure_ascii=False, indent=2))
+        return 0
+    if action == 'add':
+        t = r['turn']
+        print(f"记下第 {t['i']} 条：{t['text'][:40]}")
+        print(f"  判类 {t['type']} {t['type_name']} · 复杂度 {t['level']}"
+              f" · 路由 {t['route']} · 五步结论 {t['verdict']}")
+        ran = [e for e in t['execution'] if e['status'] == 'run']
+        pend = [e for e in t['execution'] if e['status'] != 'run']
+        print(f"  执行：真跑 {len(ran)} 件"
+              + (f"（{'、'.join(e['component'] for e in ran)}）" if ran else '')
+              + f" / 没跑 {len(pend)} 件（缺结构化线索的照实标）")
+    elif action == 'revise':
+        rev = r['revision']
+        print(f"信念修正（{rev['verdict']}）：{rev['new_info'][:40]}")
+        print(f"  保留 {rev['kept']} / 放弃 {rev['dropped']}"
+              f"（旧集合来自{rev['beliefs_source']}）")
+    elif action == 'reset':
+        print('会话已清空（文件保留）。')
+    else:
+        print('会话当前状态：')
+        for t in st['turn_list']:
+            print(f"  {t['i']}. [{t['type']}-{t['level']}] {t['text'][:36]}"
+                  f"（{t['verdict']}）")
+        for e in st['wall_events']:
+            print(f"  墙事件 {e['i']}：{e['component']}"
+                  f" → {e['component_verdict']}")
+    print(f"  当前会话：轮次 {st['turns']} · 题型分布 {st['per_type']}"
+          f" · 墙清单 {st['wall_count']} 条 · 信念 {len(st['beliefs'])} 条"
+          f" · 修正 {len(st['revisions'])} 次")
+    print('  ' + r['boundary'])
+    return 0
+
+
+def session_guard_error(args, json_out):
+    """--session 的动作参数必须配 --session（否则不知道记哪儿）。"""
+    if args.session:
+        return None
+    given = [n for n, v in (
+        ('--add', args.add is not None),
+        ('--revise', args.revise is not None),
+        ('--beliefs', bool(args.beliefs)),
+        ('--session-state', args.session_state),
+        ('--session-reset', args.session_reset)) if v]
+    if not given:
+        return None
+    msg = ('%s 必须配 --session FILE（会话记在哪个文件）——'
+           '不会悄悄在别处落文件' % ' 与 '.join(given))
+    print(json.dumps({'error': msg}, ensure_ascii=False, indent=2)
+          if json_out else msg)
+    return 2
+
+
 def main(argv=None):
     ensure_utf8_console()   # Windows GBK 控制台：报告含 ⚠/✅，先自愈编码
     args = build_parser().parse_args(argv)
@@ -377,6 +512,12 @@ def main(argv=None):
     guard = mark_guard_error(args, args.json)
     if guard is not None:
         return guard
+    guard = session_guard_error(args, args.json)
+    if guard is not None:
+        return guard
+
+    if args.session:
+        return session_cmd(args)
 
     if args.mark:
         return mark_scenes(args.json, args.mark, args.verdict, args.note)

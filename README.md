@@ -54,8 +54,15 @@ paradox-engine --text "这句话是假的" --json      # 结构化输出
 paradox-engine --scenarios                      # 场景库（25 个真实场景 + 复核状态）
 paradox-engine --scene S01                      # 跑单场景：期望 vs 实际 + 真跑白箱
 paradox-engine --text "..." --explain          # 判类依据（主型/副型得分+命中信号+路由）
-paradox-engine --review                        # 场景复核模式（逐条给依据+勾选指引）
-paradox-engine --stats                         # 场景库统计（题型分布/通过数/复核进度）
+paradox-engine --review                        # 场景复核模式（逐条给依据+落笔命令）
+paradox-engine --mark S05 --verdict ok         # 复核落笔：结论写回场景表
+paradox-engine --stats                         # 场景库统计（题型分布/通过数/复核分布）
+
+# 多轮会话：一批材料一条条看，跨命令记住前文
+paradox-engine --session 会话.json --add "产品既要快又要稳"
+paradox-engine --session 会话.json --add "这句话是假的" --structured-json '{"sentence":"liar"}'
+paradox-engine --session 会话.json --revise "¬Q" --beliefs "P→Q,P"   # 新信息 → 信念修正
+paradox-engine --session 会话.json --session-state                # 汇总：轮次/题型/墙清单/信念
 
 # 或作为 Python 包 import
 from engine.control.controller import run as controller
@@ -68,7 +75,7 @@ print(r['report'])
 ```bash
 # 克隆后，在仓库根目录
 python demo.py          # 十九步演示
-python run_tests.py     # 全量回归（一条命令：38 个测试文件 / 979 项断言）
+python run_tests.py     # 全量回归（一条命令：39 个测试文件 / 1014 项断言）
 ```
 
 `demo.py` 演示十九件事（①②③ 悖论三件套 → ④-⑩ 经典逻辑地基 → ⑪ 撞墙管线 → ⑫ 总控五步 → ⑬ MT-MP-TL 骨架 → ⑭ 冷门逻辑 → ⑮ AI 挂载 → ⑯ 数学底座 → ⑰ 冷门补完 → ⑱ 构造性立场 → ⑲ 墙的精确地图）：
@@ -278,7 +285,7 @@ run(inputs: dict) -> dict
 
 ### 测试状态
 
-- **979 项正式断言全过**（38 个测试文件），覆盖全部
+- **1014 项正式断言全过**（39 个测试文件），覆盖全部
   机制构件与总控/场景/AI 工具层；
 - **一条命令跑全量回归**：`python run_tests.py`（发现 + 运行 + 汇总；
   任一文件失败即非零退出——CI 与本地同一入口）；

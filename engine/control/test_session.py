@@ -1,0 +1,196 @@
+# -*- coding: utf-8 -*-
+"""
+test_session.py — 正式测试：多轮状态构件（会话台账）
+用例依据：轨 C 多轮状态 + 诚实边界（只记录引擎输出，不补结论）
+         + 仓库纪律「测试不许改动被跟踪文件」
+运行：python engine/control/test_session.py
+"""
+import io
+import json
+import os
+import shutil
+import sys
+import tempfile
+
+_HERE = os.path.dirname(os.path.abspath(__file__))
+_REPO = os.path.dirname(os.path.dirname(_HERE))
+sys.path.insert(0, _REPO)
+
+from engine.control.session import run as session_run  # noqa: E402
+from engine.control.controller import run as ctl  # noqa: E402
+from engine.cold.agm_revision import run as agm  # noqa: E402
+
+PASS = 0
+
+try:  # 控制台自愈：Windows GBK 控制台打印 emoji（✅/⚠）会崩
+    import sys as _sys
+    _sys.stdout.reconfigure(encoding='utf-8')
+except Exception:  # noqa: BLE001
+    pass
+
+
+def check(label, cond, detail=""):
+    global PASS
+    assert cond, f"{label} 失败: {detail}"
+    PASS += 1
+    print(f"  ✅ {label}")
+
+
+def text_of(path):
+    with io.open(path, encoding='utf-8', newline='') as fh:
+        return fh.read()
+
+
+TXT_WALL = '这句话是假的，反复震荡，越绕越深'
+TXT_CONFLICT = '产品既要三周上线又要十二周合规，销售和研发各执一词'
+TXT_PLAIN = '帮我看看这个怎么办才好'
+
+print("多轮状态 · 正式测试")
+print("=" * 60)
+
+d = tempfile.mkdtemp(prefix='pe_session_test_')
+p = os.path.join(d, 's.json')
+p2 = os.path.join(d, 's2.json')
+try:
+    # ── 用例1：空会话与缺参（诚实拦截，不落文件）
+    r = session_run({'action': 'state', 'path': p})
+    check("会话文件不存在时 state → empty_session",
+          r['verdict'] == 'empty_session', r['verdict'])
+    check("空会话不偷偷建文件", not os.path.exists(p))
+    check("缺 path → input_pending（不在别处落文件）",
+          session_run({'action': 'add', 'text': 'x'})['verdict'] == 'input_pending')
+    check("action 非法 → input_pending",
+          session_run({'action': 'wat', 'path': p})['verdict'] == 'input_pending')
+    check("inputs 不是 dict → input_pending",
+          session_run('x')['verdict'] == 'input_pending')
+
+    # ── 用例2：add 记轮次（记录的是引擎自己的输出，不二次加工）
+    r1 = session_run({'action': 'add', 'path': p, 'text': TXT_CONFLICT})
+    direct = ctl({'text': TXT_CONFLICT})
+    check("add → turn_added", r1['verdict'] == 'turn_added', str(r1['verdict']))
+    check("轮次里的判类与总控直接跑一致（不编造）",
+          r1['turn']['type'] == direct['classification']['main_type']
+          and r1['turn']['level'] == direct['classification']['level']
+          and r1['turn']['route'] == direct['classification']['route']['route_id'],
+          str(r1['turn']))
+    check("轮次记了五步结论（verdict 原样）",
+          r1['turn']['verdict'] == direct['verdict'], r1['turn']['verdict'])
+    check("会话文件已生成且是合法 JSON",
+          os.path.exists(p) and isinstance(json.loads(text_of(p)), dict))
+    check("会话文件行尾 LF（无 CR）", '\r' not in text_of(p))
+    check("created / updated 都写上了",
+          bool(json.loads(text_of(p))['created'])
+          and bool(json.loads(text_of(p))['updated']))
+    check("写盘不留临时文件",
+          not [f for f in os.listdir(d) if f.startswith('.session-')])
+
+    # ── 用例3：坏输入不弄脏会话
+    check("text 非字符串 → input_pending",
+          session_run({'action': 'add', 'path': p, 'text': 5})['verdict']
+          == 'input_pending')
+    check("text 空串 → input_pending",
+          session_run({'action': 'add', 'path': p, 'text': '   '})['verdict']
+          == 'input_pending')
+    check("structured 非 dict → input_pending",
+          session_run({'action': 'add', 'path': p, 'text': 'x',
+                       'structured': []})['verdict'] == 'input_pending')
+    check("坏输入后轮次数没变（仍是 1）",
+          session_run({'action': 'state', 'path': p})['state']['turns'] == 1)
+
+    # ── 用例4：多轮累积与题型分布
+    r2 = session_run({'action': 'add', 'path': p, 'text': TXT_PLAIN})
+    st = session_run({'action': 'add', 'path': p, 'text': TXT_WALL})['state']
+    check("三轮累积、顺序保持（i=1,2,3）",
+          [t['i'] for t in json.loads(text_of(p))['turns']] == [1, 2, 3],
+          str(st['per_type']))
+    check("题型分布与实际判类一致",
+          sum(st['per_type'].values()) == 3, str(st['per_type']))
+    check("轮次 verdict 与控制器口径一致（第二轮 classified_only 之类原样）",
+          r2['turn']['verdict'] == ctl({'text': TXT_PLAIN})['verdict'])
+
+    # ── 用例5：撞墙族构件真跑了才进墙清单
+    check("只给文本、构件没真跑 → 墙清单为空（不假装）",
+          st['wall_count'] == 0, str(st['wall_events']))
+    r5 = session_run({'action': 'add', 'path': p, 'text': TXT_WALL,
+                      'structured': {'sentence': 'liar'}})
+    ev = r5['state']['wall_events']
+    check("给了结构化线索、自指构件真跑 → 记进墙清单",
+          r5['state']['wall_count'] == 1 and ev[0]['component']
+          == 'selfref_fixpoint', str(ev))
+    check("墙清单记的是构件自己的 verdict（不是引擎替它编的）",
+          ev[0]['component_verdict'] == (ctl({'text': TXT_WALL, 'structured':
+                                              {'sentence': 'liar'}})['execution'][0]
+                                         ['output']['verdict']), str(ev))
+
+    # ── 用例6：revise 用 AGM 修正信念（结论以 AGM 构件为准）
+    check("会话里没信念集时 revise → input_pending（不硬推）",
+          session_run({'action': 'revise', 'path': p,
+                       'new_info': '¬Q'})['verdict'] == 'input_pending')
+    ref = agm({'mode': 'revise', 'beliefs': ['P→Q', 'P'], 'new_info': '¬Q'})
+    r6 = session_run({'action': 'revise', 'path': p, 'beliefs': ['P→Q', 'P'],
+                      'new_info': '¬Q'})
+    check("revise → belief_revised，结论与 AGM 直接跑一致",
+          r6['verdict'] == 'belief_revised'
+          and r6['revision']['dropped'] == ref['dropped']
+          and r6['revision']['kept'] == ref['kept'],
+          str(r6['revision']))
+    check("修正后会话信念集 = AGM 的 kept（含新信息）",
+          session_run({'action': 'state', 'path': p})['state']['beliefs']
+          == ref['kept'])
+    check("修正历史记了 before/after（可追溯）",
+          r6['revision']['beliefs_before'] == ['P→Q', 'P']
+          and r6['revision']['beliefs_after'] == ref['kept'],
+          str(r6['revision']))
+
+    unsat = agm({'mode': 'revise', 'beliefs': ['P'], 'new_info': '¬(P∨¬P)'})
+    check("不可满足的新信息 → AGM 说不可满足（作为对照）",
+          unsat['verdict'] == 'new_info_unsatisfiable', unsat['verdict'])
+    before_beliefs = session_run({'action': 'state', 'path': p})['state']['beliefs']
+    r7 = session_run({'action': 'revise', 'path': p, 'beliefs': ['P'],
+                      'new_info': '¬(P∨¬P)'})
+    check("不可满足的新信息不写进信念集（原信念不动）",
+          r7['verdict'] == 'belief_revised'
+          and r7['revision']['beliefs_after'] == before_beliefs,
+          str(r7['revision']))
+
+    # ── 用例7：两个会话互不串
+    session_run({'action': 'add', 'path': p2, 'text': TXT_PLAIN})
+    check("两个会话文件各记各的（不共享状态）",
+          session_run({'action': 'state', 'path': p2})['state']['turns'] == 1
+          and session_run({'action': 'state', 'path': p})['state']['turns'] == 4)
+
+    # ── 用例8：reset 清空但文件留着
+    r8 = session_run({'action': 'reset', 'path': p})
+    check("reset → reset_done，轮次/信念/修正都归零",
+          r8['verdict'] == 'reset_done' and r8['state']['turns'] == 0
+          and r8['state']['beliefs'] == [] and r8['state']['revisions'] == [])
+    check("reset 后文件仍在且是合法 JSON",
+          os.path.exists(p) and isinstance(json.loads(text_of(p)), dict))
+
+    # ── 用例9：损坏文件绝不覆盖
+    bad = os.path.join(d, 'bad.json')
+    with io.open(bad, 'w', encoding='utf-8') as fh:
+        fh.write('{ 这不是 JSON')
+    before_bad = text_of(bad)
+    r9 = session_run({'action': 'add', 'path': bad, 'text': 'x'})
+    check("会话文件损坏 → state_corrupt（不覆盖原文件）",
+          r9['verdict'] == 'state_corrupt' and text_of(bad) == before_bad,
+          r9['verdict'])
+    with io.open(bad, 'w', encoding='utf-8') as fh:
+        fh.write('[1, 2, 3]')
+    check("顶层不是对象 → state_corrupt",
+          session_run({'action': 'add', 'path': bad, 'text': 'x'})['verdict']
+          == 'state_corrupt')
+    check("path 是目录 → path_invalid（不砸栈）",
+          session_run({'action': 'add', 'path': d, 'text': 'x'})['verdict']
+          == 'path_invalid')
+
+    # ── 用例10：边界声明与端口
+    check("每次返回都带边界声明（只诊断不决策）",
+          '只诊断不决策' in r8['boundary'] and '算不动' in r8['boundary'])
+finally:
+    shutil.rmtree(d, ignore_errors=True)
+
+print("=" * 60)
+print(f"结果: {PASS}/35 通过")
+raise SystemExit(0 if PASS == 35 else 1)

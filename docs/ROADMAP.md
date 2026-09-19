@@ -190,7 +190,7 @@ paradox-engine 最终形态：**一个分情况分层、挂上 AI 就能用的�
   回馈闭环 ✅（S13 T8 判错 → 扩信号表 → 回归；测试加「覆盖 12 题型」不变式）
   → 建模姿态定型（按需）；
 - **轨 C 生态接口**：工具 schema 冻结 ✅（`freeze_tool_schema.py` + 快照 +
-  `docs/tool_schema.md` + `test_tool_contract.py` 防漂移）→ 多轮状态（按需）
+  `docs/tool_schema.md` + `test_tool_contract.py` 防漂移）→ 多轮状态 ✅（会话台账：逐条累积诊断 + 新信息触发信念修正，`engine/control/session.py` + CLI `--session`）
   → CLI 入口 ✅ →（待授权）Web/API/LLM 对接；
 - **轨 D 开源治理**：LICENSE 授权口径（待作者拍板）→ 贡献者路径 → 文档
   外向化抽查。
