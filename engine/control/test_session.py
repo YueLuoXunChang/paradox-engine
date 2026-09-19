@@ -811,9 +811,90 @@ try:
           session_run({'action': 'brief',
                        'path': os.path.join(d, '空简报.json')})['verdict']
           == 'nothing_to_report')
+    # ── 用例23：会话 vs 场景表对账（只报差异，两边都不改）
+    prc = os.path.join(d, '对账.json')
+    check("会话里没记过依据 → nothing_to_compare（没得对账）",
+          session_run({'action': 'reconcile',
+                       'path': prc})['verdict'] == 'nothing_to_compare')
+    session_run({'action': 'review', 'path': prc, 'scene_id': 'S13'})
+    session_run({'action': 'review', 'path': prc, 'scene_id': 'S01'})
+    sha_rc = sha(prc)
+    rrc = session_run({'action': 'reconcile', 'path': prc})
+    mrc = rrc.get('markdown') or ''
+    check("对账可生成且带标题",
+          rrc['verdict'] == 'reconciled' and mrc.startswith('# 复核对账'),
+          rrc['verdict'])
+    check("「记了依据但还没落笔」列出 S13 并给落笔命令",
+          rrc['stats']['not_marked'] == 1 and 'S13' in mrc
+          and '--mark S13' in mrc, str(rrc['stats']))
+    check("S01 已落笔且会话有依据 → 不算「未落笔」",
+          'S01：引擎' not in mrc, mrc[:400])
+    check("「已落笔但没依据存档」列出老标记的场景",
+          rrc['stats']['no_evidence'] >= 3 and 'S02：' in mrc,
+          str(rrc['stats']['no_evidence']))
+    check("场景表没有 review 文本时不算「方向相反」（不硬判）",
+          rrc['stats']['disagree'] == 0, str(rrc['stats']))
+    check("对账只读：会话文件 sha256 未变", sha(prc) == sha_rc)
+    check("对账只读：场景表 sha256 未变",
+          sha(os.path.join(_REPO, 'engine', 'scenarios',
+                           'scenarios.py')) == scen_before)
+    check("对账边界写明两边都不改、谁对由人定",
+          '两边都不改' in mrc and '谁对由人定' in mrc, mrc[-200:])
+
+    # 场景表副本：把 S13 标成「误判-待修」，会话里它是对照通过 → 方向相反
+    reg2 = os.path.join(d, '场景表副本.py')
+    shutil.copyfile(os.path.join(_REPO, 'engine', 'scenarios',
+                                 'scenarios.py'), reg2)
+    _mark('S13', 'wrong', 'engine 说对，我改的是期望值', path=reg2)
+    rrc2 = session_run({'action': 'reconcile', 'path': prc,
+                        'registry_path': reg2})
+    md2 = rrc2.get('markdown') or ''
+    check("方向相反会被列出（引擎对照通过 / 你标了误判）",
+          rrc2['stats']['disagree'] == 1 and 'S13' in md2
+          and '常见原因是改的是期望值' in md2, str(rrc2['stats']))
+    _mark('S13', 'ok', path=reg2)
+    rrc3 = session_run({'action': 'reconcile', 'path': prc,
+                        'registry_path': reg2})
+    check("标回「正确」后方向相反归零",
+          rrc3['stats']['disagree'] == 0, str(rrc3['stats']))
+    # 另一头：会话记的是「对照不符」，场景表标「正确」
+    st_rc = json.loads(text_of(prc))
+    st_rc['reviews'][0]['passed'] = False
+    with io.open(prc, 'w', encoding='utf-8', newline='\n') as fh:
+        fh.write(json.dumps(st_rc, ensure_ascii=False, indent=2))
+    rrc4 = session_run({'action': 'reconcile', 'path': prc,
+                        'registry_path': reg2})
+    check("另一头也认：引擎对照不符 / 你标了正确",
+          rrc4['stats']['disagree'] == 1
+          and '对照不符' in (rrc4.get('markdown') or ''), str(rrc4['stats']))
+    bad_reg2 = os.path.join(d, '不是场景表2.txt')
+    with io.open(bad_reg2, 'w', encoding='utf-8') as fh:
+        fh.write('不是场景表')
+    check("场景表读不到 → registry_unreadable（不编对账）",
+          session_run({'action': 'reconcile', 'path': prc,
+                       'registry_path': bad_reg2})['verdict']
+          == 'registry_unreadable')
+    rout = os.path.join(d, '对账.md')
+    rrc5 = session_run({'action': 'reconcile', 'path': prc,
+                        'out_file': rout})
+    check("对账可写文件且 LF",
+          rrc5['verdict'] == 'reconciled_written' and os.path.exists(rout)
+          and '\r' not in text_of(rout), rrc5['verdict'])
+    check("目标已存在且没开覆盖 → file_exists",
+          session_run({'action': 'reconcile', 'path': prc,
+                       'out_file': rout})['verdict'] == 'file_exists')
+    check("导出目标 = 会话文件本身 → 拦下",
+          session_run({'action': 'reconcile', 'path': prc,
+                       'out_file': prc})['verdict'] == 'input_pending')
+    check("导出目标是目录 → path_invalid",
+          session_run({'action': 'reconcile', 'path': prc,
+                       'out_file': d})['verdict'] == 'path_invalid')
+    check("out_file 非字符串 → input_pending",
+          session_run({'action': 'reconcile', 'path': prc,
+                       'out_file': 5})['verdict'] == 'input_pending')
 finally:
     shutil.rmtree(d, ignore_errors=True)
 
 print("=" * 60)
-print(f"结果: {PASS}/186 通过")
-raise SystemExit(0 if PASS == 186 else 1)
+print(f"结果: {PASS}/204 通过")
+raise SystemExit(0 if PASS == 204 else 1)

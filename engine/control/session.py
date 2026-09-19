@@ -637,6 +637,92 @@ BRIEF_HUMAN_ONLY = (
     '是否推远端 / 打 tag / 定 LICENSE 口径')
 
 
+RECONCILE_BOUNDARY = (
+    '对账只报差异，**两边都不改**：会话里的依据不动、场景表的标记也不动；'
+    '「值得看一眼」那类只说明引擎对照结果与人工落笔方向相反（常见原因是你改的是'
+    '期望值，而不是引擎判错），谁对由人定。')
+
+
+def _reconcile(state, registry_path=None):
+    """会话里记的复核依据 vs 场景表当前的复核标记（只读对账）。"""
+    try:
+        from engine.scenarios.review_marks import marks
+    except ImportError:
+        sys.path.insert(0, os.path.join(_REPO, 'engine', 'scenarios'))
+        from review_marks import marks  # noqa: E402
+    mk = marks(registry_path)
+    if not mk:
+        raise ValueError('场景表里没解析到任何场景（0 个）——不编对账')
+    recorded = {}
+    for r in state['reviews']:
+        recorded.setdefault(r['scene'], r)
+    not_marked, no_evidence, disagree = [], [], []
+    for sid in sorted(set(list(recorded) + list(mk))):
+        rec = recorded.get(sid)
+        cur = mk.get(sid)
+        if rec and cur and not cur['checked']:
+            not_marked.append({'scene': sid, 'expect': rec['expect'],
+                               'actual': rec['actual'],
+                               'passed': rec['passed']})
+        if cur and cur['checked'] and not rec:
+            no_evidence.append({'scene': sid, 'review': cur['review']})
+        if rec and cur and cur['checked'] and cur['review']:
+            said_wrong = '误判' in cur['review']
+            if rec['passed'] and said_wrong:
+                disagree.append({'scene': sid, 'engine': '对照通过',
+                                 'human': cur['review'][:40]})
+            elif (not rec['passed']) and not said_wrong                     and '正确' in cur['review']:
+                disagree.append({'scene': sid, 'engine': '对照不符',
+                                 'human': cur['review'][:40]})
+    if not recorded:
+        return None, {'recorded': 0, 'checked_in_registry':
+                      sum(1 for v in mk.values() if v['checked'])}
+    L = ['# 复核对账（会话 vs 场景表）', '']
+    L.append('- 生成时间：%s' % _now())
+    L.append('- 会话里记过的场景：%d 个 · 场景表已落笔：%d 个'
+             % (len(recorded), sum(1 for v in mk.values() if v['checked'])))
+    L.append('')
+    L.append('## 记了依据但还没落笔（%d 个）' % len(not_marked))
+    L.append('')
+    for r in not_marked:
+        L.append('- %s：引擎 期望 %s / 实际 %s（%s）——落笔用 '
+                 '`--mark %s --verdict ok|wrong|edge`'
+                 % (r['scene'], r['expect'], r['actual'],
+                    '对照通过' if r['passed'] else '对照不符', r['scene']))
+    if not not_marked:
+        L.append('- 无')
+    L.append('')
+    L.append('## 已落笔但会话里没有依据存档（%d 个）' % len(no_evidence))
+    L.append('')
+    for r in no_evidence:
+        L.append('- %s：场景表写的是「%s」——想看依据就 '
+                 '`--review --scene %s` 再跑一次记进会话'
+                 % (r['scene'], r['review'] or '（无记录）', r['scene']))
+    if not no_evidence:
+        L.append('- 无')
+    L.append('')
+    L.append('## 值得看一眼：引擎对照结果与人工落笔方向相反（%d 个）'
+             % len(disagree))
+    L.append('')
+    for r in disagree:
+        L.append('- %s：引擎 %s / 你标了「%s」——常见原因是改的是期望值'
+                 % (r['scene'], r['engine'], r['human']))
+    if not disagree:
+        L.append('- 无')
+    L.append('')
+    L.append('## 边界')
+    L.append('')
+    L.append('- %s' % RECONCILE_BOUNDARY)
+    L.append('')
+    stats = {'recorded': len(recorded),
+             'checked_in_registry': sum(1 for v in mk.values()
+                                        if v['checked']),
+             'not_marked': len(not_marked),
+             'no_evidence': len(no_evidence),
+             'disagree': len(disagree)}
+    return '\n'.join(L), stats
+
+
 def _brief_md(state, session_path=None):
     """一页简报：把会话里已有的记录汇总成"现在什么状态、下一步能干什么"。"""
     ov = _overview(state)
@@ -994,7 +1080,8 @@ def run(inputs):
     path = inputs.get('path')
     if action not in ('add', 'add_file', 'revise', 'state', 'reset',
                       'report', 'review', 'overview',
-                      'worksheet', 'progress', 'brief'):
+                      'worksheet', 'progress', 'brief',
+                      'reconcile'):
         return _result('input_pending', _summary(_empty()),
                        explanation='action 应为 add/add_file/revise/state/'
                                    'reset/report/review/overview/worksheet/progress，得到 %r——诚实拦截'
@@ -1026,6 +1113,50 @@ def run(inputs):
 
     if action == 'state':
         return _result('state', _summary(state))
+
+    if action == 'reconcile':
+        out_file = inputs.get('out_file')
+        if out_file is not None and not isinstance(out_file, str):
+            return _result('input_pending', _summary(state),
+                           explanation='out_file 必须是字符串路径（或 "-" '
+                                       '表示只在结果里返回文本）')
+        try:
+            md, stats = _reconcile(state, inputs.get('registry_path'))
+        except Exception as exc:  # noqa: BLE001
+            return _result('registry_unreadable', _summary(state),
+                           explanation='场景表读不到（%s）——不编对账' % exc)
+        if md is None:
+            return _result('nothing_to_compare', _summary(state),
+                           stats=stats,
+                           explanation='会话里还没记过复核依据'
+                                       '（先用 --review 记）——没得对账')
+        if out_file in (None, '-'):
+            return _result('reconciled', _summary(state), markdown=md,
+                           stats=stats,
+                           explanation='对账完成：未落笔 %d / 无依据 %d / '
+                                       '方向相反 %d'
+                                       % (stats['not_marked'],
+                                          stats['no_evidence'],
+                                          stats['disagree']))
+        target = os.path.abspath(out_file)
+        if target == os.path.abspath(path):
+            return _result('input_pending', _summary(state),
+                           explanation='导出目标不能是会话文件本身——诚实拦截')
+        try:
+            _write_text(target, md, bool(inputs.get('overwrite')))
+        except IsADirectoryError as exc:
+            return _result('path_invalid', _summary(state),
+                           explanation=str(exc), markdown=md)
+        except FileExistsError as exc:
+            return _result('file_exists', _summary(state),
+                           explanation=str(exc), markdown=md)
+        except (IOError, OSError) as exc:
+            return _result('input_pending', _summary(state),
+                           explanation='写对账失败：%s' % exc, markdown=md)
+        return _result('reconciled_written', _summary(state), markdown=md,
+                       stats=stats,
+                       explanation='对账已写入 %s（%d 字）'
+                                   % (target, len(md)))
 
     if action == 'brief':
         out_file = inputs.get('out_file')
