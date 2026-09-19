@@ -130,30 +130,6 @@ def main():
     print("  λ 演算给'自指'一个干净底座：Y f = f(Y f)——引擎能算的边界内自指。")
 
     print("\n" + "=" * 62)
-    banner("⑳ 工作台：一批材料 -> 会话台账 -> 一页简报（跨命令记住前文）")
-    import tempfile as _tf
-    import shutil as _sh
-    from engine.control.session import run as _sess
-    _d = _tf.mkdtemp(prefix='pe_demo_')
-    try:
-        _s = os.path.join(_d, '会话.json')
-        for _txt in ('产品既要三周上线又要十二周合规，销售和研发各执一词',
-                     '这句话是假的，反复震荡'):
-            _sess({'action': 'add', 'path': _s, 'text': _txt, 'clues': True})
-        _ov = _sess({'action': 'overview', 'path': _s})['overview']
-        _br = _sess({'action': 'brief', 'path': _s})
-        print(f"  记下 {_ov['turns']} 条材料，判类分布 {_ov['per_type']}；"
-              f"线索可直接用 {list((_ov.get('clues') or {}).get('ready_keys') or {})}"
-              f"，还欠人给 {list((_ov['clues']['need_human_keys']))}")
-        _line = [l for l in (_br.get('markdown') or '').split('\n')
-                 if l.startswith('- 一句话状态')]
-        print('  ' + (_line[0][2:] if _line else '（简报没生成——这不该发生）'))
-        print("  台账与简报都可导出（--export / --brief-out）；"
-              "复核依据、进度快照、对账分别走 --review / --progress / --reconcile")
-        print("  会话是工作台账：只记引擎自己的输出，不替人下结论（只诊断不决策）。")
-    finally:
-        _sh.rmtree(_d, ignore_errors=True)
-
     print("paradox-engine 的分层主张：")
     print("  第 1 层经典逻辑：能算的先算清（命题/谓词/时序/模态/λ/图灵机/类型）")
 
@@ -360,6 +336,30 @@ def main():
           "——借鉴区逐条标源；表是参考文献表不是判定过程。")
 
     print("\n" + "=" * 62)
+    banner("⑳ 工作台：一批材料 -> 会话台账 -> 一页简报（跨命令记住前文）")
+    import tempfile as _tf
+    import shutil as _sh
+    from engine.control.session import run as _sess
+    _d = _tf.mkdtemp(prefix='pe_demo_')
+    try:
+        _s = os.path.join(_d, '会话.json')
+        for _txt in ('产品既要三周上线又要十二周合规，销售和研发各执一词',
+                     '这句话是假的，反复震荡'):
+            _sess({'action': 'add', 'path': _s, 'text': _txt, 'clues': True})
+        _ov = _sess({'action': 'overview', 'path': _s})['overview']
+        _br = _sess({'action': 'brief', 'path': _s})
+        print(f"  记下 {_ov['turns']} 条材料，判类分布 {_ov['per_type']}；"
+              f"线索可直接用 {list((_ov.get('clues') or {}).get('ready_keys') or {})}"
+              f"，还欠人给 {list((_ov['clues']['need_human_keys']))}")
+        _line = [l for l in (_br.get('markdown') or '').split('\n')
+                 if l.startswith('- 一句话状态')]
+        print('  ' + (_line[0][2:] if _line else '（简报没生成——这不该发生）'))
+        print("  台账与简报都可导出（--export / --brief-out）；"
+              "复核依据、进度快照、对账分别走 --review / --progress / --reconcile")
+        print("  会话是工作台账：只记引擎自己的输出，不替人下结论（只诊断不决策）。")
+    finally:
+        _sh.rmtree(_d, ignore_errors=True)
+
     print("paradox-engine 的分层主张：")
     print("  总控：判类→判复杂度→切路→执行→判输出（最小充分：简单问题绝不复杂化）")
     print("  第 0 层骨架：点/线程/拓扑/操作——结构表达（12 形态，不掺判定）")
@@ -372,7 +372,6 @@ def main():
     print(f"  AI 挂载：引擎 = {len(tl)} 个可调用工具——诊断留给使用者（只诊断不决策）")
     print("  只诊断不决策：把判断留给使用它的人。")
     print("更多：见 README.md + docs/ROADMAP.md")
-
     print("=" * 62)
 
 

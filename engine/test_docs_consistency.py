@@ -161,6 +161,13 @@ check("英文 README 的 demo 步数与实测一致（英文数字）",
       [m.group(0) for m in re.finditer(r'[a-z]+-step\w*|[a-z]+ steps', _en)])
 check("demo 步数 ≥19（⑲ 墙的精确地图在位）", _demo_steps >= 19,
       str(_demo_steps))
+# 横幅顺序也必须对：插错位置（比如插到演示中段）时步数照样是 20，
+# 光数条数抓不出来——所以这里查升序，最后一步必须是 ⑳
+_markers = [l.strip()[8:10] for l in
+            _read('demo.py').split('\n') if 'banner("' in l]
+check("demo 横幅按 ①→⑳ 升序排列（插错位置会被抓出）",
+      _markers == [_circled(i) + " " for i in range(1, _demo_steps + 1)],
+      str(_markers))
 
 # ── ④ 场景数与题型覆盖
 check("中文 README 场景数与实测一致",
@@ -200,5 +207,5 @@ check("README 断言声明不多不少（= 实测）",
       all(c == _total_asserts for c in _zh_claims), str(_zh_claims))
 
 print("=" * 60)
-print(f"结果: {PASS}/19 通过")
-raise SystemExit(0 if PASS == 19 else 1)
+print(f"结果: {PASS}/20 通过")
+raise SystemExit(0 if PASS == 20 else 1)
