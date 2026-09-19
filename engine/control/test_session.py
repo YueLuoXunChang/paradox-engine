@@ -36,6 +36,12 @@ def check(label, cond, detail=""):
     print(f"  ✅ {label}")
 
 
+def sha(path):
+    import hashlib
+    with io.open(path, 'rb') as fh:
+        return hashlib.sha256(fh.read()).hexdigest()
+
+
 def text_of(path):
     with io.open(path, encoding='utf-8', newline='') as fh:
         return fh.read()
@@ -381,9 +387,77 @@ try:
     check("没跑构件的 detail 是空的（不给没跑的东西编字段）",
           all(e['detail'] == {} for e in rself['turn']['execution']
               if e['status'] != 'run'))
+
+    # ── 用例16：场景复核依据记进会话（结论仍是人的判断）
+    from engine.scenarios.scenarios import SCENES, run as scenes_run
+    scen_path = os.path.join(_REPO, 'engine', 'scenarios', 'scenarios.py')
+    scen_before = sha(scen_path)
+    prv = os.path.join(d, '复核.json')
+    r1r = session_run({'action': 'review', 'path': prv, 'scene_id': 'S13'})
+    check("复核单场景 → reviews_added（1 条）",
+          r1r['verdict'] == 'reviews_added' and len(r1r['reviews']) == 1,
+          r1r.get('explanation'))
+    rec = r1r['reviews'][0]
+    s13 = [s for s in SCENES if s['id'] == 'S13'][0]
+    direct13 = scenes_run({'action': 'run', 'scene_id': 'S13'})['scenes'][0]
+    check("记的期望/实际与场景库直接跑一致（不编）",
+          rec['scene'] == 'S13'
+          and rec['expect'] == '%s-%s' % (s13['expect_type'],
+                                          s13['expect_level'])
+          and rec['actual'] == '%s-%s' % (direct13['actual_type'],
+                                          direct13['actual_level'])
+          and rec['passed'] == bool(direct13['passed']), str(rec))
+    c13 = cl({'text': s13['text']})
+    check("记的命中信号与判类器直跑一致",
+          rec['signals'] == (c13['types'][0]['signals'] if c13['types']
+                             else []), str(rec['signals']))
+    rall = session_run({'action': 'review', 'path': prv, 'scene_id': 'all'})
+    check("复核全部 → 记录数 = 场景数（25）",
+          rall['verdict'] == 'reviews_added'
+          and len(rall['reviews']) == len(SCENES), str(len(rall['reviews'])))
+    check("两条复核记录都落进会话文件（可回看）",
+          len(json.loads(text_of(prv))['reviews']) == 1 + len(SCENES))
+    check("会话汇总里带上复核条数",
+          rall['state']['reviews'] == 1 + len(SCENES))
+
+    turns_before2 = len(json.loads(text_of(prv))['reviews'])
+    for label, sid in (('未知场景', 'S99'), ('类型错', 5), ('空串场景 id', '')):
+        rr2 = session_run({'action': 'review', 'path': prv, 'scene_id': sid})
+        ok = (rr2['verdict'] == 'reviews_added' if sid == '' else
+              rr2['verdict'] == 'input_pending')
+        check(f"复核拦截：{label} → {'空串按 all' if sid == '' else 'input_pending'}",
+              ok, rr2['verdict'])
+    check("拦截与空串按 all 之后记录数自洽",
+          len(json.loads(text_of(prv))['reviews'])
+          == turns_before2 + len(SCENES), 'see above')
+
+    # 复核记录不等于替作者落笔：场景表必须一个字节都没动
+    check("复核记录不改场景表（checked 一个字都没替作者写）",
+          sha(scen_path) == scen_before)
+
+    ponly = os.path.join(d, '只有复核.json')
+    session_run({'action': 'review', 'path': ponly, 'scene_id': 'S01'})
+    rmd = session_run({'action': 'report', 'path': ponly})
+    check("只有复核记录的会话也能导台账（不算空会话）",
+          rmd['verdict'] == 'report_ready'
+          and '场景复核记录' in rmd['markdown'], rmd['verdict'])
+    check("台账复核段带「当前复核标记」一栏（读场景表当前状态）",
+          '当前复核标记' in rmd['markdown']
+          and ('待复核' in rmd['markdown']
+               or '已复核' in rmd['markdown']))
+    check("台账规模行写出复核记录条数",
+          '复核记录 1 条' in rmd['markdown'],
+          [l for l in rmd['markdown'].split('\n')
+           if l.startswith('- 规模')][:1])
+    rst = session_run({'action': 'reset', 'path': ponly})
+    check("reset 连复核记录一起清",
+          rst['verdict'] == 'reset_done' and rst['state']['reviews'] == 0,
+          str(rst['state']['reviews']))
+    check("清空后会话文件仍是合法 JSON",
+          isinstance(json.loads(text_of(ponly)), dict))
 finally:
     shutil.rmtree(d, ignore_errors=True)
 
 print("=" * 60)
-print(f"结果: {PASS}/77 通过")
-raise SystemExit(0 if PASS == 77 else 1)
+print(f"结果: {PASS}/93 通过")
+raise SystemExit(0 if PASS == 93 else 1)

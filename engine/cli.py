@@ -419,6 +419,8 @@ def session_cmd(args):
         action = 'state'
     elif args.session_reset:
         action = 'reset'
+    elif args.review:
+        action = 'review'
     elif args.export is not None:
         action = 'report'
     elif args.add_file is not None:
@@ -434,6 +436,8 @@ def session_cmd(args):
               if args.json else msg)
         return 2
     inputs = {'action': action, 'path': args.session}
+    if action == 'review':
+        inputs['scene_id'] = args.scene or 'all'
     if action == 'report':
         inputs['out_file'] = args.export
         inputs['overwrite'] = args.export_overwrite
@@ -509,6 +513,17 @@ def session_cmd(args):
         print(f"  执行：真跑 {len(ran)} 件"
               + (f"（{'、'.join(e['component'] for e in ran)}）" if ran else '')
               + f" / 没跑 {len(pend)} 件（缺结构化线索的照实标）")
+    elif action == 'review':
+        print(f"场景复核依据：{r['explanation']}")
+        for row in (r.get('reviews') or []):
+            print(f"  {row['scene']} {'✅' if row['passed'] else '⚠️'} "
+                  f"期望 {row['expect']} / 实际 {row['actual']}")
+            print(f"      输入：{(row['title'] or '')[:40]}"
+                  f"（判类命中：{'、'.join(row.get('signals') or []) or '—'}）")
+            for d in (row.get('diffs') or []):
+                print(f"      差异：{d}")
+        print("  落笔仍是人的判断：paradox-engine --mark S05 --verdict ok"
+              "（wrong=误判待修 / edge=边界情况）")
     elif action == 'add_file':
         imp = r['imported']
         print(f"材料导入：{r['explanation']}")
@@ -535,7 +550,7 @@ def session_cmd(args):
                   f" → {e['component_verdict']}")
     print(f"  当前会话：轮次 {st['turns']} · 题型分布 {st['per_type']}"
           f" · 墙清单 {st['wall_count']} 条 · 信念 {len(st['beliefs'])} 条"
-          f" · 修正 {len(st['revisions'])} 次")
+          f" · 修正 {len(st['revisions'])} 次 · 复核记录 {st['reviews']} 条")
     print('  ' + r['boundary'])
     return 0
 
@@ -582,6 +597,8 @@ def main(argv=None):
         return scenes_stats(args.json)
 
     if args.review:
+        if args.session:
+            return session_cmd(args)
         return review_scenes(args.json, args.scene)
 
     if args.scenarios:

@@ -34,9 +34,10 @@ PORTS = {
     'in': {'action': 'str', 'path': 'str?', 'text': 'str?', 'new_info': 'str?',
            'beliefs': 'list?', 'structured': 'dict?', 'text_file': 'str?',
            'split': 'str?', 'max_segs': 'int?', 'max_seg_chars': 'int?',
-           'out_file': 'str?', 'overwrite': 'bool?'},
+           'out_file': 'str?', 'overwrite': 'bool?', 'scene_id': 'str?'},
     'out': {'verdict': 'str', 'state': 'dict', 'turn': 'dict?',
             'revision': 'dict?', 'imported': 'dict?', 'markdown': 'str?',
+            'reviews': 'list?',
             'boundary': 'str'},
 }
 
@@ -94,7 +95,7 @@ def _detail(out):
 def _empty():
     """空会话（每次新建，避免默认值里的列表被多处共享）。"""
     return {'created': None, 'updated': None, 'turns': [], 'walls': [],
-            'beliefs': [], 'revisions': []}
+            'beliefs': [], 'revisions': [], 'reviews': []}
 
 
 def _now():
@@ -108,7 +109,7 @@ def _normalize(data):
         state['created'] = data['created']
     if isinstance(data.get('updated'), str):
         state['updated'] = data['updated']
-    for k in ('turns', 'walls', 'beliefs', 'revisions'):
+    for k in ('turns', 'walls', 'beliefs', 'revisions', 'reviews'):
         v = data.get(k)
         if isinstance(v, list):
             state[k] = v
@@ -186,6 +187,8 @@ def _summary(state):
         'wall_count': len(walls),
         'beliefs': state['beliefs'],
         'revisions': state['revisions'],
+        'reviews': len(state['reviews']),
+        'review_list': list(state['reviews']),
         'created': state['created'],
         'updated': state['updated'],
     }
@@ -322,6 +325,79 @@ def _add_file(state, text_file, mode='para', max_segs=200,
             'skipped_empty_blocks': empty, 'segments': len(segs)}, None
 
 
+def _scene_rows(scene_id='all'):
+    """跑场景对照并收集复核依据（与 CLI --review 同一套口径：期望 vs 实际 +
+    判类命中信号）。返回 (rows, 错误)。"""
+    try:
+        from engine.scenarios.scenarios import SCENES, run as scenes_run
+    except ImportError:
+        sys.path.insert(0, os.path.join(_REPO, 'engine', 'scenarios'))
+        try:
+            from scenarios import SCENES, run as scenes_run  # noqa: E402
+        except ImportError as exc:
+            return None, '场景库读不到（%s）——诚实拦截，不假装复核过' % exc
+    try:
+        from engine.control.classifier import run as classifier_run
+    except ImportError as exc:
+        return None, '判类器读不到（%s）' % exc
+    ids = [s['id'] for s in SCENES]
+    if scene_id not in (None, '', 'all'):
+        if scene_id not in ids:
+            return None, ('场景 %s 不存在——可用：%s（或 all=全部）'
+                          % (scene_id, '、'.join(ids)))
+    smap = {s['id']: s for s in SCENES}
+    results = scenes_run({'action': 'run',
+                          'scene_id': None if scene_id in (None, '', 'all')
+                          else scene_id})['scenes']
+    rows = []
+    for x in results:
+        s = smap[x['id']]
+        c = classifier_run({'text': s['text']})
+        rows.append({
+            'scene': x['id'], 'title': x['title'],
+            'expect': '%s-%s' % (s['expect_type'], s['expect_level']),
+            'actual': '%s-%s' % (x['actual_type'], x['actual_level']),
+            'passed': bool(x['passed']), 'diffs': x['diffs'],
+            'signals': c['types'][0]['signals'] if c['types'] else [],
+            'confidence': c['confidence'],
+            'ran': sum(1 for e in (x.get('execution') or [])
+                       if e.get('status') == 'run'),
+        })
+    return rows, None
+
+
+def _add_reviews(state, scene_id='all'):
+    """把场景复核依据记进会话（只记引擎输出，不替作者下结论）。"""
+    rows, err = _scene_rows(scene_id)
+    if rows is None:
+        return None, err
+    recs = []
+    for row in rows:
+        rec = dict(row)
+        rec['i'] = len(state['reviews']) + len(recs) + 1
+        rec['when'] = _now()
+        recs.append(rec)
+    state['reviews'].extend(recs)
+    return recs, None
+
+
+def _review_mark_of(scene_id):
+    """读场景当前的复核标记（读不到就如实说读不到，不编）。"""
+    try:
+        from engine.scenarios.scenarios import SCENES
+    except ImportError:
+        try:
+            sys.path.insert(0, os.path.join(_REPO, 'engine', 'scenarios'))
+            from scenarios import SCENES  # noqa: E402
+        except ImportError:
+            return None
+    for s in SCENES:
+        if s['id'] == scene_id:
+            return {'checked': bool(s.get('checked')),
+                    'review': s.get('review') or ''}
+    return None
+
+
 def _report_md(state, session_path=None):
     """把会话导成 Markdown 台账：**只写记过的东西**，没跑的照实标。"""
     st = _summary(state)
@@ -329,9 +405,10 @@ def _report_md(state, session_path=None):
     L.append('- 导出时间：%s' % _now())
     if session_path:
         L.append('- 会话文件：`%s`' % session_path)
-    L.append('- 规模：轮次 %d · 墙事件 %d · 信念 %d 条 · 修正 %d 次'
+    L.append('- 规模：轮次 %d · 墙事件 %d · 信念 %d 条 · 修正 %d 次 · '
+             '复核记录 %d 条'
              % (st['turns'], st['wall_count'], len(st['beliefs']),
-                len(st['revisions'])))
+                len(st['revisions']), len(state['reviews'])))
     if st['created']:
         L.append('- 会话建立：%s（末次更新 %s）' % (st['created'],
                                               st['updated'] or '—'))
@@ -408,6 +485,39 @@ def _report_md(state, session_path=None):
                         .replace('|', '\\|')))
         L.append('')
 
+    if state['reviews']:
+        L.append('## 场景复核记录（复核时的引擎依据）')
+        L.append('')
+        L.append('| # | 场景 | 期望 | 实际 | 对照 | 判类命中 | 真跑件数 | 当前复核标记 |')
+        L.append('|--:|:--|:--|:--|:--|:--|--:|:--|')
+        for r in state['reviews']:
+            mark = _review_mark_of(r['scene'])
+            if mark is None:
+                mark_txt = '—（场景表读不到）'
+            elif mark['checked']:
+                mark_txt = '已复核：%s' % (mark['review'] or '（无记录）')
+            else:
+                mark_txt = '待复核'
+            sig = '、'.join(r.get('signals') or []) or '—'
+            L.append('| %d | %s %s | %s | %s | %s | %s | %d | %s |'
+                     % (r['i'], r['scene'], r['title'].replace('|', '\\|'),
+                        r['expect'], r['actual'],
+                        '符合' if r['passed'] else '不符',
+                        sig.replace('|', '\\|'), r.get('ran') or 0,
+                        mark_txt.replace('|', '\\|')))
+        L.append('')
+        bad = [r for r in state['reviews'] if not r['passed']]
+        if bad:
+            L.append('判定与期望不符的场景（差异照实记，不改期望值）：')
+            L.append('')
+            for r in bad:
+                for d in (r.get('diffs') or []):
+                    L.append('- %s：%s' % (r['scene'], d))
+            L.append('')
+        L.append('> 标记一栏读的是场景表当前的复核状态；会话只记依据，'
+                 '「正确 / 误判 / 边界」仍是人的判断（`--mark` 落笔）。')
+        L.append('')
+
     if state['beliefs']:
         L.append('## 当前信念集')
         L.append('')
@@ -453,10 +563,10 @@ def run(inputs):
     action = inputs.get('action')
     path = inputs.get('path')
     if action not in ('add', 'add_file', 'revise', 'state', 'reset',
-                      'report'):
+                      'report', 'review'):
         return _result('input_pending', _summary(_empty()),
                        explanation='action 应为 add/add_file/revise/state/'
-                                   'reset/report，得到 %r——诚实拦截'
+                                   'reset/report/review，得到 %r——诚实拦截'
                                    % (action,))
     if not isinstance(path, str) or not path.strip():
         return _result('input_pending', _summary(_empty()),
@@ -488,14 +598,15 @@ def run(inputs):
 
     if action == 'reset':
         n = (len(state['turns']), len(state['beliefs']),
-             len(state['revisions']))
+             len(state['revisions']), len(state['reviews']))
         state['turns'], state['walls'] = [], []
         state['beliefs'], state['revisions'] = [], []
+        state['reviews'] = []
         state['updated'] = _now()
         _save(path, state)
         return _result('reset_done', _summary(state),
-                       explanation='已清空 %d 条轮次 / %d 条信念 / %d 条修正'
-                                   '记录（文件保留）' % n)
+                       explanation='已清空 %d 条轮次 / %d 条信念 / %d 条修正 / '
+                                   '%d 条复核记录（文件保留）' % n)
 
     if action == 'add':
         text = inputs.get('text')
@@ -551,12 +662,13 @@ def run(inputs):
                            explanation='out_file 必须是字符串路径（或 "-" '
                                        '表示只在结果里返回文本）')
         md = _report_md(state, path)
-        if not state['turns'] and not state['beliefs'] \
-                and not state['revisions']:
+        if not (state['turns'] or state['beliefs'] or state['revisions']
+                or state['reviews']):
             return _result('nothing_to_report', _summary(state),
                            markdown=md,
                            explanation='会话是空的——导出会得到空台账，'
-                                       '不编内容；先用 --add / --add-file 记材料')
+                                       '不编内容；先用 --add / --add-file 记材料，'
+                                       '或用 --review 记场景复核依据')
         if out_file in (None, '-'):
             return _result('report_ready', _summary(state), markdown=md,
                            explanation='台账已生成（%d 字），未写文件'
@@ -579,6 +691,24 @@ def run(inputs):
                            explanation='写台账失败：%s' % exc, markdown=md)
         return _result('report_written', _summary(state), markdown=md,
                        explanation='台账已写入 %s（%d 字）' % (target, len(md)))
+
+    if action == 'review':
+        scene_id = inputs.get('scene_id', 'all')
+        if scene_id is not None and not isinstance(scene_id, str):
+            return _result('input_pending', _summary(state),
+                           explanation='scene_id 必须是字符串（如 S01 或 all），'
+                                       '得到 %s' % type(scene_id).__name__)
+        recs, err = _add_reviews(state, scene_id or 'all')
+        if recs is None:
+            return _result('input_pending', _summary(state), explanation=err)
+        state['updated'] = _now()
+        _save(path, state)
+        n_ok = sum(1 for r in recs if r['passed'])
+        return _result('reviews_added', _summary(state), reviews=recs,
+                       explanation='记下 %d 个场景的复核依据（判定符合期望 %d / '
+                                   '需人看 %d）——引擎只把依据摆出来，'
+                                   '结论仍是人的判断'
+                                   % (len(recs), n_ok, len(recs) - n_ok))
 
     # revise
     new_info = inputs.get('new_info')
