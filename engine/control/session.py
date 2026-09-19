@@ -32,14 +32,16 @@ session.py — 多轮状态构件（第 0 层总控外围，工作台件）
 
 PORTS = {
     'in': {'action': 'str', 'path': 'str?', 'text': 'str?', 'new_info': 'str?',
-           'beliefs': 'list?', 'structured': 'dict?'},
+           'beliefs': 'list?', 'structured': 'dict?', 'text_file': 'str?',
+           'split': 'str?', 'max_segs': 'int?', 'max_seg_chars': 'int?'},
     'out': {'verdict': 'str', 'state': 'dict', 'turn': 'dict?',
-            'revision': 'dict?', 'boundary': 'str'},
+            'revision': 'dict?', 'imported': 'dict?', 'boundary': 'str'},
 }
 
 import io
 import json
 import os
+import re
 import sys
 import tempfile
 import datetime
@@ -203,14 +205,82 @@ def _revise(state, new_info, beliefs=None):
     return rec, r
 
 
+def _split_material(raw, mode='para'):
+    """把一整篇材料切成段：para=按空行分段（默认）；line=按行。
+
+    返回 (segments, skipped_empty)——只丢掉**空白**段，其余一律保留
+    （宁可多切，也不悄悄替作者删内容）。
+    """
+    if mode == 'line':
+        parts = raw.split('\n')
+    else:
+        parts = re.split(r'\n[ \t]*\n', raw)
+    segs, empty = [], 0
+    for p in parts:
+        s = p.strip()
+        if not s:
+            empty += 1
+            continue
+        segs.append(s)
+    return segs, empty
+
+
+def _add_file(state, text_file, mode='para', max_segs=200,
+              max_seg_chars=2000):
+    """整篇材料逐段诊断并记账；返回 (导入明细, 未处理明细) 或 (None, 错误)。"""
+    if not isinstance(text_file, str) or not text_file.strip():
+        return None, {'verdict': 'input_pending',
+                      'boundary': 'add_file 需要 text_file（材料文件路径）'}
+    if not os.path.exists(text_file):
+        return None, {'verdict': 'input_pending',
+                      'boundary': '材料文件不存在：%s' % text_file}
+    if os.path.isdir(text_file):
+        return None, {'verdict': 'input_pending',
+                      'boundary': 'text_file 是目录，不是材料文件：%s'
+                                  % text_file}
+    if mode not in ('para', 'line'):
+        return None, {'verdict': 'input_pending',
+                      'boundary': "split 应为 para/line，得到 %r——诚实拦截"
+                                  % (mode,)}
+    try:
+        # utf-8-sig：材料文件带 BOM 时不要把它当成正文第一个字
+        with io.open(text_file, encoding='utf-8-sig') as fh:
+            raw = fh.read()
+    except (IOError, OSError, UnicodeDecodeError) as exc:
+        return None, {'verdict': 'input_pending',
+                      'boundary': '读材料失败（要 UTF-8 文本）：%s' % exc}
+    segs, empty = _split_material(raw, mode)
+    if not segs:
+        return None, {'verdict': 'file_empty',
+                      'boundary': '材料里没有非空段落：%s' % text_file}
+
+    imported, skipped = [], []
+    for k, s in enumerate(segs):
+        if len(imported) >= max_segs:
+            skipped.append({'seg': k + 1, 'reason': 'max_segs',
+                            'chars': len(s),
+                            'head': s[:24]})
+            continue
+        if len(s) > max_seg_chars:
+            skipped.append({'seg': k + 1, 'reason': 'too_long',
+                            'chars': len(s), 'head': s[:24]})
+            continue
+        turn = _add(state, s)
+        imported.append({'i': turn['i'], 'seg': k + 1, 'chars': len(s),
+                         'head': s[:24], 'type': turn['type'],
+                         'level': turn['level'], 'verdict': turn['verdict']})
+    return {'imported': imported, 'skipped': skipped,
+            'skipped_empty_blocks': empty, 'segments': len(segs)}, None
+
+
 def run(inputs):
     """
-    做什么：多轮会话——add 记一条诊断 / revise 用新信息修正信念 / state 看汇总
-            / reset 清空。
+    做什么：多轮会话——add 记一条诊断 / add_file 整篇材料逐段诊断 /
+            revise 用新信息修正信念 / state 看汇总 / reset 清空。
 
-    返回 dict（PORTS['out']）：verdict + state（汇总）+ 可选的 turn/revision +
-    boundary。缺参数或状态文件损坏时 verdict='input_pending'/'state_corrupt'
-    并给 explanation，不硬做。
+    返回 dict（PORTS['out']）：verdict + state（汇总）+ 可选的 turn/revision/
+    imported + boundary。缺参数或状态文件损坏时 verdict='input_pending'/
+    'state_corrupt' 并给 explanation，不硬做。
     """
     if not isinstance(inputs, dict):
         return _result('input_pending', _summary(_empty()),
@@ -218,10 +288,10 @@ def run(inputs):
                                    % type(inputs).__name__)
     action = inputs.get('action')
     path = inputs.get('path')
-    if action not in ('add', 'revise', 'state', 'reset'):
+    if action not in ('add', 'add_file', 'revise', 'state', 'reset'):
         return _result('input_pending', _summary(_empty()),
-                       explanation='action 应为 add/revise/state/reset，'
-                                   '得到 %r——诚实拦截' % (action,))
+                       explanation='action 应为 add/add_file/revise/state/'
+                                   'reset，得到 %r——诚实拦截' % (action,))
     if not isinstance(path, str) or not path.strip():
         return _result('input_pending', _summary(_empty()),
                        explanation='必须给 path（会话文件路径）——不会悄悄'
@@ -276,6 +346,36 @@ def run(inputs):
         state['updated'] = _now()
         _save(path, state)
         return _result('turn_added', _summary(state), turn=turn)
+
+    if action == 'add_file':
+        max_segs = inputs.get('max_segs', 200)
+        max_chars = inputs.get('max_seg_chars', 2000)
+        for name, v in (('max_segs', max_segs), ('max_seg_chars', max_chars)):
+            if isinstance(v, bool) or not isinstance(v, int) or v <= 0:
+                return _result('input_pending', _summary(state),
+                               explanation='%s 必须是正整数，得到 %r'
+                                           '——诚实拦截' % (name, v))
+        res, err = _add_file(state, inputs.get('text_file'),
+                             inputs.get('split') or 'para', max_segs,
+                             max_chars)
+        if err is not None:
+            return _result(err['verdict'], _summary(state),
+                           explanation=err['boundary'])
+        state['updated'] = _now()
+        _save(path, state)
+        skipped = res['skipped']
+        verdict = 'turns_added' if not skipped else 'turns_added_partial'
+        note = ('导入 %d 段（跳过空白段 %d）'
+                % (len(res['imported']), res['skipped_empty_blocks']))
+        if skipped:
+            why = {}
+            for s in skipped:
+                why[s['reason']] = why.get(s['reason'], 0) + 1
+            note += ('；未处理 %d 段（%s）——没有静默截断'
+                     % (len(skipped),
+                        '、'.join('%s×%d' % (k, v) for k, v in why.items())))
+        return _result(verdict, _summary(state), imported=res,
+                       explanation=note)
 
     # revise
     new_info = inputs.get('new_info')

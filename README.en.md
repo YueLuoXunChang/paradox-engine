@@ -71,6 +71,7 @@ paradox-engine --stats                         # scenario stats (per type / pass
 
 # Multi-turn session: read a batch of material one by one, remembered across commands
 paradox-engine --session s.json --add "产品既要快又要稳"
+paradox-engine --session s.json --add-file material.md   # diagnose a whole document paragraph by paragraph
 paradox-engine --session s.json --add "这句话是假的" --structured-json '{"sentence":"liar"}'
 paradox-engine --session s.json --revise "¬Q" --beliefs "P→Q,P"   # new info -> belief revision
 paradox-engine --session s.json --session-state                # summary: turns/types/walls/beliefs
@@ -86,7 +87,7 @@ print(r['report'])
 ```bash
 # After cloning, from the repository root
 python demo.py          # nineteen-step tour
-python run_tests.py     # full regression (39 test files / 1014 assertions)
+python run_tests.py     # full regression (39 test files / 1030 assertions)
 ```
 
 `demo.py` demonstrates nineteen things (①②③ the paradox trio → ④-⑩ the
@@ -326,7 +327,7 @@ when a real pain point appears).
 
 ### Test status
 
-- **1014 formal assertions pass** (39 test files), covering every mechanism
+- **1030 formal assertions pass** (39 test files), covering every mechanism
   component plus the controller/scenario/AI-tool layers;
 - **One command runs the whole suite**: `python run_tests.py` (discover + run +
   summarize; a single failing file yields a non-zero exit — the same entry

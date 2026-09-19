@@ -188,9 +188,78 @@ try:
     # ── 用例10：边界声明与端口
     check("每次返回都带边界声明（只诊断不决策）",
           '只诊断不决策' in r8['boundary'] and '算不动' in r8['boundary'])
+
+    # ── 用例11：整篇材料逐段导入（工作台实际用法）
+    mat = os.path.join(d, '材料.md')
+    with io.open(mat, 'w', encoding='utf-8-sig', newline='\n') as fh:
+        fh.write(TXT_CONFLICT + '\n\n')
+        fh.write('   \n\n')                 # 空白段：只报数，不当正文
+        fh.write(TXT_WALL + '\n\n')
+        fh.write(TXT_PLAIN + '\n')          # 末尾换行不算一段
+    pi = os.path.join(d, 'imp.json')
+    ri = session_run({'action': 'add_file', 'path': pi, 'text_file': mat})
+    check("导入 → turns_added（3 段）",
+          ri['verdict'] == 'turns_added'
+          and len(ri['imported']['imported']) == 3, ri.get('explanation'))
+    check("空白段只报数，不当成一段（不静默丢也不假装）",
+          ri['imported']['skipped'] == []
+          and ri['imported']['skipped_empty_blocks'] == 1,
+          str(ri['imported']))
+    seg = ri['imported']['imported'][0]
+    direct_mat = ctl({'text': TXT_CONFLICT})
+    check("导入的判类与总控直接跑一致（不编造）",
+          seg['type'] == direct_mat['classification']['main_type']
+          and seg['level'] == direct_mat['classification']['level'],
+          str(seg))
+    check("带 BOM 的材料文件不把 BOM 当正文",
+          not seg['head'].startswith('\ufeff'), repr(seg['head'][:6]))
+    check("导入的轮次按顺序接在会话里（i=1,2,3）",
+          [t['i'] for t in json.loads(text_of(pi))['turns']] == [1, 2, 3])
+
+    # ── 用例12：超限照实报（不静默截断）
+    rlim = session_run({'action': 'add_file', 'path': pi, 'text_file': mat,
+                        'max_segs': 1})
+    check("超过 max_segs → turns_added_partial（说明没处理多少段）",
+          rlim['verdict'] == 'turns_added_partial'
+          and len(rlim['imported']['skipped']) >= 1
+          and '没有静默截断' in rlim['explanation'], rlim.get('explanation'))
+    rlong = session_run({'action': 'add_file', 'path': pi, 'text_file': mat,
+                         'max_seg_chars': 5})
+    check("超过 max_seg_chars → 该段标 too_long 且不写进会话",
+          all(s['reason'] == 'too_long'
+              for s in rlong['imported']['skipped'])
+          and len(rlong['imported']['skipped']) == 3,
+          str(rlong['imported']['skipped']))
+    check("按行分段也认（split=line）",
+          session_run({'action': 'add_file', 'path': pi, 'text_file': mat,
+                       'split': 'line'})['verdict']
+          in ('turns_added', 'turns_added_partial'))
+
+    # ── 用例13：导入的坏输入全部诚实拦截（会话不动）
+    turns_before = session_run({'action': 'state',
+                                'path': pi})['state']['turns']
+    for label, extra in (
+            ('材料文件不存在', {'text_file': os.path.join(d, '没有这个.md')}),
+            ('材料路径是目录', {'text_file': d}),
+            ('split 非法', {'text_file': mat, 'split': 'xx'}),
+            ('max_segs 为 0', {'text_file': mat, 'max_segs': 0}),
+            ('max_segs 是字符串', {'text_file': mat, 'max_segs': '3'}),
+            ('max_seg_chars 负数', {'text_file': mat, 'max_seg_chars': -1})):
+        rr = session_run(dict({'action': 'add_file', 'path': pi}, **extra))
+        check(f"导入拦截：{label} → input_pending",
+              rr['verdict'] == 'input_pending', str(rr.get('explanation'))[:60])
+    check("六次坏导入后会话轮次数没变（没被弄脏）",
+          session_run({'action': 'state',
+                       'path': pi})['state']['turns'] == turns_before)
+    empty = os.path.join(d, '空.md')
+    with io.open(empty, 'w', encoding='utf-8', newline='\n') as fh:
+        fh.write('\n\n   \n')
+    check("全空白材料 → file_empty（不假装导入 0 段成功）",
+          session_run({'action': 'add_file', 'path': pi,
+                       'text_file': empty})['verdict'] == 'file_empty')
 finally:
     shutil.rmtree(d, ignore_errors=True)
 
 print("=" * 60)
-print(f"结果: {PASS}/35 通过")
-raise SystemExit(0 if PASS == 35 else 1)
+print(f"结果: {PASS}/51 通过")
+raise SystemExit(0 if PASS == 51 else 1)

@@ -97,6 +97,15 @@ def build_parser():
                         '（配 --add / --revise / --state / --reset）')
     p.add_argument('--add', type=str, default=None, metavar='文本',
                    help='配合 --session：给一段材料跑诊断并记进会话')
+    p.add_argument('--add-file', type=str, default=None, metavar='文件',
+                   dest='add_file',
+                   help='配合 --session：整篇材料（UTF-8 文本）逐段诊断并记账——'
+                        'para=按空行分段（默认）、line=按行')
+    p.add_argument('--split', type=str, default='para', choices=['para', 'line'],
+                   help='配合 --add-file 的分段方式（默认 para）')
+    p.add_argument('--max-segs', type=int, default=200, dest='max_segs',
+                   metavar='N', help='配合 --add-file：一次最多导入多少段'
+                                     '（默认 200；超出的照实报，不静默丢）')
     p.add_argument('--structured-json', type=str, default=None,
                    metavar='JSON', dest='structured_json',
                    help='配合 --session --add：结构化线索（如 {"sentence":'
@@ -404,17 +413,23 @@ def session_cmd(args):
         action = 'state'
     elif args.session_reset:
         action = 'reset'
+    elif args.add_file is not None:
+        action = 'add_file'
     elif args.add is not None:
         action = 'add'
     elif args.revise is not None:
         action = 'revise'
     else:
-        msg = ('--session 要配一个动作：--add 文本 / --revise 新信息 / '
-               '--session-state / --session-reset')
+        msg = ('--session 要配一个动作：--add 文本 / --add-file 文件 / '
+               '--revise 新信息 / --session-state / --session-reset')
         print(json.dumps({'error': msg}, ensure_ascii=False, indent=2)
               if args.json else msg)
         return 2
     inputs = {'action': action, 'path': args.session}
+    if action == 'add_file':
+        inputs['text_file'] = args.add_file
+        inputs['split'] = args.split
+        inputs['max_segs'] = args.max_segs
     if action == 'add':
         inputs['text'] = args.add
         if args.structured_json:
@@ -464,6 +479,15 @@ def session_cmd(args):
         print(f"  执行：真跑 {len(ran)} 件"
               + (f"（{'、'.join(e['component'] for e in ran)}）" if ran else '')
               + f" / 没跑 {len(pend)} 件（缺结构化线索的照实标）")
+    elif action == 'add_file':
+        imp = r['imported']
+        print(f"材料导入：{r['explanation']}")
+        for it in imp['imported']:
+            print(f"  {it['i']}. [{it['type']}-{it['level']}] "
+                  f"{it['head']}（{it['verdict']}）")
+        for sk in imp['skipped']:
+            print(f"  未处理 第{sk['seg']}段（{sk['reason']}，"
+                  f"{sk['chars']} 字）：{sk['head']}")
     elif action == 'revise':
         rev = r['revision']
         print(f"信念修正（{rev['verdict']}）：{rev['new_info'][:40]}")
@@ -492,6 +516,7 @@ def session_guard_error(args, json_out):
         return None
     given = [n for n, v in (
         ('--add', args.add is not None),
+        ('--add-file', args.add_file is not None),
         ('--revise', args.revise is not None),
         ('--beliefs', bool(args.beliefs)),
         ('--session-state', args.session_state),
