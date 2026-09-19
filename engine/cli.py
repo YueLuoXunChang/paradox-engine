@@ -75,6 +75,10 @@ def build_parser():
     p.add_argument('--scene', type=str, default=None, metavar='ID',
                    help='跑指定场景（如 S01；all=全部），输出期望 vs 实际 '
                         '+ 实际跑了哪些构件；可与 --json 同用')
+    p.add_argument('--suggest', action='store_true',
+                   help='结构化线索建议：按实际路由列出每个构件要什么，'
+                        '能从原文指出来的给建议（带依据），给不出的照实说'
+                        '需人给；再拼一条可粘贴的命令（建议不自动应用）')
     p.add_argument('--explain', action='store_true',
                    help='输出判类依据（主型/副型得分与命中信号、复杂度构成、'
                         '路由依据）——把「为什么这么判」摆出来')
@@ -628,6 +632,45 @@ def session_guard_error(args, json_out):
     return 2
 
 
+def suggest_block(json_out, text):
+    """结构化线索建议：只给建议与可粘贴片段，不自动应用。"""
+    try:
+        from engine.control.clue_suggester import run as suggest
+    except ImportError:
+        from clue_suggester import run as suggest
+    r = suggest({'text': text})
+    if json_out:
+        print(json.dumps(r, ensure_ascii=False, indent=2))
+        return 0 if r['verdict'] != 'input_pending' else 2
+    if r['verdict'] == 'input_pending':
+        print('需给文本：--text "..." 或 --file 输入.txt')
+        return 2
+    print(f"结构化线索建议（路由 {r['route']}）——启发式，要你确认：")
+    for c in r['components']:
+        mark = '✅' if c['ready'] else '⏳'
+        print(f"  {mark} {c['component']}：{c['hint']}")
+        for s in c['ready']:
+            print(f"      建议 {s['key']} = {s['value']!r}"
+                  f"（{s['why']}；照原文用词）")
+        for x in c['need_human']:
+            print(f"      需人给 {x['key']}：{x['reason']}")
+        if c['has_defaults'] and not c['ready']:
+            print('      （该构件有默认值，不给人估任何一个数）')
+    if r['paste']:
+        print('  可粘贴（建议不自动应用，用不用你定）：')
+        merged = {}
+        for _c, kv in r['paste'].items():
+            merged.update(kv)
+        print('    paradox-engine --text %s --structured %s'
+              % (json.dumps(r['text'], ensure_ascii=False),
+                 json.dumps(json.dumps(merged, ensure_ascii=False),
+                            ensure_ascii=False)))
+    else:
+        print('  这段文本没有能直接建议的线索——需人给（引擎不抽公式）。')
+    print('  ' + r['boundary'])
+    return 0
+
+
 def main(argv=None):
     ensure_utf8_console()   # Windows GBK 控制台：报告含 ⚠/✅，先自愈编码
     args = build_parser().parse_args(argv)
@@ -676,6 +719,20 @@ def main(argv=None):
             fn = t['function']
             print(f'  · {fn["name"]}：{fn["description"]}')
         return 0
+
+    if args.suggest:
+        text = args.text
+        if args.file:
+            try:
+                with open(args.file, encoding='utf-8-sig') as fh:
+                    text = fh.read().strip()
+            except OSError as e:
+                print(f'读文件失败：{e}')
+                return 2
+        if not text:
+            print('需给文本：--text "..." 或 --file 输入.txt')
+            return 2
+        return suggest_block(args.json, text)
 
     # 取文本
     text = args.text
