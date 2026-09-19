@@ -176,6 +176,25 @@ for dp, dn, fn in os.walk(_REPO):
             _crlf.append(os.path.relpath(p, _REPO))
 check("工作区文本文件无 CRLF（eol=lf 真落地，不靠 stat 缓存遮掩）",
       not _crlf, f"含 CRLF: {sorted(_crlf)[:6]}")
+
+# 零 BOM：同样的道理——PowerShell 的 Set-Content -Encoding UTF8 会偷偷加 BOM，
+# 而 Python 直接跑带 BOM 的文件会 SyntaxError。以前只靠人眼查，现在守着。
+_bom = []
+for dp, dn, fn in os.walk(_REPO):         # 与 CRLF 检查同一批文件
+    dn[:] = [d for d in dn if d not in ("__pycache__", "build", ".git",
+                                        "paradox_engine.egg-info")]
+    for f in fn:
+        if not (f.endswith(_TEXT_EXT) or f in _TEXT_NAME):
+            continue
+        p = os.path.join(dp, f)
+        try:
+            with open(p, "rb") as fh:
+                if fh.read(3) == b"\xef\xbb\xbf":
+                    _bom.append(os.path.relpath(p, _REPO))
+        except OSError:
+            continue
+check("工作区文本文件无 BOM（Set-Content 那类写入不会污染仓库）",
+      not _bom, f"含 BOM: {sorted(_bom)[:6]}")
 check("行尾检查覆盖 ≥80 个文本文件（全仓含 json/yml/md）",
       _lf_checked >= 80, str(_lf_checked))
 
@@ -207,5 +226,5 @@ check("engine/__init__.py 的 __version__ 为 0.1.0（未发布基线）",
       __import__('engine').__version__ == '0.1.0')
 
 print("=" * 60)
-print(f"结果: {PASS}/21 通过")
-raise SystemExit(0 if PASS == 21 else 1)
+print(f"结果: {PASS}/22 通过")
+raise SystemExit(0 if PASS == 22 else 1)
