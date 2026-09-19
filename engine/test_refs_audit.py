@@ -99,6 +99,13 @@ try:
     check("清单提醒别提交进公开仓", '别提交进公开仓' in txt)
     check("清单说明本仓章节引用不算", '本仓内章节引用' in txt)
 
+    check("清单给出分类小计（私有档案名+章节号 / 编号型指针）",
+          '处，涉及' in txt and ('私有档案名+章节号' in txt.split('：')[1][:80]
+                             or '编号型指针' in txt.split('：')[1][:80]),
+          txt.split('\n')[2][:90])
+    check("清单写明计数口径（同段上下文只记一处，数字偏保守）",
+          '只记一处' in txt and '偏保守' in txt)
+
     # ── 只读
     sample = [os.path.join(_REPO, 'README.md'),
               os.path.join(_REPO, 'engine', 'cold', 'agm_revision.py')]
@@ -111,5 +118,5 @@ finally:
     shutil.rmtree(d, ignore_errors=True)
 
 print("=" * 60)
-print(f"结果: {PASS}/14 通过")
-raise SystemExit(0 if PASS == 14 else 1)
+print(f"结果: {PASS}/16 通过")
+raise SystemExit(0 if PASS == 16 else 1)

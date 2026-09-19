@@ -92,7 +92,14 @@ def report_text(root=None):
     """人看的清单（只列不删，落不落文件由调用方决定）。"""
     r = audit(root)
     L = ['私有档案引用清点（只列不改；清或留由作者定）', '=' * 48]
-    L.append('共 %d 处，涉及 %d 个文件：' % (r['total'], r['files_hit']))
+    kinds = {}
+    for hits in r['files'].values():
+        for _ln, _frag, kind in hits:
+            kinds[kind] = kinds.get(kind, 0) + 1
+    L.append('共 %d 处，涉及 %d 个文件：%s'
+             % (r['total'], r['files_hit'],
+                ' · '.join('%s %d 处' % kv
+                           for kv in sorted(kinds.items()))))
     for rel in sorted(r['files']):
         hits = r['files'][rel]
         L.append('')
@@ -102,6 +109,9 @@ def report_text(root=None):
         if len(hits) > 8:
             L.append('  …还有 %d 处' % (len(hits) - 8))
     L.append('')
+    L.append('口径：同一行的同一段上下文只记一处（例如「详规 §一~§五」按一处计），'
+             '所以本工具的数字**偏保守**——不会比实际引用多；'
+             '逐条命令的宽松扫描可能比这里多 1〜2 处，差在口径不在漏计。')
     L.append('说明：发布面判据文件自身写的「允许项样例」不计入（它必须写出'
              '这些名字，否则没法测）；本仓内章节引用（如 ROADMAP 的 §6.4）'
              '不算私有引用——'
