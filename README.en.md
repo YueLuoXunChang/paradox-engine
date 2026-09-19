@@ -99,14 +99,15 @@ print(r['report'])
 
 ```bash
 # After cloning, from the repository root
-python demo.py          # nineteen-step tour
+python demo.py          # twenty-step tour
 python run_tests.py     # full regression (45 test files / 1337 assertions)
 ```
 
-`demo.py` demonstrates nineteen things (①②③ the paradox trio → ④-⑩ the
+`demo.py` demonstrates twenty things (①②③ the paradox trio → ④-⑩ the
 classical-logic foundation → ⑪ wall pipeline → ⑫ five-step controller →
 ⑬ MT-MP-TL skeleton → ⑭ cold logics → ⑮ AI mounting → ⑯ math foundations →
-⑰ cold logics completed → ⑱ constructive stance → ⑲ the precise map of the walls):
+⑰ cold logics completed → ⑱ constructive stance → ⑲ the precise map of the
+walls → ⑳ the workbench):
 
 | Step | Demonstration | Layer |
 |---|---|---|
@@ -129,6 +130,7 @@ classical-logic foundation → ⑪ wall pipeline → ⑫ five-step controller �
 | ⑰ cold logics completed | Belief revision / non-monotonicity (AGM: a black swan retracts the old conclusion) + relevance logic (real conflict vs empty rhetoric) | L3 |
 | ⑱ constructive stance | Intuitionistic logic: Kripke countermodels (why excluded middle is not constructively valid) + classical-vs-intuitionistic comparison table | L3 |
 | ⑲ precise map of the walls | Decidability map (16 fragments, each with a cited source) + arithmetic hierarchy Δ1/Σ1/Π1/Σ2/Π2 (what the engine promises per level) | Foundations |
+| ⑳ workbench | A batch of material → session ledger (per-turn diagnosis + clue suggestions + what is still owed) → one-page brief; remembered across commands | Workbench |
 
 You can also call a mechanism directly:
 
@@ -196,7 +198,7 @@ paradox-engine/
 │       └── decidability_map.py    decidable fragments + arithmetic hierarchy (map of the walls)
 │       (each component ships with a test_*.py formal test)
 │   └── cli.py                 ← command-line entry (--text/--json/--file/--tools)
-├── demo.py                  ← 2-minute tour (nineteen steps)
+├── demo.py                  ← 2-minute tour (twenty steps)
 ├── run_tests.py             ← full-regression entry (one command, same as CI)
 ├── verify_install.py        ← install-path check (build wheel → venv install → run the CLI)
 ├── pyproject.toml           ← pip packaging (provides the `paradox-engine` command)
@@ -362,7 +364,7 @@ when a real pain point appears).
   + install-path check);
 - Every component is self-contained: `python engine/<layer>/<name>.py` runs
   its self-test; `python engine/<layer>/test_<name>.py` runs its formal tests;
-- Demo: `python demo.py` walks through nineteen steps; end-to-end scenarios:
+- Demo: `python demo.py` walks through twenty steps; end-to-end scenarios:
   `python engine/ai/ai_scenarios.py`; scenario comparison: 25 scenes (≥2 per problem type)
   (`python engine/scenarios/scenarios.py`);
 - Zero third-party dependencies — pure Python standard library (≥3.9);
