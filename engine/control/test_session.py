@@ -704,9 +704,70 @@ try:
                        'path': ponly2})['verdict'] == 'nothing_to_do')
     check("工作单边界写明「只拼装、不猜值」",
           '不猜值' in mws and '由人决定' in mws, mws[-300:])
+    # ── 用例21：复核进度快照（只读现状 + 与上次对比）
+    from engine.scenarios.review_marks import review_state as _rstate
+    from engine.control.controller import ADAPTER_SPECS as _AS  # noqa: F401
+    ppr = os.path.join(d, '进度.json')
+    r1p = session_run({'action': 'progress', 'path': ppr})
+    snap = r1p['snapshot']
+    check("首次快照 → snapshot_taken 且计数与场景表实际一致",
+          r1p['verdict'] == 'snapshot_taken'
+          and snap['checked'] == _rstate()['ok'] + _rstate()['wrong']
+          + _rstate()['edge'], str(snap['checked']))
+    check("快照列出待复核场景 id（与场景表一致）",
+          len(snap['pending_ids']) == _rstate()['pending'],
+          str(len(snap['pending_ids'])))
+    check("首次快照不编 delta（写明是第 1 次）",
+          snap['delta_checked'] is None and '第 1 次' in r1p['explanation'],
+          r1p['explanation'])
+    r2p = session_run({'action': 'progress', 'path': ppr})
+    check("第二次快照给出 delta（场景表没动就是 +0）",
+          r2p['snapshot']['delta_checked'] == 0
+          and r2p['snapshot']['newly_checked'] == []
+          and r2p['snapshot']['newly_reverted'] == [],
+          str(r2p['snapshot']))
+    check("快照序列落进会话（可对比历史）",
+          len(json.loads(text_of(ppr))['snapshots']) == 2)
+    scen_snapshot = os.path.join(d, '假场景表.py')
+    shutil.copyfile(os.path.join(_REPO, 'engine', 'scenarios',
+                                 'scenarios.py'), scen_snapshot)
+    from engine.scenarios.review_marks import mark_scene as _mark
+    _mark('S05', 'ok', path=scen_snapshot)
+    r3p = session_run({'action': 'progress', 'path': ppr,
+                       'registry_path': scen_snapshot})
+    check("换了场景表副本后：比出「新复核 S05」",
+          r3p['snapshot']['newly_checked'] == ['S05']
+          and r3p['snapshot']['delta_checked'] == 1,
+          str(r3p['snapshot']))
+    _mark('S05', 'pending', path=scen_snapshot)
+    r4p = session_run({'action': 'progress', 'path': ppr,
+                       'registry_path': scen_snapshot})
+    check("退回待复核也认出来（newly_reverted）",
+          r4p['snapshot']['newly_reverted'] == ['S05']
+          and r4p['snapshot']['delta_checked'] == -1, str(r4p['snapshot']))
+    check("快照只读：真场景表 sha256 未变",
+          sha(scen_snapshot) != '' and
+          sha(os.path.join(_REPO, 'engine', 'scenarios',
+                           'scenarios.py')) == scen_before)
+    bad_reg = os.path.join(d, '不是场景表.txt')
+    with io.open(bad_reg, 'w', encoding='utf-8') as fh:
+        fh.write('这不是场景表')
+    check("场景表读不到 → registry_unreadable（不编进度）",
+          session_run({'action': 'progress', 'path': ppr,
+                       'registry_path': bad_reg})['verdict']
+          == 'registry_unreadable')
+    md_p = session_run({'action': 'report', 'path': ppr})['markdown']
+    check("台账有复核进度快照段（含 delta 与仍待复核）",
+          '## 复核进度快照' in md_p and '较上次' in md_p
+          and '仍待复核' in md_p)
+    check("台账快照段写明落笔仍是作者的判断",
+          '落笔仍是作者的判断' in md_p)
+    check("只有快照的会话也能导台账（不算空会话）",
+          session_run({'action': 'report', 'path': ppr})['verdict']
+          == 'report_ready')
 finally:
     shutil.rmtree(d, ignore_errors=True)
 
 print("=" * 60)
-print(f"结果: {PASS}/157 通过")
-raise SystemExit(0 if PASS == 157 else 1)
+print(f"结果: {PASS}/169 通过")
+raise SystemExit(0 if PASS == 169 else 1)

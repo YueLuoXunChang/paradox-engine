@@ -139,6 +139,26 @@ def mark_scene(scene_id, verdict, note='', path=None, when=None):
             or '（清除复核记录）'}
 
 
+def marks(path=None):
+    """每个场景当前的复核标记：{id: {'checked': bool, 'review': str}}。
+
+    只读——用于进度快照/看板这类"读现状"的地方，不碰文件。
+    """
+    path = path or SCENES_PATH
+    with io.open(path, encoding='utf-8', newline='') as fh:
+        text = fh.read()
+    out = {}
+    for m in re.finditer(r"'id': '([A-Z0-9]+)',", text):
+        sid = m.group(1)
+        j = text.find('\n    {\n', m.start())
+        block = text[m.start():j if j > 0 else len(text)]
+        cm = _CHECKED_RE.search(block)
+        checked = bool(cm) and cm.group(2) == 'True'
+        rm = re.search(r"'review': '([^'\n]*)'", block)
+        out[sid] = {'checked': checked, 'review': rm.group(1) if rm else ''}
+    return out
+
+
 def review_state(path=None):
     """当前复核分布：{'ok': n, 'wrong': n, 'edge': n, 'pending': n}。"""
     path = path or SCENES_PATH

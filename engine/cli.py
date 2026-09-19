@@ -148,6 +148,9 @@ def build_parser():
     p.add_argument('--export', type=str, default=None, metavar='文件',
                    help='配合 --session：把会话导成 Markdown 台账（给 "-" '
                         '则只打印）；目标已存在时默认不覆盖')
+    p.add_argument('--progress', action='store_true',
+                   help='配合 --session：记一次复核进度快照（读场景表当前'
+                        '状态，与上次快照比出新复核/退回哪些）——只读，不落笔')
     p.add_argument('--pending', action='store_true',
                    help='配合 --session：生成欠线索工作单（可粘贴命令 + '
                         '待你填的空位）——只拼装，不猜值')
@@ -495,6 +498,8 @@ def session_cmd(args):
         action = 'state'
     elif args.overview:
         action = 'overview'
+    elif args.progress:
+        action = 'progress'
     elif args.pending or args.pending_out is not None:
         action = 'worksheet'
     elif args.session_reset:
@@ -562,6 +567,14 @@ def session_cmd(args):
                                  if b.strip()]
     r = session_run(inputs)
     st = r['state']
+    if action == 'progress':
+        if r['verdict'] == 'snapshot_taken':
+            print('复核进度：' + r['explanation'])
+            return 0
+        msg = r.get('explanation') or r['verdict']
+        print(json.dumps(r, ensure_ascii=False, indent=2) if args.json
+              else '没记成：' + msg)
+        return 2
     if action == 'worksheet':
         if r['verdict'] == 'worksheet':
             print(r.get('markdown') or '')
@@ -734,6 +747,7 @@ def session_guard_error(args, json_out):
         ('--session-state', args.session_state),
         ('--overview', args.overview),
         ('--pending', args.pending or args.pending_out is not None),
+        ('--progress', args.progress),
         ('--session-reset', args.session_reset)) if v]
     if not given:
         return None

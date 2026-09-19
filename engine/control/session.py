@@ -96,7 +96,8 @@ def _detail(out):
 def _empty():
     """空会话（每次新建，避免默认值里的列表被多处共享）。"""
     return {'created': None, 'updated': None, 'turns': [], 'walls': [],
-            'beliefs': [], 'revisions': [], 'reviews': []}
+            'beliefs': [], 'revisions': [], 'reviews': [],
+            'snapshots': []}
 
 
 def _now():
@@ -110,7 +111,8 @@ def _normalize(data):
         state['created'] = data['created']
     if isinstance(data.get('updated'), str):
         state['updated'] = data['updated']
-    for k in ('turns', 'walls', 'beliefs', 'revisions', 'reviews'):
+    for k in ('turns', 'walls', 'beliefs', 'revisions', 'reviews',
+              'snapshots'):
         v = data.get(k)
         if isinstance(v, list):
             state[k] = v
@@ -189,6 +191,7 @@ def _summary(state):
         'beliefs': state['beliefs'],
         'revisions': state['revisions'],
         'reviews': len(state['reviews']),
+        'snapshots': len(state['snapshots']),
         'review_list': list(state['reviews']),
         'created': state['created'],
         'updated': state['updated'],
@@ -513,6 +516,7 @@ def _overview(state):
         'not_ran_reasons': dict(sorted(not_ran.items())),
         'walls': dict(sorted(walls.items())),
         'reviews': len(state['reviews']),
+        'snapshots': len(state['snapshots']),
         'beliefs': len(state['beliefs']),
         'revisions': len(state['revisions']),
         'clues': _clue_stats(state),
@@ -581,6 +585,45 @@ def _overview_md(ov):
 WORKSHEET_BOUNDARY = (
     '工作单只做**拼装**：能建议的照抄原文，欠的键留成 `<待填>` 空位——'
     '引擎不猜值、不填数、不产生逻辑式；填完后要不要真跑由人决定。')
+
+
+def _registry_snapshot(registry_path=None):
+    """读场景表当前复核状态（只读）。读不到就诚实抛，不编。"""
+    try:
+        from engine.scenarios.review_marks import marks, review_state
+    except ImportError:
+        sys.path.insert(0, os.path.join(_REPO, 'engine', 'scenarios'))
+        from review_marks import marks, review_state  # noqa: E402
+    mk = marks(registry_path)
+    if not mk:
+        raise ValueError('场景表里没解析到任何场景（0 个）'
+                         '——不像场景表，不编进度')
+    return {'total': len(mk), 'checked': sum(1 for v in mk.values()
+                                             if v['checked']),
+            'unchecked': sum(1 for v in mk.values() if not v['checked']),
+            'distribution': review_state(registry_path),
+            'pending_ids': [k for k, v in mk.items() if not v['checked']],
+            'checked_ids': [k for k, v in mk.items() if v['checked']]}
+
+
+def _progress(state, registry_path=None):
+    """记一次复核进度快照，并与上一次快照比出「这次新复核了哪些 / 退回了哪些」。"""
+    snap = _registry_snapshot(registry_path)
+    prev = state['snapshots'][-1] if state['snapshots'] else None
+    if prev:
+        was = set(prev.get('checked_ids') or [])
+        now = set(snap['checked_ids'])
+        snap['newly_checked'] = sorted(now - was)
+        snap['newly_reverted'] = sorted(was - now)
+        snap['delta_checked'] = snap['checked'] - prev['checked']
+    else:
+        snap['newly_checked'] = []
+        snap['newly_reverted'] = []
+        snap['delta_checked'] = None
+    snap['i'] = len(state['snapshots']) + 1
+    snap['when'] = _now()
+    state['snapshots'].append(snap)
+    return snap
 
 
 def _worksheet(state):
@@ -751,6 +794,26 @@ def _report_md(state, session_path=None):
                         .replace('|', '\\|')))
         L.append('')
 
+    if state['snapshots']:
+        L.append('## 复核进度快照（每次一条，可与上次对比）')
+        L.append('')
+        for s in state['snapshots']:
+            d = s.get('delta_checked')
+            delta = '（第 1 次）' if d is None else '（较上次 %+d）' % d
+            L.append('- %s #%d：已复核 %d / 待复核 %d %s'
+                     % (s['when'], s['i'], s['checked'], s['unchecked'],
+                        delta))
+            if s.get('newly_checked'):
+                L.append('  - 新复核：%s' % '、'.join(s['newly_checked']))
+            if s.get('newly_reverted'):
+                L.append('  - 退回待复核：%s' % '、'.join(s['newly_reverted']))
+            if s.get('pending_ids'):
+                L.append('  - 仍待复核：%s' % '、'.join(s['pending_ids']))
+        L.append('')
+        L.append('> 快照读的是场景表**当时**的状态，只记事实；'
+                 '落笔仍是作者的判断（`--mark`）。')
+        L.append('')
+
     if state['reviews']:
         L.append('## 场景复核记录（复核时的引擎依据）')
         L.append('')
@@ -832,10 +895,10 @@ def run(inputs):
     path = inputs.get('path')
     if action not in ('add', 'add_file', 'revise', 'state', 'reset',
                       'report', 'review', 'overview',
-                      'worksheet'):
+                      'worksheet', 'progress'):
         return _result('input_pending', _summary(_empty()),
                        explanation='action 应为 add/add_file/revise/state/'
-                                   'reset/report/review/overview/worksheet，得到 %r——诚实拦截'
+                                   'reset/report/review/overview/worksheet/progress，得到 %r——诚实拦截'
                                    % (action,))
     if not isinstance(path, str) or not path.strip():
         return _result('input_pending', _summary(_empty()),
@@ -864,6 +927,27 @@ def run(inputs):
 
     if action == 'state':
         return _result('state', _summary(state))
+
+    if action == 'progress':
+        try:
+            snap = _progress(state, inputs.get('registry_path'))
+        except Exception as exc:  # noqa: BLE001  读不到场景表就诚实报
+            return _result('registry_unreadable', _summary(state),
+                           explanation='场景表读不到（%s）——不编进度' % exc)
+        state['updated'] = _now()
+        _save(path, state)
+        if snap['delta_checked'] is None:
+            note = ('第 1 次快照：已复核 %d / 待复核 %d（之后每次快照'
+                    '会告诉你又复核了哪些）'
+                    % (snap['checked'], snap['unchecked']))
+        else:
+            note = ('已复核 %d / 待复核 %d（较上次 %+d；新复核 %s；退回 %s）'
+                    % (snap['checked'], snap['unchecked'],
+                       snap['delta_checked'],
+                       '、'.join(snap['newly_checked']) or '无',
+                       '、'.join(snap['newly_reverted']) or '无'))
+        return _result('snapshot_taken', _summary(state), snapshot=snap,
+                       explanation=note)
 
     if action == 'worksheet':
         out_file = inputs.get('out_file')
@@ -982,12 +1066,12 @@ def run(inputs):
                                        '表示只在结果里返回文本）')
         md = _report_md(state, path)
         if not (state['turns'] or state['beliefs'] or state['revisions']
-                or state['reviews']):
+                or state['reviews'] or state['snapshots']):
             return _result('nothing_to_report', _summary(state),
                            markdown=md,
                            explanation='会话是空的——导出会得到空台账，'
                                        '不编内容；先用 --add / --add-file 记材料，'
-                                       '或用 --review 记场景复核依据')
+                                       '或用 --review / --progress 记复核依据与进度')
         if out_file in (None, '-'):
             return _result('report_ready', _summary(state), markdown=md,
                            explanation='台账已生成（%d 字），未写文件'
