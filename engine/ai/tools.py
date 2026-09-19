@@ -166,6 +166,21 @@ def tools():
     return out
 
 
+def _arg_type_error(mod_path, args):
+    """按构件声明的 PORTS['in'] 校验实参类型（判据在 engine/_validate.py，
+    与总控适配器共用同一把闸）。返回中文说明；无问题返回 None。"""
+    try:
+        mod = _load_module(mod_path)
+    except Exception:  # noqa: BLE001——加载失败由调用处统一报
+        return None
+    try:
+        from engine._validate import arg_type_error
+    except ImportError:
+        sys.path.insert(0, _REPO)
+        from engine._validate import arg_type_error
+    return arg_type_error(getattr(mod, 'PORTS', {}).get('in'), args)
+
+
 def call_tool(name, arguments=None):
     """
     分派：工具名 → 构件 run(arguments)。
@@ -174,6 +189,14 @@ def call_tool(name, arguments=None):
     args = arguments or {}
     for tname, mod_path, _desc in _TOOL_REGISTRY:
         if tname == name:
+            # 按声明 schema 先挡错类型（错类型不该透传给构件去崩）
+            why = _arg_type_error(mod_path, args)
+            if why:
+                return {'verdict': 'input_pending', 'tool': name,
+                        'result': {'verdict': 'input_pending',
+                                   'error': why,
+                                   'boundary': '参数类型不符：构件未执行'
+                                               '（挂载层按 schema 拦截）'}}
             try:
                 mod = _load_module(mod_path)
             except Exception as e:

@@ -64,9 +64,8 @@ def scenario1_argument_conflict():
 
 def scenario2_discipline_modeling():
     """场景 2：学科题目建模示意（判类→路由→撞墙→Dung 工具链）。"""
-    banner("场景 2 · 学科建模示意：拥堵的多线演化 + 扩容悖论")
-    text = ('城市交通系统为何越修越堵，能否建模其多线路径，'
-            '以及"扩容反而更堵"算不算悖论？')
+    banner("场景 2 · 学科建模示意：交通拥堵的多线演化 + 扩容悖论")
+    text = ('城市交通系统为何越修越堵：通勤者改走新路使商业区车流集中，公交分担率下滑又推高私家车出行，能否建模其多线演化路径、机制如何，以及「扩容反而更堵」算不算悖论？')
     print(f"输入：{text}\n")
     print("【AI 决策】学科题目（T9）+ 含悖论扫描——先判类看路由。")
     r = call_tool('classifier', {'text': text})
@@ -84,16 +83,15 @@ def scenario2_discipline_modeling():
     print(f"→ 注解卡 LV = {wp['annotation'].get('LV')}")
     print("\n【AI 决策】拥堵治理矛盾场里哪些立场站得住——Dung 分析。")
     r3 = call_tool('dung_framework', {
-        'arguments': ['新建快速路', '公交专用道', '拥堵收费',
-                      '错峰上班'],
+        'arguments': ['新建快速路', '公交专用道', '拥堵收费', '错峰上班'],
         'attacks': [('公交专用道', '新建快速路'),
-                    ('拥堵收费', '公交专用道'),
-                    ('错峰上班', '新建快速路')]})
+                    ('拥堵收费', '新建快速路'),
+                    ('错峰上班', '拥堵收费')]})
     dg = r3['result']
     print(f"→ grounded（站得住）：{dg['grounded']}")
     print(f"→ preferred：{dg['preferred']}")
     print(f"→ 争议集：{dg['conflict_pairs']}")
-    print("\n说明：这些是诊断（立场建议），治理方案取舍由决策者判断"
+    print("\n说明：这些是诊断（立场排序），治理方案取舍由决策者判断"
           "（只诊断不决策）。")
     return wp, dg
 

@@ -1,0 +1,45 @@
+name: 功能建议（Feature request）
+description: 新的逻辑片段/构件/场景，或某个能力的改进
+title: "[Feature] "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        本项目取舍原则：**无真实痛点不硬上**。请先描述「你遇到的真实问题」，
+        再说你想要的能力——这能帮我们判断该加构件，还是改现有构件就够。
+  - type: textarea
+    id: pain
+    attributes:
+      label: 真实痛点
+      description: 你在什么场景下卡住了（最好给真实中文输入）
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: 你希望的形态
+      description: 新构件 / 新场景 / 新 CLI 参数 / 文档改进……都可以
+    validations:
+      required: true
+  - type: dropdown
+    id: layer
+    attributes:
+      label: 你认为它属于哪一层
+      options:
+        - 不确定（交给维护者判断）
+        - 第 1 层经典逻辑
+        - 第 2 层悖论
+        - 第 3 层冷门逻辑
+        - 数学底座
+        - AI 挂载 / CLI
+        - 文档与工程化
+    validations:
+      required: false
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: 自查
+      options:
+        - label: 我确认建议里不含敏感信息（路径/邮箱/密钥/私有项目名）
+          required: true

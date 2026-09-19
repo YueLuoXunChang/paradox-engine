@@ -47,6 +47,13 @@ _covered = {s['expect_type'] for s in SCENES}
 _all_types = {f'T{i}' for i in range(1, 13)}
 check("场景覆盖 T1-T12 全部 12 题型（判类语料无盲区）",
       _all_types <= _covered, f"缺: {sorted(_all_types - _covered)}")
+check("场景 ≥24 个（第二轮语料：每题型 ≥2）", len(SCENES) >= 24,
+      str(len(SCENES)))
+from collections import Counter as _C
+_per = _C(s['expect_type'] for s in SCENES)
+check("每个题型都有 ≥2 个真实场景（单例会过拟合一句话）",
+      all(_per.get(t, 0) >= 2 for t in _all_types),
+      f"不足: {[(t, _per.get(t, 0)) for t in sorted(_all_types) if _per.get(t, 0) < 2]}")
 
 # ── 用例2：全场景对照（期望 vs 实际）
 r = run({'action': 'run'})
@@ -102,5 +109,5 @@ check("list 给边界声明", '共识' in run({'action': 'list'})['boundary']
 check("run 边界：只诊断不决策", '只诊断' in run({'action': 'run'})['boundary'])
 
 print("=" * 60)
-print(f"结果: {PASS}/24 通过")
-raise SystemExit(0 if PASS == 24 else 1)
+print(f"结果: {PASS}/26 通过")
+raise SystemExit(0 if PASS == 26 else 1)

@@ -55,3 +55,45 @@ def check_nonneg(**kw):
         if err:
             return False, err
     return True, None
+
+
+# ── 参数类型闸（按构件声明的 PORTS['in'] 挡错类型）
+# 为什么：random fuzz 撞出 equality_tableau 在 conclusion=True/-5/dict 上
+# `len()` 崩——这类"错类型"是**系统性**的（29 个构件都可能中），所以按声明
+# 契约先挡一道。挂载层（call_tool）与总控（controller 适配器）共用本函数，
+# 两条路都不把错类型透给构件。
+_TYPE_CHECKERS = {
+    'str': lambda v: isinstance(v, str),
+    'dict': lambda v: isinstance(v, dict),
+    'list': lambda v: isinstance(v, (list, tuple)),
+    # 数值：bool 是 int 子类，明确排除（易与 0/1 混淆）
+    'int': lambda v: isinstance(v, int) and not isinstance(v, bool),
+    'float': lambda v: isinstance(v, (int, float)) and not isinstance(v, bool),
+    'bool': lambda v: isinstance(v, bool),
+    'callable': callable,
+}
+
+
+def arg_type_error(ports_in, args):
+    """按 PORTS['in'] 校验实参类型。返回中文说明；无问题返回 None。
+
+    · 只查**声明了类型**且**实参已提供**的字段（缺参由构件自己拦）；
+    · None 一律放行（多为"可省"语义，交给构件判定）；
+    · 'object' 等无判据的类型不限。
+    """
+    if not isinstance(args, dict):
+        return f'arguments 应为对象（dict），得到 {type(args).__name__}'
+    for field, spec in (ports_in or {}).items():
+        if field not in args:
+            continue
+        checker = _TYPE_CHECKERS.get(str(spec).rstrip('?'))
+        if checker is None:
+            continue
+        val = args[field]
+        if val is None:
+            continue
+        if not checker(val):
+            return (f'参数 {field} 类型不符：声明 {str(spec).rstrip("?")}，'
+                    f'得到 {type(val).__name__}——按声明契约拦下'
+                    '（不把错类型透传给构件）')
+    return None

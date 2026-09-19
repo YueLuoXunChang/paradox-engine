@@ -50,8 +50,10 @@ check("observer+全局+不可消除 → P-A（连升两级封顶）",
 
 # ── 用例3：P2 8 字段完整
 card = annotate(
-    {'A': '要求当天全检', 'notA': '要求当天发货', 'pos': '产线流程·质检线程',
-     'src': '同一订单既要求全检又要求当天发', 'effect': '流程策略冲突',
+    {'A': '要求当天全检', 'notA': '要求当天发货',
+     'pos': '产线流程·质检线程',
+     'src': '同一订单既要求全检又要求当天发',
+     'effect': '流程策略冲突',
      'coexist': '两条要求同时下达', 'note': '优先级待拍板'},
     'runtime', impact='local', eliminable=True, seq=1)
 required = {'ID', 'LV', 'POS', 'SRC', 'CT', 'EF', 'ST', 'AN'}
@@ -60,10 +62,12 @@ check("P2 8 字段齐", required <= set(card.keys()) and len(card) == 8,
 check("ID 格式 悖论_P-B_001", card['ID'] == '悖论_P-B_001', str(card))
 check("LV=P-B（runtime）", card['LV'] == 'P-B', str(card))
 check("ST=活跃", card['ST'] == '活跃', str(card))
-check("CT 含 A 与 ¬A", '要求当天全检' in card['CT'] and '要求当天发货' in card['CT'],
+check("CT 含 A 与 ¬A", '要求当天全检' in card['CT']
+      and '要求当天发货' in card['CT'],
       str(card))
 check("POS 位置透传", card['POS'] == '产线流程·质检线程', str(card))
-check("SRC 来源透传", card['SRC'] == '同一订单既要求全检又要求当天发', str(card))
+check("SRC 来源透传", card['SRC'] == '同一订单既要求全检又要求当天发',
+      str(card))
 
 # ── 用例4：P4 ID 唯一性
 ids = set()

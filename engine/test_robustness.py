@@ -71,7 +71,11 @@ _BAD = [
     ('None 值', {'wA': None, 'wNotA': None, 'formula': None, 'text': None,
                  'premises': None, 'conclusion': None}),
 ]
-_crash, _mount_fail, _no_verdict = [], [], []
+# 诚实拦截可能发生在两处（都合格）：
+#   ① 挂载层按声明 schema 先挡（verdict='input_pending'，result 里带 error）；
+#   ② 透传给构件，由构件自己拦（verdict='ok'，构件输出 verdict='input_pending'）。
+# 不合格的只有两种：抛异常，或挂载层报 tool_error（= 构件崩了被兜住）。
+_crash, _tool_error, _dishonest = [], [], []
 for name, path, desc in _TOOL_REGISTRY:
     for label, args in _BAD:
         try:
@@ -79,18 +83,28 @@ for name, path, desc in _TOOL_REGISTRY:
         except Exception as e:  # noqa: BLE001——崩了就是问题，记下来
             _crash.append(f'{name}[{label}] {type(e).__name__}: {str(e)[:40]}')
             continue
-        if r.get('verdict') != 'ok':
-            _mount_fail.append(f"{name}[{label}] → {r.get('verdict')}")
+        v = r.get('verdict')
+        if v == 'tool_error':
+            _tool_error.append(f"{name}[{label}] → {str(r.get('error'))[:50]}")
+            continue
+        if v == 'input_pending':          # 挂载层拦下：必须给说明
+            out = r.get('result') or {}
+            if not out.get('error'):
+                _dishonest.append(f"{name}[{label}] 拦截但无说明")
+            continue
+        if v != 'ok':
+            _dishonest.append(f"{name}[{label}] 挂载层 verdict={v}")
             continue
         out = r.get('result') or {}
         if 'verdict' not in out:
-            _no_verdict.append(f"{name}[{label}] 键={sorted(out)[:3]}")
+            _dishonest.append(f"{name}[{label}] 构件输出缺 verdict 键="
+                              f"{sorted(out)[:3]}")
 check(f"坏输入扫描：{len(_TOOL_REGISTRY)} 工具 ×4 类不抛异常", not _crash,
       str(_crash[:4]))
-check("坏输入扫描：构件自行诚实拦截（挂载层不报 tool_error）", not _mount_fail,
-      str(_mount_fail[:4]))
-check("坏输入扫描：构件输出都带 verdict 字段（接口统一）", not _no_verdict,
-      str(_no_verdict[:4]))
+check("坏输入扫描：没有构件崩到挂载层（无 tool_error）", not _tool_error,
+      str(_tool_error[:4]))
+check("坏输入扫描：拦截都给说明 + 输出都带 verdict（接口统一）",
+      not _dishonest, str(_dishonest[:4]))
 
 # ── 用例2：μ 不变量（旗舰构件——曾算出负值/崩）
 _cases = [

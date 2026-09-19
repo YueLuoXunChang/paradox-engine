@@ -185,8 +185,10 @@ if __name__ == '__main__':
 
     # P2 8字段完整：注解必含 ID/LV/POS/SRC/CT/EF/ST/AN
     card = annotate(
-        {'A': '要求当天全检', 'notA': '要求当天发货', 'pos': '产线流程·质检线程',
-         'src': '同一订单既要求全检又要求当天发', 'effect': '流程策略冲突',
+        {'A': '要求当天全检', 'notA': '要求当天发货',
+         'pos': '产线流程·质检线程',
+         'src': '同一订单既要求全检又要求当天发',
+         'effect': '流程策略冲突',
          'coexist': '两条要求同时下达', 'note': '优先级待拍板'},
         'runtime', impact='local', eliminable=True, seq=1,
     )
@@ -195,7 +197,8 @@ if __name__ == '__main__':
     assert len(card) == 8, f"P2: 应恰 8 字段, 实际 {len(card)}"
     assert card['ID'] == '悖论_P-B_001', f"ID 格式: {card['ID']}"
     assert card['LV'] == 'P-B' and card['ST'] == '活跃'
-    assert '要求当天全检' in card['CT'] and '要求当天发货' in card['CT'], "CT 应含 A/¬A"
+    assert '要求当天全检' in card['CT'] and '要求当天发货' in card['CT'], \
+        "CT 应含 A/¬A"
     print(f"✅ P2 8字段完整: ID={card['ID']}, LV={card['LV']}, ST={card['ST']}")
 
     # P4 ID 唯一：悖论_P-{级}_{序号} 不重复

@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 安全漏洞（私密报告）
+    url: https://github.com/YueLuoXunChang/paradox-engine/security/advisories/new
+    about: 请不要在公开 issue 里贴漏洞细节，走私密通道
+  - name: 先看文档（README / 贡献指南 / 路线）
+    url: https://github.com/YueLuoXunChang/paradox-engine#readme
+    about: 安装、用法、分层主张、测试状态、贡献纪律都在这里

@@ -33,6 +33,21 @@ non-classical-logic
 | Website（可选） | 留空（无独立站点） |
 | Releases/tags | 暂不打——稳定后打 v0.1.0（死命令：真发布才 tag） |
 
+## 仓库内已就绪的标准件（不用去网页配）
+
+| 文件 | GitHub 上的效果 |
+|---|---|
+| `SECURITY.md` | 仓库页 Security 标签出现「安全策略」；私密报告走 Security Advisories |
+| `CODE_OF_CONDUCT.md` | 社区标准可见（Contributor Covenant 2.1） |
+| `CONTRIBUTING.md` | issue/PR 页面出现「贡献指南」入口 |
+| `.github/ISSUE_TEMPLATE/*` | 新建 issue 时选模板（缺陷/功能），并默认禁用空白 issue |
+| `.github/PULL_REQUEST_TEMPLATE.md` | 新建 PR 自动带自检清单 |
+| `.github/workflows/test.yml` | Actions 里跑回归/演示/CLI/安装验证 |
+| README 徽章 | tests / license / python / zero-dependencies 四枚 |
+
+> 仍需作者在网页做的只有两件：**About 的 Description 与 Topics**（文本见上），
+> 以及可选的 **Social preview 图**（GitHub 不支持仓库内文件直接充当，需要上传图片）。
+
 ## 备注
 
 - README.md 是中文主文档（含 🌐 English 切换链接 README.en.md）；
@@ -41,12 +56,12 @@ non-classical-logic
   演示 + CLI 冒烟）——push 后仓库页 Actions 会出绿/红，README 可挂状态徽章
   （徽章 URL 形如 `https://github.com/<用户>/paradox-engine/actions/workflows/test.yml/badge.svg`，
   要用时再加一行即可，本文件不预先写死）；
-- 本地跑同一套回归：`python run_tests.py`（36 测试文件 / 911 断言）。
+- 本地跑同一套回归：`python run_tests.py`（37 测试文件 / 954 断言）。
 
 ## 仓库页可展示的状态行（About/议题里可直接用）
 
 - 分层引擎：总控 + 第 0/1/2/3 层 + 数学底座 + AI 挂载（29 个可调用工具）；
-- 零第三方依赖（纯标准库，Python ≥3.9）；911 项正式断言 + CI 全绿；
+- 零第三方依赖（纯标准库，Python ≥3.9）；954 项正式断言 + CI 全绿；
 - 冷门逻辑六件齐（Belnap 四值 / Dung / 真值修正 / AGM / 相干 / 直觉主义）
   + 可判定片段地图（16 条，逐条标源）；
 - 诚实边界：能算的算清，算不清的测量+注解+报告——**只诊断不决策**。

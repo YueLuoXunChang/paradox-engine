@@ -408,6 +408,20 @@ def run(inputs):
                               'component': comp, 'status': 'missing_input',
                               'note': hint})
             continue
+        # 参数类型闸（与挂载层共用同一把：engine/_validate.arg_type_error）——
+        # 错类型不直接砸给构件（fuzz 曾撞出 conclusion=True → len() 崩）
+        try:
+            from engine._validate import arg_type_error
+        except ImportError:
+            sys.path.insert(0, os.path.dirname(os.path.dirname(
+                os.path.abspath(__file__))))
+            from engine._validate import arg_type_error
+        _why = arg_type_error(getattr(mod, 'PORTS', {}).get('in'), args)
+        if _why:
+            execution.append({'step': len(execution) + 1,
+                              'component': comp, 'status': 'missing_input',
+                              'note': f'{_why}（构件未执行）'})
+            continue
         try:
             out = run_fn(args)
         except Exception as e:

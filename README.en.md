@@ -4,6 +4,11 @@
 > Stance: **diagnose only, never decide** — measure it, annotate it, report it,
 > and leave the judgment to whoever uses it.
 >
+> [![tests](https://github.com/YueLuoXunChang/paradox-engine/actions/workflows/test.yml/badge.svg)](https://github.com/YueLuoXunChang/paradox-engine/actions/workflows/test.yml)
+> [![license](https://img.shields.io/badge/license-MPL--2.0-blue.svg)](LICENSE)
+> [![python](https://img.shields.io/badge/python-3.9%2B-blue.svg)](pyproject.toml)
+> [![dependencies](https://img.shields.io/badge/dependencies-zero-brightgreen.svg)](pyproject.toml)
+> 
 > 🌐 **中文**：[README.md](README.md)
 
 **paradox-engine** is a small, focused prototype engine for paradox /
@@ -57,6 +62,11 @@ cd paradox-engine && pip install .
 # Command line
 paradox-engine --text "产品既要快又要稳"
 paradox-engine --text "这句话是假的" --json      # structured output
+paradox-engine --scenarios                      # the scenario library (25 real cases + review status)
+paradox-engine --scene S01                      # run one case: expected vs actual + what really ran
+paradox-engine --text "..." --explain          # why this classification (scores + matched signals)
+paradox-engine --review                        # scenario review mode (evidence + tick guidance)
+paradox-engine --stats                         # scenario stats (per type / passed / review progress)
 
 # Or import as a Python package
 from engine.control.controller import run as controller
@@ -69,7 +79,7 @@ print(r['report'])
 ```bash
 # After cloning, from the repository root
 python demo.py          # nineteen-step tour
-python run_tests.py     # full regression (36 test files / 911 assertions)
+python run_tests.py     # full regression (37 test files / 954 assertions)
 ```
 
 `demo.py` demonstrates nineteen things (①②③ the paradox trio → ④-⑩ the
@@ -141,7 +151,7 @@ paradox-engine/
 │   │   ├── counterpoint_gen.py   counterpoint generation (opposites → third state candidate)
 │   │   └── wall_pipeline.py      wall pipeline A (measure→annotate→drill→view→bypass→create → 5-way verdict)
 │   ├── scenarios/             ← Scenario library (real input + expected diagnosis + review — corpus feedback)
-│   │   └── scenarios.py          14-scenario registry + run_all comparison (expected vs actual)
+│   │   └── scenarios.py          25-scenario registry + run_all comparison (expected vs actual)
 │   ├── skeleton/              ← MT-MP-TL skeleton (L0: structure only, no judging)
 │   │   └── mtmp.py               points/threads/topology (12 shapes)/operations (5 kinds)
 │   ├── cold/                  ← Cold logics (L3: chosen by need; external consensus marked as borrowed)
@@ -175,7 +185,10 @@ paradox-engine/
 │   ├── ROADMAP.md                layered roadmap
 │   └── formulas/                 concept cards (×10 for the classical layer)
 ├── README.md                ← Chinese readme (this English one: README.en.md)
-├── CONTRIBUTING.md          ← contribution guide (five hard rules + pre-submit checklist)
+├── CONTRIBUTING.md          ← contribution guide (five hard rules + public-face red lines)
+├── CODE_OF_CONDUCT.md       ← code of conduct (Contributor Covenant 2.1)
+├── SECURITY.md              ← security policy (private reporting + honest scope)
+├── .editorconfig            ← editor conventions (LF / UTF-8 / 4 spaces)
 ├── CHANGELOG.md             ← changelog (by date — no versions until release)
 ├── NOTICE                   ← copyright / authorship / AI-collaboration notes
 └── (will grow as the author selects more parts to make public)
@@ -306,7 +319,7 @@ when a real pain point appears).
 
 ### Test status
 
-- **911 formal assertions pass** (36 test files), covering every mechanism
+- **954 formal assertions pass** (37 test files), covering every mechanism
   component plus the controller/scenario/AI-tool layers;
 - **One command runs the whole suite**: `python run_tests.py` (discover + run +
   summarize; a single failing file yields a non-zero exit — the same entry
@@ -316,7 +329,7 @@ when a real pain point appears).
 - Every component is self-contained: `python engine/<layer>/<name>.py` runs
   its self-test; `python engine/<layer>/test_<name>.py` runs its formal tests;
 - Demo: `python demo.py` walks through nineteen steps; end-to-end scenarios:
-  `python engine/ai/ai_scenarios.py`; scenario comparison: 14 scenes (all 12 problem types covered)
+  `python engine/ai/ai_scenarios.py`; scenario comparison: 25 scenes (≥2 per problem type)
   (`python engine/scenarios/scenarios.py`);
 - Zero third-party dependencies — pure Python standard library (≥3.9);
 - **LF line endings everywhere**: `.gitattributes` pins `eol=lf` globally, so

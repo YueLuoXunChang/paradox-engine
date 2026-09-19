@@ -173,6 +173,21 @@ def main(argv=None):
         m = re.search(r'可用工具 (\d+) 件', r.stdout or '')
         _step('--tools 列出工具', r.returncode == 0 and bool(m),
               f"{m.group(1) if m else '?'} 件")
+        # 新增能力的安装后冒烟（场景库 / 判类白箱 / 复核统计）
+        for label, argv, must in (
+                ('--scenarios 列场景库', ['--scenarios'], '场景库'),
+                ('--scene 跑单场景对照', ['--scene', 'S01'], '期望'),
+                ('--stats 场景库统计', ['--stats'], '场景库统计'),
+                ('--explain 判类白箱',
+                 ['--explain', '--text', '这句话是假的'], '判类依据'),
+                ('--review 场景复核模式',
+                 ['--review', '--scene', 'S01'], '复核状态')):
+            rr = subprocess.run([vexe, *argv], cwd=tmp,
+                                stdout=subprocess.PIPE,
+                                stderr=subprocess.STDOUT, text=True,
+                                encoding='utf-8', errors='replace', env=env)
+            _step(label, rr.returncode == 0 and must in (rr.stdout or ''),
+                  f"exit={rr.returncode}")
         txt = os.path.join(tmp, 'in.txt')
         with open(txt, 'w', encoding='utf-8') as fh:
             fh.write('要自由还是要秩序，能不能兼得')

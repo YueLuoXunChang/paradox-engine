@@ -1,0 +1,16 @@
+# 编辑器统一约定（配合 .gitattributes 的 eol=lf）
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 4
+
+[*.{md,yml,yaml,json,toml}]
+indent_size = 2
+
+[*.py]
+max_line_length = 79

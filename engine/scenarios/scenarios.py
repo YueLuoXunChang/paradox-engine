@@ -64,12 +64,12 @@ SCENES = [
     },
     {
         'id': 'S03',
-        'title': '交通扩容建模（学科题）',
-        'text': ('城市交通系统为何越修越堵，能否建模其多线路径，'
-                 '以及"扩容反而更堵"算不算悖论？'),
+        'title': '交通扩容悖论（学科题 · 中性题材）',
+        'text': '城市交通系统为何越修越堵：通勤者改走新路使商业区车流集中，公交分担率下滑又推高私家车出行，能否建模其多线演化路径、机制如何，以及「扩容反而更堵」算不算悖论？',
         'expect_type': 'T9', 'expect_level': 'L3', 'expect_route': 'R9-L3',
         'structured': None,
-        'note': '学科题目典型——实体多+演化+悖论扫描',
+        'note': '学科题目典型——实体多+演化+悖论扫描（原为医学题材，' 
+                '2026-09-07 换中性题材发布）',
         'checked': True,
     },
     {
@@ -191,6 +191,122 @@ SCENES = [
         'note': '未分类：走通用最小管线并诚实标注置信度 low——引擎不硬编题型'
                 '（验证兜底路径）。待人工复核。',
         'checked': False,  # 待人工复核
+    },
+    # ── 第二轮语料：把每个题型补到 ≥2 个
+    # （单例题型没有「同型不同说法」的对照，判类器容易过拟合某一句）
+    {
+        'id': 'S15',
+        'title': '传递性推理（A→B→C）',
+        'text': '如果 A 推出 B，而且 B 推出 C，那么 A 推出 C 成立吗',
+        'expect_type': 'T1', 'expect_level': 'L2', 'expect_route': 'R1-L2',
+        'structured': {'premises': ['A→B', 'B→C'], 'conclusion': 'A→C'},
+        'note': '命题真值：假言三段论 → 期望 valid。待人工复核。',
+        'checked': False,
+    },
+    {
+        'id': 'S16',
+        'title': '信任网自强化（关系环）',
+        'text': '甲信任乙，乙信任丙，丙又信任甲，这个信任网会自我强化吗',
+        'expect_type': 'T3', 'expect_level': 'L2', 'expect_route': 'R3-L2',
+        'structured': None,
+        'note': '关系结构：信任环（与 S11 依赖环同型不同说法）→ 一阶关系推理；'
+                '缺 facts/rules/query 时诚实报缺。待人工复核。',
+        'checked': False,
+    },
+    {
+        'id': 'S17',
+        'title': '用户增长翻倍（指数递推）',
+        'text': '用户每天增长百分之十，大概多久能翻倍',
+        'expect_type': 'T4', 'expect_level': 'L1', 'expect_route': 'R4-L1',
+        'structured': None,
+        'note': '演化递推：指数增长（与 S12 几何衰减相对）→ 收敛/递推判定。'
+                '待人工复核。',
+        'checked': False,
+    },
+    {
+        'id': 'S18',
+        'title': '哥德尔式自指句（本句不可证）',
+        'text': '本句不可证',
+        'expect_type': 'T6', 'expect_level': 'L2', 'expect_route': 'R6-L2',
+        'structured': {'sentence': '本句不可证'},
+        'note': '自指（与 S02 说谎者句相对：非真值翻转而是可证性自指）→ '
+                '递归修正三态观察。待人工复核。',
+        'checked': False,
+    },
+    {
+        'id': 'S19',
+        'title': '安全 vs 效率（对立交汇）',
+        'text': '安全和效率能不能都要',
+        'expect_type': 'T7', 'expect_level': 'L1', 'expect_route': 'R7-L1',
+        'structured': {'wA': 5, 'wNotA': 5},
+        'note': '对立交汇（不使用"既要又要"字样，避免被判成 T2——见 S20 说明）。'
+                '待人工复核。',
+        'checked': False,
+    },
+    {
+        'id': 'S20',
+        'title': '隐私 vs 公共安全（既要又要 → 归 T2）',
+        'text': '既要个人隐私，又要公共安全，能不能兼得',
+        'expect_type': 'T2', 'expect_level': 'L1', 'expect_route': 'R2-L1',
+        'structured': {'A': '个人隐私', 'B': '公共安全', 'wA': 5, 'wNotA': 5},
+        'note': '边界案例：文本用"既要…又要…"，判类器按设计归 **T2 论证矛盾**'
+                '（不是 T7 对立交汇）——留档说明"同义不同形"的判定口径，'
+                '避免以后误当 bug 修。待人工复核。',
+        'checked': False,
+    },
+    {
+        'id': 'S21',
+        'title': '检测结果矛盾（阳性 vs 阴性）',
+        'text': '两份检测报告结果相反，一份阳性一份阴性，该信哪个',
+        'expect_type': 'T8', 'expect_level': 'L1', 'expect_route': 'R8-L1',
+        'structured': {'wA': 5, 'wNotA': 5},
+        'note': '证据冲突（与 S13 同型不同说法：检测/阳性/阴性口径）→ 两证据'
+                '权重对比。待人工复核。',
+        'checked': False,
+    },
+    {
+        'id': 'S22',
+        'title': '质检与返工（学科题 · 中性题材）',
+        'text': '为什么提高质检标准反而让返工率上升，机制是什么',
+        'expect_type': 'T9', 'expect_level': 'L1', 'expect_route': 'R9-L1',
+        'structured': None,
+        'note': '学科题目（与 S03 交通扩容相对：这里是机制询问，不涉及建模范式）'
+                '→ 谓词建模最小管线。待人工复核。',
+        'checked': False,
+    },
+    {
+        'id': 'S23',
+        'title': '聪明 vs 智慧（概念辨析）',
+        'text': '聪明和智慧的区别到底在哪',
+        'expect_type': 'T10', 'expect_level': 'L1',
+        'expect_route': 'R10-L1',
+        'structured': None,
+        'note': '定义辨析（与 S07 同情/共情同型不同说法）。待人工复核。',
+        'checked': False,
+    },
+    {
+        'id': 'S24',
+        'title': '抽样代表性（八成支持？）',
+        'text': '这个调查说八成的人支持，样本只有一百人，靠不靠谱',
+        'expect_type': 'T11', 'expect_level': 'L1',
+        'expect_route': 'R11-L1',
+        'structured': None,
+        'note': '假设检验。**本场景首跑判错**（原判 T3 关系结构）：T11 信号表'
+                '只有"靠不靠谱/有效率/显著"这类评价词，「调查/样本/比例」'
+                '全不在表里，于是被判成 T3（命中"支持"）。已按语料回馈扩表'
+                '（第二处闭环）→ 现判 T11。待人工复核。',
+        'checked': False,
+    },
+    {
+        'id': 'S25',
+        'title': '打招呼式输入（无信号兜底之二）',
+        'text': '帮我看看这个怎么办才好',
+        'expect_type': 'T12', 'expect_level': 'L1',
+        'expect_route': 'R12-L1',
+        'structured': None,
+        'note': '未分类（与 S14 同型不同说法）：口语化求助、无题型信号 → '
+                '通用最小管线 + 置信度 low。待人工复核。',
+        'checked': False,
     },
 ]
 

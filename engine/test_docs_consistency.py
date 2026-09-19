@@ -176,12 +176,18 @@ check("中文 README 冷门件数与实测一致（六件齐口径）",
       f"实测 {_n_cold}: {sorted(_cold)}")
 
 # ── ⑥ 文档文件清单与实物一致
-check("docs/ 清单声明的文件都存在",
+check("门面文件清单都在（README/许可/贡献/安全/模板/CI）",
       all(os.path.exists(os.path.join(_REPO, f)) for f in (
           'docs/mechanisms.md', 'docs/ROADMAP.md', 'docs/tool_schema.md',
           'docs/github_meta.md', 'README.md', 'README.en.md',
           'CHANGELOG.md', 'NOTICE', 'LICENSE', 'run_tests.py',
-          'demo.py', 'pyproject.toml')),
+          'demo.py', 'pyproject.toml', 'CONTRIBUTING.md',
+          'CODE_OF_CONDUCT.md', 'SECURITY.md', '.editorconfig',
+          '.github/PULL_REQUEST_TEMPLATE.md',
+          '.github/ISSUE_TEMPLATE/bug_report.yml',
+          '.github/ISSUE_TEMPLATE/feature_request.yml',
+          '.github/ISSUE_TEMPLATE/config.yml',
+          '.github/workflows/test.yml')),
       '缺文件')
 check("pyproject 的 readme 指向真实文件",
       'readme = "README.md"' in _read('pyproject.toml')

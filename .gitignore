@@ -9,3 +9,8 @@ dist/
 *.egg-info/
 .venv/
 _venv*/
+
+# 本机私有名清单（发布面抽查用；不进仓库）
+.public-face-local.txt
+# 改写历史时留下的旧 .git 备份（含旧历史，绝不入库）
+.git.old/
