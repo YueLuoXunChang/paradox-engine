@@ -35,7 +35,7 @@ PORTS = {
            'beliefs': 'list?', 'structured': 'dict?', 'text_file': 'str?',
            'split': 'str?', 'max_segs': 'int?', 'max_seg_chars': 'int?',
            'out_file': 'str?', 'overwrite': 'bool?', 'scene_id': 'str?',
-           'turn': 'int?', 'clues': 'bool?'},
+           'turn': 'int?', 'clues': 'bool?', 'start_seg': 'int?'},
     'out': {'verdict': 'str', 'state': 'dict', 'turn': 'dict?',
             'revision': 'dict?', 'imported': 'dict?', 'markdown': 'str?',
             'reviews': 'list?', 'overview': 'dict?',
@@ -97,7 +97,7 @@ def _empty():
     """空会话（每次新建，避免默认值里的列表被多处共享）。"""
     return {'created': None, 'updated': None, 'turns': [], 'walls': [],
             'beliefs': [], 'revisions': [], 'reviews': [],
-            'snapshots': []}
+            'snapshots': [], 'imports': []}
 
 
 def _now():
@@ -112,7 +112,7 @@ def _normalize(data):
     if isinstance(data.get('updated'), str):
         state['updated'] = data['updated']
     for k in ('turns', 'walls', 'beliefs', 'revisions', 'reviews',
-              'snapshots'):
+              'snapshots', 'imports'):
         v = data.get(k)
         if isinstance(v, list):
             state[k] = v
@@ -192,6 +192,8 @@ def _summary(state):
         'revisions': state['revisions'],
         'reviews': len(state['reviews']),
         'snapshots': len(state['snapshots']),
+        'imports': len(state['imports']),
+        'import_list': list(state['imports']),
         'review_list': list(state['reviews']),
         'created': state['created'],
         'updated': state['updated'],
@@ -310,7 +312,7 @@ def _split_material(raw, mode='para'):
 
 
 def _add_file(state, text_file, mode='para', max_segs=200,
-              max_seg_chars=2000, clues=False):
+              max_seg_chars=2000, clues=False, start_seg=1):
     """整篇材料逐段诊断并记账；返回 (导入明细, 未处理明细) 或 (None, 错误)。"""
     if not isinstance(text_file, str) or not text_file.strip():
         return None, {'verdict': 'input_pending',
@@ -339,7 +341,11 @@ def _add_file(state, text_file, mode='para', max_segs=200,
                       'boundary': '材料里没有非空段落：%s' % text_file}
 
     imported, skipped = [], []
+    before = max(0, start_seg - 1)
     for k, s in enumerate(segs):
+        if k + 1 < start_seg:
+            continue            # 起点之前的段：跳过但不记成'未处理'
+
         if len(imported) >= max_segs:
             skipped.append({'seg': k + 1, 'reason': 'max_segs',
                             'chars': len(s),
@@ -353,8 +359,26 @@ def _add_file(state, text_file, mode='para', max_segs=200,
         imported.append({'i': turn['i'], 'seg': k + 1, 'chars': len(s),
                          'head': s[:24], 'type': turn['type'],
                          'level': turn['level'], 'verdict': turn['verdict']})
-    return {'imported': imported, 'skipped': skipped,
-            'skipped_empty_blocks': empty, 'segments': len(segs)}, None
+    res = {'imported': imported, 'skipped': skipped,
+           'skipped_empty_blocks': empty, 'segments': len(segs),
+           'start_seg': start_seg, 'before_start': before,
+           'file': os.path.basename(text_file), 'mode': mode}
+    # 续跑起点：既没导入、也不是'永久处理不了'（too_long）的最早一段。
+    # 注意：因 max_segs 被挡下的段**不算处理过**——它们是等下一块/续跑的。
+    done = {x['seg'] for x in imported}
+    blocked = {x['seg'] for x in skipped if x['reason'] == 'too_long'}
+    rest = [i for i in range(start_seg, len(segs) + 1)
+            if i not in done and i not in blocked]
+    res['next_seg'] = rest[0] if rest else None
+    res['blocked_segs'] = sorted(blocked)
+    state['imports'].append({'i': len(state['imports']) + 1,
+                             'when': _now(), 'file': res['file'],
+                             'mode': mode, 'start_seg': start_seg,
+                             'segments': len(segs),
+                             'imported': len(imported),
+                             'skipped': len(skipped),
+                             'next_seg': res['next_seg']})
+    return res, None
 
 
 def _scene_rows(scene_id='all'):
@@ -517,6 +541,8 @@ def _overview(state):
         'walls': dict(sorted(walls.items())),
         'reviews': len(state['reviews']),
         'snapshots': len(state['snapshots']),
+        'imports': len(state['imports']),
+        'import_list': list(state['imports']),
         'beliefs': len(state['beliefs']),
         'revisions': len(state['revisions']),
         'clues': _clue_stats(state),
@@ -979,6 +1005,21 @@ def _report_md(state, session_path=None):
                         .replace('|', '\\|')))
         L.append('')
 
+    if state['imports']:
+        L.append('## 材料导入历史（分块/续跑都记）')
+        L.append('')
+        L.append('| # | 文件 | 分段 | 起点 | 导入 | 未处理 | 续跑起点 | 时间 |')
+        L.append('|--:|:--|:--|--:|--:|--:|--:|:--|')
+        for im in state['imports']:
+            L.append('| %d | %s | %s | %d | %d | %d | %s | %s |'
+                     % (im['i'], im['file'], im['mode'], im['start_seg'],
+                        im['imported'], im['skipped'],
+                        im.get('next_seg') or '—', im['when']))
+        L.append('')
+        L.append('> 未处理的段都记着原因（超段数上限/单段过长），'
+                 '续跑用 `--from-seg N`——内容不会被静默丢掉。')
+        L.append('')
+
     if state['snapshots']:
         L.append('## 复核进度快照（每次一条，可与上次对比）')
         L.append('')
@@ -1270,6 +1311,7 @@ def run(inputs):
         state['turns'], state['walls'] = [], []
         state['beliefs'], state['revisions'] = [], []
         state['reviews'] = []
+        state['imports'] = []
         state['updated'] = _now()
         _save(path, state)
         return _result('reset_done', _summary(state),
@@ -1301,15 +1343,30 @@ def run(inputs):
                 return _result('input_pending', _summary(state),
                                explanation='%s 必须是正整数，得到 %r'
                                            '——诚实拦截' % (name, v))
+        start_seg = inputs.get('start_seg', 1)
+        if isinstance(start_seg, bool) or not isinstance(start_seg, int) \
+                or start_seg < 1:
+            return _result('input_pending', _summary(state),
+                           explanation='start_seg 必须是从 1 起的整数，'
+                                       '得到 %r——诚实拦截' % (start_seg,))
         res, err = _add_file(state, inputs.get('text_file'),
                              inputs.get('split') or 'para', max_segs,
-                             max_chars, bool(inputs.get('clues')))
+                             max_chars, bool(inputs.get('clues')),
+                             start_seg)
         if err is not None:
             return _result(err['verdict'], _summary(state),
                            explanation=err['boundary'])
         state['updated'] = _now()
         _save(path, state)
         skipped = res['skipped']
+        if not res['imported'] and not skipped:
+            # 起点越界/段全被跳过：不假装导入成功
+            return _result('nothing_to_add', _summary(state),
+                           imported=res,
+                           explanation='从第 %d 段起没有可导入的段'
+                                       '（共 %d 段）——没记任何东西'
+                                       % (res['start_seg'],
+                                          res['segments']))
         verdict = 'turns_added' if not skipped else 'turns_added_partial'
         note = ('导入 %d 段（跳过空白段 %d）'
                 % (len(res['imported']), res['skipped_empty_blocks']))

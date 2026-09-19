@@ -117,6 +117,12 @@ def build_parser():
                         '不会自动进 --structured')
     p.add_argument('--split', type=str, default='para', choices=['para', 'line'],
                    help='配合 --add-file 的分段方式（默认 para）')
+    p.add_argument('--from-seg', type=int, default=1, dest='from_seg',
+                   metavar='N', help='配合 --add-file：从第 N 段开始（续跑；'
+                                     '上次未处理的段会在结果里给出起点）')
+    p.add_argument('--chunk', type=int, default=None, metavar='N',
+                   help='配合 --add-file：分块处理，每块 N 段（大材料'
+                        '分段跑、有进度、可中断续跑）')
     p.add_argument('--max-segs', type=int, default=200, dest='max_segs',
                    metavar='N', help='配合 --add-file：一次最多导入多少段'
                                      '（默认 200；超出的照实报，不静默丢）')
@@ -523,6 +529,8 @@ def session_cmd(args):
         action = 'worksheet'
     elif args.session_reset:
         action = 'reset'
+    elif args.add_file is not None and args.chunk:
+        action = 'add_file_chunked'
     elif args.review:
         action = 'review'
     elif args.export is not None:
@@ -558,6 +566,7 @@ def session_cmd(args):
         inputs['text_file'] = args.add_file
         inputs['split'] = args.split
         inputs['max_segs'] = args.max_segs
+        inputs['start_seg'] = args.from_seg
     if args.clues:
         inputs['clues'] = True
     if action == 'add':
@@ -779,6 +788,75 @@ def session_cmd(args):
     return 0
 
 
+def add_file_chunked(args):
+    """分块导入：每块 N 段跑一次，边跑边报进度（大材料别一口气闷着）。"""
+    try:
+        from engine.control.session import run as session_run
+    except ImportError:
+        from session import run as session_run
+    start = args.from_seg
+    imported_segs, skipped_map = set(), {}
+    # 先数一下总段数（只为报进度，不给结论）
+    try:
+        import io as _io
+        with _io.open(args.add_file, encoding='utf-8-sig') as fh:
+            raw = fh.read()
+        from engine.control.session import _split_material
+        segs, _empty = _split_material(raw, args.split)
+        n_segs = len(segs)
+    except Exception:  # noqa: BLE001  数不出来也照跑，只是不报总数
+        n_segs = None
+    print('分块导入：每块 %d 段%s%s'
+          % (args.chunk,
+             ('，共 %d 段' % n_segs) if n_segs else '',
+             ('，从第 %d 段开始' % start) if start > 1 else ''))
+    while True:
+        r = session_run({'action': 'add_file', 'path': args.session,
+                         'text_file': args.add_file, 'split': args.split,
+                         'max_segs': args.chunk, 'start_seg': start,
+                         'clues': bool(args.clues)})
+        if r['verdict'] in ('input_pending', 'state_corrupt', 'file_empty',
+                            'path_invalid'):
+            print('中断：' + (r.get('explanation') or r['verdict']))
+            return 2
+        imp = r['imported']
+        got = len(imp['imported'])
+        imported_segs |= {it['seg'] for it in imp['imported']}
+        for sk in imp['skipped']:
+            skipped_map[sk['seg']] = sk['reason']
+        hi = imp['start_seg'] + got - 1
+        print('  第 %d–%d 段：导入 %d 段%s'
+              % (imp['start_seg'], max(hi, imp['start_seg']), got,
+                 ('，本块未处理 %d 段（%s，留给下一块）'
+                  % (len(imp['skipped']),
+                     '、'.join(sorted({x['reason'] for x in imp['skipped']}))))
+                 if imp['skipped'] else ''))
+        nxt = imp.get('next_seg')
+        if not nxt:
+            break
+        if nxt <= start and got == 0:
+            # 防死循环：这一块什么都没推进，就停下说清楚
+            print('  停在第 %d 段：这一块没有可处理的段（'
+                  '可能都超过单段长度上限）' % nxt)
+            break
+        start = nxt
+    st = session_run({'action': 'state', 'path': args.session})['state']
+    left = {s: r for s, r in skipped_map.items()
+            if s not in imported_segs}      # 后面真跑过的就不算没处理
+    print('完成：本次导入 %d 段；仍未处理 %d 段%s；会话现有轮次 %d'
+          % (len(imported_segs), len(left),
+             ('（%s）' % '、'.join(
+                 '%s×%d' % (k, sum(1 for v in left.values() if v == k))
+                 for k in sorted(set(left.values())))) if left else '',
+             st['turns']))
+    if left:
+        print('  仍未处理的是超单段长度上限的段——把材料拆细，'
+              '或提高单段上限（--max-segs 只管段数）。')
+    print('  下一步：--overview 看分布 · --pending 生成欠线索工作单 · '
+          '--brief 看一页简报')
+    return 0
+
+
 def session_guard_error(args, json_out):
     """--session 的动作参数必须配 --session（否则不知道记哪儿）。"""
     if args.session:
@@ -790,6 +868,8 @@ def session_guard_error(args, json_out):
         ('--export', args.export is not None),
         ('--beliefs', bool(args.beliefs)),
         ('--turn', args.turn is not None),
+        ('--chunk', bool(args.chunk)),
+        ('--from-seg', args.from_seg != 1),
         ('--clues', args.clues),
         ('--session-state', args.session_state),
         ('--overview', args.overview),
@@ -858,6 +938,8 @@ def main(argv=None):
         return guard
 
     if args.session:
+        if args.add_file is not None and args.chunk:
+            return add_file_chunked(args)
         return session_cmd(args)
 
     if args.mark:

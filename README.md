@@ -66,6 +66,8 @@ paradox-engine --stats                         # 场景库统计（题型分布/
 # 多轮会话：一批材料一条条看，跨命令记住前文
 paradox-engine --session 会话.json --add "产品既要快又要稳" --clues   # 顺手记下线索建议
 paradox-engine --session 会话.json --add-file 材料.md   # 整篇材料逐段诊断（按空行分段）
+paradox-engine --session 会话.json --add-file 大材料.md --chunk 20   # 分块跑：有进度、可续跑
+paradox-engine --session 会话.json --add-file 大材料.md --from-seg 41 # 接着上次没处理的段
 paradox-engine --session 会话.json --add "这句话是假的" --structured-json '{"sentence":"liar"}'
 paradox-engine --session 会话.json --revise "¬Q" --beliefs "P→Q,P"   # 新信息 → 信念修正
 paradox-engine --session 会话.json --session-state                # 汇总：轮次/题型/墙清单/信念
@@ -87,7 +89,7 @@ print(r['report'])
 ```bash
 # 克隆后，在仓库根目录
 python demo.py          # 十九步演示
-python run_tests.py     # 全量回归（一条命令：44 个测试文件 / 1286 项断言）
+python run_tests.py     # 全量回归（一条命令：44 个测试文件 / 1308 项断言）
 ```
 
 `demo.py` 演示十九件事（①②③ 悖论三件套 → ④-⑩ 经典逻辑地基 → ⑪ 撞墙管线 → ⑫ 总控五步 → ⑬ MT-MP-TL 骨架 → ⑭ 冷门逻辑 → ⑮ AI 挂载 → ⑯ 数学底座 → ⑰ 冷门补完 → ⑱ 构造性立场 → ⑲ 墙的精确地图）：
@@ -305,7 +307,7 @@ run(inputs: dict) -> dict
 
 ### 测试状态
 
-- **1286 项正式断言全过**（44 个测试文件），覆盖全部
+- **1308 项正式断言全过**（44 个测试文件），覆盖全部
   机制构件与总控/场景/AI 工具层；
 - **一条命令跑全量回归**：`python run_tests.py`（发现 + 运行 + 汇总；
   任一文件失败即非零退出——CI 与本地同一入口）；

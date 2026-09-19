@@ -77,6 +77,10 @@ with io.open(mat, 'w', encoding='utf-8', newline='\n') as fh:
     fh.write('产品既要三周上线又要十二周合规\n\n这句话是假的\n')
 with io.open(inp, 'w', encoding='utf-8', newline='\n') as fh:
     fh.write('产品既要快又要稳\n')
+big = os.path.join(d, 'big.md')
+with io.open(big, 'w', encoding='utf-8', newline='\n') as fh:
+    for i in range(1, 51):        # 大材料示例要真有 50 段才跑得动
+        fh.write('第 %d 段：产品既要快又要稳' % i + '\n\n')
 
 scen = os.path.join(_HERE, 'scenarios', 'scenarios.py')
 scen_sha = sha(scen)
@@ -84,7 +88,8 @@ scen_sha = sha(scen)
 # 占位符 → 临时路径（文档里写的是示例名，跑的时候得换成真路径）
 SUBS = {'会话.json': sess, 's.json': sess, '材料.md': mat,
         'material.md': mat, '台账.md': None, 'ledger.md': None,
-        '工作单.md': None, '简报.md': None, '输入.txt': inp}
+        '工作单.md': None, '简报.md': None, '输入.txt': inp,
+        '大材料.md': big, 'big.md': big}
 SKIP_REASONS = {}
 
 

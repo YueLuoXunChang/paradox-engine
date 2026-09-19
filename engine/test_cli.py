@@ -9,6 +9,8 @@ import io
 import json
 import os
 import sys
+import tempfile
+import shutil
 from contextlib import redirect_stdout
 
 # 路径引导（本仓统一写法：钉本仓库根，防顶层包名撞车）
@@ -215,6 +217,31 @@ check("--review --json 仍可用且带上场景表复核记录", ok_json, out[:2
 code, out = run_cli('--board')
 check("单给 --board 不炸（按无文本提示处理）", code == 2, f"exit={code}")
 
+# ── 用例9：分块导入与续跑（大材料分批跑，有进度）
+_d = tempfile.mkdtemp(prefix='pe_cli_chunk_')
+_mat = os.path.join(_d, '材料.md')
+with io.open(_mat, 'w', encoding='utf-8', newline='\n') as fh:
+    for i in range(1, 6):
+        fh.write('第 %d 段：产品既要快又要稳' % i + '\n\n')
+_sess = os.path.join(_d, '会话.json')
+code, out = run_cli('--session', _sess, '--add-file', _mat, '--chunk', '2')
+check("分块导入 exit=0", code == 0, f"exit={code}")
+check("分块导入逐块报进度（第 1–2 / 3–4 / 5–5 段）",
+      '第 1–2 段' in out and '第 3–4 段' in out and '第 5–5 段' in out,
+      out[:300])
+check("分块导入完成行给出总数与轮次",
+      '本次导入 5 段' in out and '会话现有轮次 5' in out, out[-200:])
+_sess2 = os.path.join(_d, '会话2.json')
+run_cli('--session', _sess2, '--add-file', _mat, '--max-segs', '1')
+code, out2 = run_cli('--session', _sess2, '--add-file', _mat,
+                     '--from-seg', '2')
+check("--from-seg 能接着导（不是从头再来）",
+      code == 0 and '导入 4 段' in out2, out2[:200])
+code, out3 = run_cli('--chunk', '2')
+check("单给 --chunk 不炸（按缺 --session 拦下）", code == 2, f"exit={code}")
+import tempfile  # noqa: E402
+shutil.rmtree(_d, ignore_errors=True)
+
 print("=" * 60)
-print(f"结果: {PASS}/54 通过")
-raise SystemExit(0 if PASS == 54 else 1)
+print(f"结果: {PASS}/59 通过")
+raise SystemExit(0 if PASS == 59 else 1)

@@ -892,9 +892,78 @@ try:
     check("out_file 非字符串 → input_pending",
           session_run({'action': 'reconcile', 'path': prc,
                        'out_file': 5})['verdict'] == 'input_pending')
+    # ── 用例24：材料分批与续跑（大材料别一口气闷着）
+    pk = os.path.join(d, '分批材料.md')
+    with io.open(pk, 'w', encoding='utf-8', newline='\n') as fh:
+        for i in range(1, 6):
+            fh.write('第 %d 段：产品既要快又要稳' % i + '\n\n')
+    pch = os.path.join(d, '分批.json')
+    r1 = session_run({'action': 'add_file', 'path': pch, 'text_file': pk,
+                      'max_segs': 2})
+    imp1 = r1['imported']
+    check("第一块导入 2 段、并给出续跑起点 3",
+          len(imp1['imported']) == 2 and imp1['next_seg'] == 3,
+          str(imp1.get('next_seg')))
+    check("被 max_segs 挡下的段**不算处理过**（否则续跑会漏段）",
+          [x['seg'] for x in imp1['skipped']] == [3, 4, 5]
+          and imp1['next_seg'] == 3, str(imp1))
+    r2 = session_run({'action': 'add_file', 'path': pch, 'text_file': pk,
+                      'max_segs': 2, 'start_seg': imp1['next_seg']})
+    check("按续跑起点接着导（第 3–4 段）",
+          [x['seg'] for x in r2['imported']['imported']] == [3, 4]
+          and r2['imported']['next_seg'] == 5, str(r2['imported']))
+    r3 = session_run({'action': 'add_file', 'path': pch, 'text_file': pk,
+                      'max_segs': 2, 'start_seg': 5})
+    check("最后一块导完，不再给续跑起点",
+          len(r3['imported']['imported']) == 1
+          and r3['imported']['next_seg'] is None, str(r3['imported']))
+    check("三段接续后会话轮次 = 5（一段没漏、没重复）",
+          session_run({'action': 'state', 'path': pch})['state']['turns'] == 5)
+    check("起点越界 → nothing_to_add（不假装导入成功）",
+          session_run({'action': 'add_file', 'path': pch, 'text_file': pk,
+                       'start_seg': 99})['verdict'] == 'nothing_to_add')
+    for bad in (0, -1, 'x', True):
+        check(f"起点非法（{bad!r}）→ input_pending",
+              session_run({'action': 'add_file', 'path': pch,
+                           'text_file': pk,
+                           'start_seg': bad})['verdict'] == 'input_pending')
+    st_imp = json.loads(text_of(pch))
+    check("导入历史落了账（文件/起点/导入数/续跑起点）",
+          len(st_imp['imports']) == 4      # 三次真导 + 一次起点越界的空尝试
+          and st_imp['imports'][0]['file'] == '分批材料.md'
+          and st_imp['imports'][0]['start_seg'] == 1
+          and st_imp['imports'][0]['next_seg'] == 3, str(st_imp['imports'][0]))
+    check("起点越界那次也照实记（导入 0 段），不假装没发生",
+          st_imp['imports'][-1]['imported'] == 0
+          and st_imp['imports'][-1]['start_seg'] == 99,
+          str(st_imp['imports'][-1]))
+    check("会话汇总里带导入次数",
+          session_run({'action': 'state',
+                       'path': pch})['state']['imports'] == 4)
+    md_k = session_run({'action': 'report', 'path': pch})['markdown']
+    check("台账有材料导入历史段且行数 = 导入次数记载数",
+          '## 材料导入历史' in md_k
+          and len([l for l in md_k.split('\n')
+                   if l.startswith('| ') and '分批材料.md' in l]) == 4,
+          md_k[md_k.find('## 材料导入历史'):][:200])
+    check("台账写明未处理原因与续跑命令",
+          '--from-seg' in md_k and '不会被静默丢掉' in md_k)
+    # 单段过长：永久处理不了的那段不拦着续跑
+    plong = os.path.join(d, '超长段.md')
+    with io.open(plong, 'w', encoding='utf-8', newline='\n') as fh:
+        fh.write('A' * 60 + '\n\n' + '产品既要快又要稳' + '\n')
+    pl = os.path.join(d, '超长.json')
+    rl = session_run({'action': 'add_file', 'path': pl, 'text_file': plong,
+                      'max_seg_chars': 10})
+    check("超长段永久跳过，续跑起点不被它挡住",
+          rl['imported']['next_seg'] is None
+          and rl['imported']['blocked_segs'] == [1], str(rl['imported']))
+    session_run({'action': 'reset', 'path': pch})
+    check("reset 连导入历史一起清",
+          json.loads(text_of(pch))['imports'] == [])
 finally:
     shutil.rmtree(d, ignore_errors=True)
 
 print("=" * 60)
-print(f"结果: {PASS}/204 通过")
-raise SystemExit(0 if PASS == 204 else 1)
+print(f"结果: {PASS}/221 通过")
+raise SystemExit(0 if PASS == 221 else 1)
