@@ -316,6 +316,19 @@ can be discussed, compared, and traced.
   dispatch — an AI receives the tool list and can call the whole engine;
   two end-to-end real scenarios (argument-conflict check / discipline
   modeling).
+- **Workbench (multi-turn session ledger)**: `--session file.json` accumulates
+  diagnoses turn by turn (remembered across commands) · `--add-file notes.md`
+  diagnoses a whole document paragraph by paragraph (oversized or blank
+  segments are reported, never silently truncated) · `--overview` gives a batch
+  overview grouped by the engine's own labels (types / levels / confidence /
+  components / wall events) — **counts only, no judgement** · `--review`
+  records review evidence and `--mark` writes a review verdict back into the
+  scenario registry (**the engine never decides the review for you**) ·
+  `--export ledger.md` writes a Markdown ledger (overview / per-turn / review
+  evidence / revision history / boundaries; existing files are not overwritten)
+  · T5 (knowledge-update) material can link an AGM revision to a turn with
+  `--revise "¬Q" --turn N` — **the engine does not extract formulas**; the
+  propositional form is supplied by a human.
 - **Mathematical foundations (borrowed, sources labeled)**: Kleene recursion
   theorem self-reference construction (a program that reads its own source) +
   Gupta-Belnap truth revision (the scholarly anchor for resonance-band
