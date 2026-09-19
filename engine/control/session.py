@@ -578,6 +578,81 @@ def _overview_md(ov):
     return L
 
 
+WORKSHEET_BOUNDARY = (
+    '工作单只做**拼装**：能建议的照抄原文，欠的键留成 `<待填>` 空位——'
+    '引擎不猜值、不填数、不产生逻辑式；填完后要不要真跑由人决定。')
+
+
+def _worksheet(state):
+    """欠线索工作单：把待补的轮次拼成可粘贴清单（值由人填）。"""
+    pending, no_clues, ready_only = [], [], []
+    for t in state['turns']:
+        cl = t.get('clues')
+        if not cl:
+            no_clues.append(t)
+            continue
+        need = list(cl.get('need_human') or [])
+        if need:
+            pending.append((t, cl, need))
+        elif cl.get('ready'):
+            ready_only.append(t)
+    if not pending and not no_clues:
+        return None, {'pending': 0, 'no_clues': 0, 'ready_only':
+                      len(ready_only)}
+
+    L = ['# 欠线索工作单（paradox-engine 会话）', '']
+    L.append('- 生成时间：%s' % _now())
+    L.append('- 待你填的轮次：%d 条 · 还没跑建议器的轮次：%d 条 · '
+             '线索已齐的轮次：%d 条'
+             % (len(pending), len(no_clues), len(ready_only)))
+    L.append('')
+    if pending:
+        L.append('## 待你填（可直接用的照抄原文，欠的键留空）')
+        L.append('')
+    for t, cl, need in pending:
+        L.append('### 轮次 %d · %s %s（%s/%s）'
+                 % (t['i'], t['type'], t.get('type_name') or '',
+                    t['level'], t['route']))
+        L.append('')
+        L.append('- 材料原文：%s' % t['text'].replace('\n', ' '))
+        if cl.get('ready'):
+            L.append('- 可直接用（建议，照原文用词）：%s'
+                     % '、'.join('%s=%r' % kv
+                                for kv in cl['ready'].items()))
+        L.append('- 待你填：%s'
+                 % '、'.join('%s=<待填>' % k for k in need))
+        merged = dict(cl.get('ready') or {})
+        for k in need:
+            merged[k] = '<待填>'
+        L.append('- 填好后可粘贴（把 <待填> 换成你的值）：')
+        L.append('')
+        L.append('  `paradox-engine --text %s --structured %s`'
+                 % (json.dumps(t['text'], ensure_ascii=False),
+                    json.dumps(json.dumps(merged, ensure_ascii=False),
+                               ensure_ascii=False)))
+        L.append('')
+    if no_clues:
+        L.append('## 还没跑建议器（可加 --clues 补）')
+        L.append('')
+        L.append('- 轮次：%s'
+                 % '、'.join(str(t['i']) for t in no_clues))
+        L.append('')
+        L.append('  `paradox-engine --session 会话文件 --add "材料" --clues`'
+                 '（或对已有会话重新导材料时带 --clues）')
+        L.append('')
+    if ready_only:
+        L.append('## 线索已齐（可直接照 --suggest 的建议跑）')
+        L.append('')
+        L.append('- 轮次：%s' % '、'.join(str(t['i']) for t in ready_only))
+        L.append('')
+    L.append('## 边界')
+    L.append('')
+    L.append('- %s' % WORKSHEET_BOUNDARY)
+    L.append('')
+    return '\n'.join(L), {'pending': len(pending), 'no_clues': len(no_clues),
+                          'ready_only': len(ready_only)}
+
+
 def _report_md(state, session_path=None):
     """把会话导成 Markdown 台账：**只写记过的东西**，没跑的照实标。"""
     st = _summary(state)
@@ -756,10 +831,11 @@ def run(inputs):
     action = inputs.get('action')
     path = inputs.get('path')
     if action not in ('add', 'add_file', 'revise', 'state', 'reset',
-                      'report', 'review', 'overview'):
+                      'report', 'review', 'overview',
+                      'worksheet'):
         return _result('input_pending', _summary(_empty()),
                        explanation='action 应为 add/add_file/revise/state/'
-                                   'reset/report/review/overview，得到 %r——诚实拦截'
+                                   'reset/report/review/overview/worksheet，得到 %r——诚实拦截'
                                    % (action,))
     if not isinstance(path, str) or not path.strip():
         return _result('input_pending', _summary(_empty()),
@@ -788,6 +864,45 @@ def run(inputs):
 
     if action == 'state':
         return _result('state', _summary(state))
+
+    if action == 'worksheet':
+        out_file = inputs.get('out_file')
+        if out_file is not None and not isinstance(out_file, str):
+            return _result('input_pending', _summary(state),
+                           explanation='out_file 必须是字符串路径（或 "-" '
+                                       '表示只在结果里返回文本）')
+        md, stats = _worksheet(state)
+        if md is None:
+            return _result('nothing_to_do', _summary(state),
+                           worksheet=None, stats=stats,
+                           explanation='没有欠线索的轮次（也还有 %d 条没跑'
+                                       '建议器）——不生成空工作单'
+                                       % stats['no_clues'])
+        if out_file in (None, '-'):
+            return _result('worksheet', _summary(state), markdown=md,
+                           stats=stats,
+                           explanation='工作单已生成（待填 %d 条 / 未跑建议器 '
+                                       '%d 条），未写文件'
+                                       % (stats['pending'], stats['no_clues']))
+        target = os.path.abspath(out_file)
+        if target == os.path.abspath(path):
+            return _result('input_pending', _summary(state),
+                           explanation='导出目标不能是会话文件本身——诚实拦截')
+        try:
+            _write_text(target, md, bool(inputs.get('overwrite')))
+        except IsADirectoryError as exc:
+            return _result('path_invalid', _summary(state),
+                           explanation=str(exc), markdown=md)
+        except FileExistsError as exc:
+            return _result('file_exists', _summary(state),
+                           explanation=str(exc), markdown=md)
+        except (IOError, OSError) as exc:
+            return _result('input_pending', _summary(state),
+                           explanation='写工作单失败：%s' % exc, markdown=md)
+        return _result('worksheet_written', _summary(state), markdown=md,
+                       stats=stats,
+                       explanation='工作单已写入 %s（%d 字）'
+                                   % (target, len(md)))
 
     if action == 'overview':
         ov = _overview(state)

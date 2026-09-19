@@ -78,6 +78,7 @@ paradox-engine --session s.json --add "这句话是假的" --structured-json '{"
 paradox-engine --session s.json --revise "¬Q" --beliefs "P→Q,P"   # new info -> belief revision
 paradox-engine --session s.json --session-state                # summary: turns/types/walls/beliefs
 paradox-engine --session s.json --overview                     # batch overview: types/levels/confidence/components
+paradox-engine --session s.json --pending                      # clue worksheet (paste-ready with blank slots)
 paradox-engine --session s.json --export ledger.md              # export a Markdown ledger
 
 # Or import as a Python package
@@ -91,7 +92,7 @@ print(r['report'])
 ```bash
 # After cloning, from the repository root
 python demo.py          # nineteen-step tour
-python run_tests.py     # full regression (41 test files / 1174 assertions)
+python run_tests.py     # full regression (41 test files / 1193 assertions)
 ```
 
 `demo.py` demonstrates nineteen things (①②③ the paradox trio → ④-⑩ the
@@ -344,7 +345,7 @@ when a real pain point appears).
 
 ### Test status
 
-- **1174 formal assertions pass** (41 test files), covering every mechanism
+- **1193 formal assertions pass** (41 test files), covering every mechanism
   component plus the controller/scenario/AI-tool layers;
 - **One command runs the whole suite**: `python run_tests.py` (discover + run +
   summarize; a single failing file yields a non-zero exit — the same entry

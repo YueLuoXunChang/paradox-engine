@@ -142,6 +142,13 @@ def build_parser():
     p.add_argument('--export', type=str, default=None, metavar='文件',
                    help='配合 --session：把会话导成 Markdown 台账（给 "-" '
                         '则只打印）；目标已存在时默认不覆盖')
+    p.add_argument('--pending', action='store_true',
+                   help='配合 --session：生成欠线索工作单（可粘贴命令 + '
+                        '待你填的空位）——只拼装，不猜值')
+    p.add_argument('--pending-out', type=str, default=None,
+                   dest='pending_out', metavar='文件',
+                   help='配合 --session --pending：把工作单写到文件'
+                        '（已存在默认不覆盖，配 --export-overwrite 才盖）')
     p.add_argument('--export-overwrite', action='store_true',
                    dest='export_overwrite',
                    help='配合 --export：允许覆盖已存在的台账文件')
@@ -435,6 +442,8 @@ def session_cmd(args):
         action = 'state'
     elif args.overview:
         action = 'overview'
+    elif args.pending or args.pending_out is not None:
+        action = 'worksheet'
     elif args.session_reset:
         action = 'reset'
     elif args.review:
@@ -456,6 +465,9 @@ def session_cmd(args):
     inputs = {'action': action, 'path': args.session}
     if action == 'review':
         inputs['scene_id'] = args.scene or 'all'
+    if action == 'worksheet':
+        inputs['out_file'] = args.pending_out
+        inputs['overwrite'] = args.export_overwrite
     if action == 'report':
         inputs['out_file'] = args.export
         inputs['overwrite'] = args.export_overwrite
@@ -497,6 +509,17 @@ def session_cmd(args):
                                  if b.strip()]
     r = session_run(inputs)
     st = r['state']
+    if action == 'worksheet':
+        if r['verdict'] == 'worksheet':
+            print(r.get('markdown') or '')
+            return 0
+        if r['verdict'] == 'worksheet_written':
+            print('工作单：' + (r.get('explanation') or ''))
+            return 0
+        msg = r.get('explanation') or r['verdict']
+        print(json.dumps(r, ensure_ascii=False, indent=2) if args.json
+              else '没生成：' + msg)
+        return 0 if r['verdict'] == 'nothing_to_do' else 2
     if action == 'report':
         md = r.get('markdown') or ''
         if r['verdict'] == 'report_ready':
@@ -657,6 +680,7 @@ def session_guard_error(args, json_out):
         ('--clues', args.clues),
         ('--session-state', args.session_state),
         ('--overview', args.overview),
+        ('--pending', args.pending or args.pending_out is not None),
         ('--session-reset', args.session_reset)) if v]
     if not given:
         return None

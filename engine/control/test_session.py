@@ -316,8 +316,16 @@ try:
           again['verdict'])
     ro = session_run({'action': 'report', 'path': pr, 'out_file': tout,
                       'overwrite': True})
-    check("开了覆盖才重写（report_written）",
-          ro['verdict'] == 'report_written' and text_of(tout) == body)
+    # 台账里有「导出时间」，跨秒重写整份字节必然不同——比内容（去掉时间行）
+    def _no_time(s):
+        return '\n'.join(l for l in s.split('\n')
+                          if not l.startswith('- 导出时间'))
+    check("开了覆盖才重写（report_written，除时间行外内容一致）",
+          ro['verdict'] == 'report_written'
+          and _no_time(text_of(tout)) == _no_time(body),
+          ro['verdict'])
+    check("重写后的台账仍带同一批轮次",
+          '### 1. T2' in text_of(tout) and '### 2. T6' in text_of(tout))
     same = session_run({'action': 'report', 'path': pr, 'out_file': pr})
     check("导出目标 = 会话文件本身 → 拦下（别把台账源删了）",
           same['verdict'] == 'input_pending'
@@ -635,9 +643,70 @@ try:
     check("clues 传非真值也不报错（按假处理）",
           session_run({'action': 'add', 'path': pcl, 'text': TXT_PLAIN,
                        'clues': 0})['verdict'] == 'turn_added')
+    # ── 用例20：欠线索工作单（只拼装，不猜值）
+    pws = os.path.join(d, '工作单.json')
+    session_run({'action': 'add', 'path': pws, 'text': TXT_CONFLICT,
+                 'clues': True})
+    session_run({'action': 'add', 'path': pws, 'text': TXT_WALL,
+                 'structured': {'sentence': 'liar'}, 'clues': True})
+    session_run({'action': 'add', 'path': pws, 'text': TXT_PLAIN})
+    sha_ws = sha(pws)
+    rws = session_run({'action': 'worksheet', 'path': pws})
+    mws = rws.get('markdown') or ''
+    check("有欠线索轮次 → 生成工作单",
+          rws['verdict'] == 'worksheet' and mws.startswith('# 欠线索工作单'),
+          rws['verdict'])
+    check("列出待填轮次（编号 + 判类 + 材料原文）",
+          '轮次 1 · T2' in mws and TXT_CONFLICT in mws, mws[:400])
+    check("可直接用的照抄原文（A/B 是材料里的词）",
+          "A='三周上线'" in mws and "B='十二周合规'" in mws, mws[:600])
+    check("欠的键留成 <待填> 空位",
+          'wA=<待填>' in mws and 'wNotA=<待填>' in mws, mws[:600])
+    check("不给欠的键编数（wA/wNotA 只有待填空位、没有数字）",
+          '"wA": 5' not in mws and '"wA": "5"' not in mws
+          and mws.count('<待填>') >= 4, mws[-500:])
+    check("还没跑建议器的轮次单独列出",
+          '还没跑建议器' in mws and '轮次：3' in mws, mws[-700:])
+    check("线索已齐的轮次也标出来",
+          '线索已齐' in mws and '轮次：2' in mws, mws[-400:])
+    check("表头数字与统计一致",
+          rws['stats']['pending'] == 1 and rws['stats']['no_clues'] == 1
+          and rws['stats']['ready_only'] == 1, str(rws['stats']))
+    check("工作单只读：会话文件 sha256 未变", sha(pws) == sha_ws)
+    wout = os.path.join(d, '工作单.md')
+    rw2 = session_run({'action': 'worksheet', 'path': pws, 'out_file': wout})
+    check("工作单可写文件",
+          rw2['verdict'] == 'worksheet_written' and os.path.exists(wout),
+          rw2['verdict'])
+    ws_body = text_of(wout)
+    check("写出的工作单 LF 且含待填空位",
+          '\r' not in ws_body and '<待填>' in ws_body)
+    check("写文件不留临时文件",
+          not [f for f in os.listdir(d) if f.startswith('.session-')])
+    again_ws = session_run({'action': 'worksheet', 'path': pws,
+                            'out_file': wout})
+    check("目标已存在且没开覆盖 → file_exists 且文件未变",
+          again_ws['verdict'] == 'file_exists' and text_of(wout) == ws_body,
+          again_ws['verdict'])
+    check("导出目标 = 会话文件本身 → 拦下",
+          session_run({'action': 'worksheet', 'path': pws,
+                       'out_file': pws})['verdict'] == 'input_pending')
+    check("导出目标是目录 → path_invalid",
+          session_run({'action': 'worksheet', 'path': pws,
+                       'out_file': d})['verdict'] == 'path_invalid')
+    check("out_file 非字符串 → input_pending",
+          session_run({'action': 'worksheet', 'path': pws,
+                       'out_file': 5})['verdict'] == 'input_pending')
+    ponly2 = os.path.join(d, '只有复核2.json')
+    session_run({'action': 'review', 'path': ponly2, 'scene_id': 'S05'})
+    check("没有欠线索也没有未跑建议器 → nothing_to_do（不生成空单）",
+          session_run({'action': 'worksheet',
+                       'path': ponly2})['verdict'] == 'nothing_to_do')
+    check("工作单边界写明「只拼装、不猜值」",
+          '不猜值' in mws and '由人决定' in mws, mws[-300:])
 finally:
     shutil.rmtree(d, ignore_errors=True)
 
 print("=" * 60)
-print(f"结果: {PASS}/138 通过")
-raise SystemExit(0 if PASS == 138 else 1)
+print(f"结果: {PASS}/157 通过")
+raise SystemExit(0 if PASS == 157 else 1)
