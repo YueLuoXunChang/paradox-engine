@@ -84,7 +84,8 @@ def _neutralize_allowed(text):
 
 _BANS = [
     ('本机绝对路径',
-     re.compile(r'[A-Za-z]:\\\\|[A-Za-z]:\\[A-Za-z]|/Users/[A-Za-z]|/home/[a-z]'),
+     re.compile(r'[A-Za-z]:\\\\|[A-Za-z]:\\[A-Za-z]|[A-Za-z]:/[A-Za-z]'
+                r'|/Users/[A-Za-z]|/home/[a-z]'),
      None),
     ('内部文档编号',
      re.compile(r'\b\d{2}_[^\s`）)]*\.md|(?:4[0-5]|3[89])\s*蓝图'), None),
@@ -166,10 +167,12 @@ for label, _pat, _pre in _BANS:
     check(f"无{label}", not arr, f"{len(arr)} 处: {arr[:4]}")
 
 # 判据自查：故意造一条命中，确认判据真的抓得住（防止正则写废了还全绿）
-_fake = ("某内部档案 §151 与 D:\\某盘\\x 与 99_某内部文档.md 与 a@b.com"
-         " 与 sk-abcdefghijklmnop")
+_fake = ("某内部档案 §151 与 D:\\某盘\\x 与 D:/某盘/x 与 99_某内部文档.md"
+         " 与 a@b.com 与 sk-abcdefghijklmnop")
 _caught = [label for label, pat, pre in _BANS
            if pat.search(pre(_fake) if pre else _fake)]
+check("判据自检：前向斜杠盘符路径（如 D:/x）也能抓住",
+      _BANS[0][1].search('见 D:/Git/etc/gitconfig'))
 check("判据自检：通用禁止项都能被抓住（正则未写废）",
       len(_caught) >= 4, f"只抓到 {_caught}")
 check("允许项不误伤（详规 §1.1 / 公式卡 §2.1 放行——中性化后不再命中）",
@@ -195,5 +198,5 @@ check("被排除的本地清单确实在 .gitignore（排除才安全）",
                                        encoding='utf-8').read())
 
 print("=" * 60)
-print(f"结果: {PASS}/14 通过")
-raise SystemExit(0 if PASS == 14 else 1)
+print(f"结果: {PASS}/15 通过")
+raise SystemExit(0 if PASS == 15 else 1)

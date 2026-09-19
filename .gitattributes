@@ -1,5 +1,5 @@
 # 统一行尾与文本处理
-# 关键：**全局钉 eol=lf**——本机系统级 core.autocrlf=true（D:/Git2/etc/gitconfig）
+# 关键：**全局钉 eol=lf**——本机系统级 core.autocrlf=true（安装时的全局 git 配置）
 # 曾把 NOTICE/pyproject.toml/.gitignore/.gitattributes 检出成 CRLF；只按后缀
 # 钉规则会漏掉无后缀文件与顶层配置。全局 eol=lf 优先级高于 autocrlf。
 * text=auto eol=lf
