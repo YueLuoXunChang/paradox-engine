@@ -44,6 +44,13 @@ def text_of(path):
 TXT_WALL = '这句话是假的，反复震荡，越绕越深'
 TXT_CONFLICT = '产品既要三周上线又要十二周合规，销售和研发各执一词'
 TXT_PLAIN = '帮我看看这个怎么办才好'
+# 走到 T9-L3（撞墙管线路由）的语料：学科密集 + 关系多 + 证据冲突 + 对立
+TXT_WALL_PIPE = ('这道题要求建模：先说清机制与理论模型，再讨论系统演化与多条通路，'
+                 '为什么产量导致成本上升，库存导致资金占用，广告导致需求波动，'
+                 '汇率促进出口，税率抑制投资，监管抑制加急，审计隶属法务，'
+                 '这条通路隶属主系统，另有一条通路隶属备用模型；'
+                 '报告说这套模型有效，另一份报告说无效，数据互相矛盾；'
+                 '方案既要三周上线，又要十二周合规')
 
 print("多轮状态 · 正式测试")
 print("=" * 60)
@@ -328,9 +335,55 @@ try:
     check("会话损坏 → state_corrupt 且不产出台账文件",
           rbad['verdict'] == 'state_corrupt' and not os.path.exists(outbad),
           rbad['verdict'])
+
+    # ── 用例15：撞墙族构件的诊断也落账（T9-L3 真跑撞墙管线那种）
+    from engine.control.classifier import run as cl
+    from engine.mechanisms.wall_pipeline import run as wall_direct
+    pw = os.path.join(d, '墙.json')
+    struct = {'wall': '既要三周上线又要十二周合规', 'thesis': '要快',
+              'antithesis': '要稳', 'events': ['快', '稳', '快', '稳']}
+    cw = cl({'text': TXT_WALL_PIPE})
+    check("构造的语料确实走到撞墙管线路由（否则本用例没意义）",
+          'wall_pipeline' in cw['route']['pipeline'], str(cw['route']))
+    rw2 = session_run({'action': 'add', 'path': pw, 'text': TXT_WALL_PIPE,
+                       'structured': struct})
+    wl = rw2['state']['wall_events']
+    check("撞墙管线真跑 → 墙事件里带五选一诊断 label",
+          len(wl) == 1 and wl[0]['component'] == 'wall_pipeline'
+          and bool(wl[0].get('diagnosis_label')), str(wl))
+    direct = wall_direct(struct)
+    check("五选一诊断与会话里记的一致（直接跑构件对照，不编）",
+          wl[0]['diagnosis_label'] == direct['diagnosis']['label']
+          and wl[0]['component_verdict'] == direct['verdict'], str(wl[0]))
+    ex = [e for e in rw2['turn']['execution']
+          if e['component'] == 'wall_pipeline'][0]
+    check("构件输出里的标量字段落账（mu/grade/drill）",
+          ex['detail'].get('mu') == direct['diagnosis']['mu']
+          and ex['detail'].get('grade') == direct['diagnosis']['grade']
+          and ex['detail'].get('drill') == direct['diagnosis']['drill'],
+          str(ex['detail']))
+    check("落账字段只来自构件输出（不无中生有）",
+          set(ex['detail']) <= (set(direct) | set(direct['diagnosis'])
+                                | {'diagnosis_label'}),
+          str(sorted(ex['detail'])))
+    mdw = session_run({'action': 'report', 'path': pw})['markdown']
+    check("台账墙事件表带五选一诊断列",
+          '五选一诊断' in mdw and direct['diagnosis']['label'] in mdw)
+    check("台账管线段写出 mu/grade 且不倒着重复 verdict",
+          ('mu=%s' % direct['diagnosis']['mu']) in mdw
+          and 'verdict=resonance' not in mdw, mdw[-400:])
+    rself = session_run({'action': 'add', 'path': pw, 'text': TXT_WALL,
+                         'structured': {'sentence': 'liar'}})
+    se = [w for w in rself['state']['wall_events']
+          if w['component'] == 'selfref_fixpoint']
+    check("别的撞墙族构件（自指不动点）也记自己的 verdict",
+          bool(se) and se[0]['component_verdict'] == 'liar_cycle', str(se))
+    check("没跑构件的 detail 是空的（不给没跑的东西编字段）",
+          all(e['detail'] == {} for e in rself['turn']['execution']
+              if e['status'] != 'run'))
 finally:
     shutil.rmtree(d, ignore_errors=True)
 
 print("=" * 60)
-print(f"结果: {PASS}/68 通过")
-raise SystemExit(0 if PASS == 68 else 1)
+print(f"结果: {PASS}/77 通过")
+raise SystemExit(0 if PASS == 77 else 1)

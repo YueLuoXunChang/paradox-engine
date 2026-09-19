@@ -69,6 +69,28 @@ BOUNDARY = ('会话是工作台账：只记录引擎自己的输出（判类/五
 WALL_FAMILY = ('wall_pipeline', 'boundary_paradox', 'selfref_fixpoint',
                'counterpoint_gen')
 
+# 构件输出里值得落账的标量字段（都是引擎自己产出的，不另做解释）
+_DETAIL_KEYS = ('verdict', 'mu', 'grade', 'drill', 'converges',
+                'selfref_type', 'tension', 'mode')
+
+
+def _detail(out):
+    """从构件输出里抽标量字段（含 diagnosis 里的五选一诊断 label）。"""
+    d = {}
+    for k in _DETAIL_KEYS:
+        v = out.get(k)
+        if v is not None and isinstance(v, (str, int, float, bool)):
+            d[k] = v
+    diag = out.get('diagnosis')
+    if isinstance(diag, dict):
+        if isinstance(diag.get('label'), str):
+            d['diagnosis_label'] = diag['label']
+        for k in ('mu', 'grade', 'drill', 'tension'):
+            v = diag.get(k)
+            if v is not None and isinstance(v, (str, int, float, bool)):
+                d.setdefault(k, v)
+    return d
+
 def _empty():
     """空会话（每次新建，避免默认值里的列表被多处共享）。"""
     return {'created': None, 'updated': None, 'turns': [], 'walls': [],
@@ -182,7 +204,8 @@ def _add(state, text, structured=None):
         execution.append({'step': e.get('step'), 'component': e.get('component'),
                           'status': e.get('status'),
                           'verdict': out.get('verdict'),    # 真跑的构件才有
-                          'note': e.get('note') or ''})
+                          'note': e.get('note') or '',
+                          'detail': _detail(out) if out else {}})
     i = len(state['turns']) + 1
     turn = {
         'i': i, 'text': text, 'type': cls.get('main_type'),
@@ -195,9 +218,14 @@ def _add(state, text, structured=None):
         # 撞墙族构件**真跑了**才记（没跑就没有，不假装）
         if (e['status'] == 'run'
                 and e['component'] in WALL_FAMILY):
+            det = e.get('detail') or {}
             state['walls'].append({'i': i, 'text': text,
                                    'component': e['component'],
-                                   'component_verdict': e['verdict']})
+                                   'component_verdict': e['verdict'],
+                                   'diagnosis_label': det.get(
+                                       'diagnosis_label'),
+                                   'mu': det.get('mu'),
+                                   'grade': det.get('grade')})
     return turn
 
 
@@ -353,19 +381,31 @@ def _report_md(state, session_path=None):
                                           else '没跑')]
                     if e.get('verdict'):
                         pieces.append('→ %s' % e['verdict'])
+                    det = {k: v for k, v in (e.get('detail') or {}).items()
+                           if k not in ('diagnosis_label', 'verdict')}
+                    if det:
+                        pieces.append('[' + ' '.join('%s=%s' % kv
+                                                     for kv in det.items())
+                                      + ']')
                     if e.get('note'):
                         pieces.append('（%s）' % e['note'])
                     L.append('  - ' + ' '.join(pieces))
+                    label = (e.get('detail') or {}).get('diagnosis_label')
+                    if label:
+                        L.append('    - 五选一诊断：%s' % label)
                 L.append('')
 
     if state['walls']:
         L.append('## 墙事件（撞墙族构件真跑过才记）')
         L.append('')
-        L.append('| 轮次 | 构件 | 构件自己的 verdict |')
-        L.append('|--:|:--|:--|')
+        L.append('| 轮次 | 构件 | 构件自己的 verdict | 五选一诊断 |')
+        L.append('|--:|:--|:--|:--|')
         for w in state['walls']:
-            L.append('| %s | %s | %s |' % (w['i'], w['component'],
-                                           w.get('component_verdict') or '—'))
+            L.append('| %s | %s | %s | %s |'
+                     % (w['i'], w['component'],
+                        w.get('component_verdict') or '—',
+                        (w.get('diagnosis_label') or '—')
+                        .replace('|', '\\|')))
         L.append('')
 
     if state['beliefs']:
