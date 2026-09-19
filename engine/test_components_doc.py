@@ -44,16 +44,13 @@ check("落盘的参考与代码一致（漂移检查；改了代码忘了重生�
       have == text,
       '文件 %d 字 vs 生成 %d 字' % (len(have), len(text)))
 
-tracked = subprocess.run(['git', 'ls-files'], cwd=_REPO, capture_output=True,
-                         text=True, encoding='utf-8').stdout.split()
-mods = [f for f in tracked
-        if f.startswith('engine/') and f.endswith('.py')
-        and '/test_' not in f
-        and not os.path.basename(f).startswith(('test_', '_'))
-        and not f.endswith('__init__.py')]
+# 与生成器同一个来源（磁盘）：新增模块还没提交时 git ls-files 看不到，
+# 用两份来源比会假报差异（这坑当场出现过）
+_scan = cd.scan()
+_mods = [it['path'] for v in _scan.values() for it in v]
 n_doc = len([l for l in text.split('\n') if l.startswith('### `engine/')])
-check("构件数 = 磁盘上的非下划线非测试模块数",
-      n_doc == len(mods), '%d vs %d' % (n_doc, len(mods)))
+check("构件数 = 扫描到的非下划线非测试模块数",
+      n_doc == len(_mods), '%d vs %d' % (n_doc, len(_mods)))
 check("每个构件都有「做什么」（没有空说明）",
       '（无说明）' not in text and '无 docstring' not in text)
 check("端口声明覆盖率 ≥30 个构件（其余诚实标未声明）",

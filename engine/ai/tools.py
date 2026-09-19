@@ -94,6 +94,8 @@ _TOOL_REGISTRY = [
      '直觉主义逻辑：Kripke 求值/反模型搜索（排中律为何非构造有效）+ 两系统对照'),
     ('decidability_map', 'classical.decidability_map',
      '可判定片段地图：这个问题能不能算（判定性结论/算术层级/墙的精确地图）'),
+    ('monadic_fol', 'classical.monadic_fol',
+     '一元谓词逻辑判定：闭的一元谓词公式是否有效（有限域展开，含反模型）'),
     ('classifier', 'control.classifier',
      '判类器：12 题型 + 复杂度 L1/L2/L3 + 路由'),
     ('controller', 'control.controller',

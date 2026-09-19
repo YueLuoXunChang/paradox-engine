@@ -121,8 +121,10 @@ FRAGMENTS = {
         'name': '一元谓词一阶逻辑（monadic）', 'decidability': DECIDABLE,
         'hierarchy': 'Δ1', 'complexity': 'NEXPTIME 完全',
         'source': 'Löwenheim 1915 / 表列法经典结果',
-        'engine_component': None,
-        'engine_note': '引擎**未实现**（诚实标注：不假装能算）',
+        'engine_component': 'classical.monadic_fol',
+        'engine_note': '引擎**真跑**：闭公式 + 有限域展开（谓词数 ≤2 完备，'
+                       '域取到 2^k；=3 只做小域搜索，找不到反模型诚实报 '
+                       'undecided；>3 报 size_limit）',
         'note': '去掉二元以上谓词，一阶逻辑立刻变可判——可判片段的典型。',
     },
     'presburger': {

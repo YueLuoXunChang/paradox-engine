@@ -291,6 +291,16 @@
         "type": "array"
       }
     },
+    "monadic_fol": {
+      "formula": {
+        "required": false,
+        "type": "string"
+      },
+      "mode": {
+        "required": false,
+        "type": "string"
+      }
+    },
     "mtmp": {
       "a": {
         "required": false,
@@ -564,5 +574,5 @@
       }
     }
   },
-  "tool_count": 29
+  "tool_count": 30
 }

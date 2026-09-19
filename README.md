@@ -90,7 +90,7 @@ print(r['report'])
 ```bash
 # 克隆后，在仓库根目录
 python demo.py          # 二十步演示
-python run_tests.py     # 全量回归（一条命令：46 个测试文件 / 1360 项断言）
+python run_tests.py     # 全量回归（一条命令：47 个测试文件 / 1373 项断言）
 ```
 
 `demo.py` 演示二十件事（①②③ 悖论三件套 → ④-⑩ 经典逻辑地基 → ⑪ 撞墙管线 → ⑫ 总控五步 → ⑬ MT-MP-TL 骨架 → ⑭ 冷门逻辑 → ⑮ AI 挂载 → ⑯ 数学底座 → ⑰ 冷门补完 → ⑱ 构造性立场 → ⑲ 墙的精确地图 → ⑳ 工作台）：
@@ -178,6 +178,7 @@ paradox-engine/
 │       ├── propositional.py      命题逻辑（有效/反例/可满足/重言式）
 │       ├── nd_propositional.py   命题自然演绎 ND（证明树，经典/直觉主义）
 │       ├── first_order.py        一阶谓词（∀/∃ 有限论域展开）
+│       ├── monadic_fol.py        一元谓词判定（可判片段：域展开 ≤2^k，含反模型）
 │       ├── resolution.py         一阶归结（Skolem + 合一 + 归结链）
 │       ├── equality_tableau.py   等词替换 + tableau（反例模型）
 │       ├── ltl.py                时序 LTL（G/F/X/U 沿路径判定）
@@ -196,7 +197,7 @@ paradox-engine/
 ├── .github/workflows/       ← CI（跑全量回归 + 演示 + CLI 冒烟）
 ├── docs/
 │   ├── mechanisms.md            分层能力总表（每构件：自测N+正式M）
-│   ├── tool_schema.md           工具协议（29 工具契约表，自动生成，供调用方）
+│   ├── tool_schema.md           工具协议（30 工具契约表，自动生成，供调用方）
 │   ├── ROADMAP.md               分层路线（7 阶段）
 │   └── formulas/                公式卡 ×10（第 1 层每构件一张概念说明）
 ├── README.md                ← 本文件（中英双语 + 测试状态）
@@ -314,7 +315,7 @@ run(inputs: dict) -> dict
 
 ### 测试状态
 
-- **1360 项正式断言全过**（46 个测试文件），覆盖全部
+- **1373 项正式断言全过**（47 个测试文件），覆盖全部
   机制构件与总控/场景/AI 工具层；
 - **一条命令跑全量回归**：`python run_tests.py`（发现 + 运行 + 汇总；
   任一文件失败即非零退出——CI 与本地同一入口）；

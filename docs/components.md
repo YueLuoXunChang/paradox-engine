@@ -2,7 +2,7 @@
 
 > 由 `python engine/_components_doc.py --write` 从各模块 docstring 与 `PORTS` 生成；`--check` 可在改动后比对漂移。手改这份文件会在检查里报不一致。
 
-- 构件数：**37** 个（不含下划线内部件与测试）
+- 构件数：**38** 个（不含下划线内部件与测试）
 
 ## 第 0 层 · 总控（判类/复杂度/路由/五步流水线/工作台）
 
@@ -85,6 +85,13 @@
 - 做什么：用可能世界语义判定模态公式（□ 必然 / ◇ 可能）的真假与可满足性
 - 输入端口：`worlds: list?`、`access: dict?`、`system: str?`、`assign: dict?`、`formula: str`、`world: str?`
 - 输出端口：`verdict: str`、`system: str`、`note: str`、`boundary: str`
+- 可独立运行：是（自带自测）
+
+### `engine/classical/monadic_fol.py`
+
+- 做什么：判定一个**闭的一元谓词公式**是否有效：谓词只作用在一个变量上（P(x)、Q(x)…），
+- 输入端口：`formula: str?`、`mode: str?`
+- 输出端口：`verdict: str`、`explanation: str`、`countermodel: dict?`、`predicates: list`、`domain_size: int?`、`boundary: str`
 - 可独立运行：是（自带自测）
 
 ### `engine/classical/nd_propositional.py`
