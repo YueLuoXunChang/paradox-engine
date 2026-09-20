@@ -20,6 +20,7 @@ import os
 import re
 import shlex
 import shutil
+import subprocess
 import sys
 import tempfile
 from contextlib import redirect_stdout
@@ -89,8 +90,21 @@ scen_sha = sha(scen)
 SUBS = {'会话.json': sess, 's.json': sess, '材料.md': mat,
         'material.md': mat, '台账.md': None, 'ledger.md': None,
         '工作单.md': None, '简报.md': None, '输入.txt': inp,
-        '大材料.md': big, 'big.md': big}
+        '大材料.md': big, 'big.md': big,
+        '复核包.md': None, 'packet.md': None}
 SKIP_REASONS = {}
+
+
+def _repo_state():
+    """仓库当前状态（未跟踪文件也算）——用来查"真跑有没有往仓库里落东西"。"""
+    p = subprocess.run(['git', 'status', '--porcelain'], cwd=_REPO,
+                       capture_output=True, text=True, encoding='utf-8',
+                       errors='replace')
+    return sorted(p.stdout.split('\n'))
+
+
+_state_before = _repo_state()
+_root_before = set(os.listdir(_REPO))
 
 
 def prepare(frag, doc, idx):
@@ -182,10 +196,15 @@ check("临时目录里没有 .session- 残留（原子写收尾干净）",
 sess_ok = os.path.exists(sess) and isinstance(
     json.loads(io.open(sess, encoding='utf-8').read()), dict)
 check("会话示例跑出的会话文件是合法 JSON", sess_ok)
-check("真跑不往仓库里落文件（仓库工作区干净）",
-      not [f for f in os.listdir(_REPO)
-           if f.startswith(('台账', 'ledger', '.session-'))],
-      str([f for f in os.listdir(_REPO) if f.startswith(('台账', 'ledger'))]))
+# 这条原先只按文件名前缀查（台账/ledger/.session-），于是新示例落下的
+# 「复核包.md / packet.md」没被认出来、还进了提交——改成**比对仓库整体状态**：
+# 真跑一条示例都不许往仓库里留东西（新文件、改动的文件都算）。
+_new_root = sorted(set(os.listdir(_REPO)) - _root_before)
+_state_after = _repo_state()
+check("真跑不往仓库里落文件（仓库状态前后一致，不只查文件名前缀）",
+      not _new_root and _state_after == _state_before,
+      '新出现的根文件：%s；git status 变化：%s'
+      % (_new_root, [x for x in _state_after if x not in _state_before][:4]))
 
 shutil.rmtree(d, ignore_errors=True)
 
