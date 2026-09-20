@@ -131,8 +131,10 @@ FRAGMENTS = {
         'name': 'Presburger 算术（自然数 + 加法）', 'decidability': DECIDABLE,
         'hierarchy': 'Δ1', 'complexity': '超指数下界（Fischer-Rabin 1974）',
         'source': 'Presburger 1929',
-        'engine_component': None,
-        'engine_note': '引擎**未实现**；规划列为按需扩展项',
+        'engine_component': 'classical.presburger',
+        'engine_note': '引擎**真跑**：量词消去（Cooper 式测试集 + 足够负情形）判'
+                       '整数上的恒真 / 可满足；规模超上限诚实报 size_limit，'
+                       '变量乘变量属 PA 直接拒（parse_error）',
         'note': '有加法无数乘 → 可判；一旦加上乘法就掉进不可判（见 PA）。',
     },
     'full_arithmetic': {
@@ -366,6 +368,8 @@ def _demo():
     plan = [
         ('命题逻辑（Δ1 可判）', 'classical.propositional',
          {'premises': ['P→Q', 'P'], 'conclusion': 'Q', 'mode': 'validity'}),
+        ('Presburger 算术（Δ1 可判：量词消元真判）', 'classical.presburger',
+         {'formula': '∀x ∃y (y + y = x ∨ y + y + 1 = x)'}),
         ('直觉主义命题（Δ1 可判，见冷门 3.5）', 'cold.intuitionistic_logic',
          {'mode': 'countermodel', 'formula': 'P∨¬P'}),
         ('λ 演算（1.6：自应用无范式——β 等价不可判）',
@@ -442,12 +446,15 @@ if __name__ == '__main__':
     assert 'Σ1 完全' in r2['entry']['hierarchy'], r2
     print(f"✅ 停机问题 → {r2['entry']['decidability']}（{r2['entry']['hierarchy']}）")
 
-    # 3) 未实现片段：诚实标 engine_component=None
-    r3 = run({'mode': 'lookup', 'system': 'presburger'})
-    assert r3['entry']['decidability'] == DECIDABLE, r3
+    # 3) 未实现片段：诚实标 engine_component=None（Presburger 已翻正，这里拿 PA）
+    r3 = run({'mode': 'lookup', 'system': 'full_arithmetic'})
+    assert r3['entry']['decidability'] == UNDECIDABLE, r3
     assert r3['entry']['engine_available'] is False, r3
-    print(f"✅ Presburger（可判但引擎未实现）→ engine_available="
+    print(f"✅ 皮亚诺算术（不可判，引擎不做）→ engine_available="
           f"{r3['entry']['engine_available']}（诚实标注，不假装能算）")
+    r3b = run({'mode': 'lookup', 'system': 'presburger'})
+    assert r3b['entry']['engine_available'] is True, r3b
+    print(f"✅ Presburger（可判）→ 引擎真跑：{r3b['entry']['engine_component']}")
 
     # 4) 层级查询
     r4 = run({'mode': 'hierarchy', 'level': 'Σ1'})

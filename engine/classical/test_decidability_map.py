@@ -85,18 +85,22 @@ check("C3 一般一阶逻辑 → 不可判定（Church/Turing 1936）",
 check("C4 引擎只做有限论域片段（诚实）",
       '有限论域' in rf['entry']['engine_note'], rf)
 
-# ── 用例D：未实现片段诚实标注（不假装能算）
-rd = run({'mode': 'lookup', 'system': 'presburger'})
-check("D1 Presburger 可判定但引擎未实现",
-      rd['entry']['decidability'] == DECIDABLE
+# ── 用例D：未实现片段诚实标注（不假装能算）——Presburger 已翻正，改用 PA
+rd = run({'mode': 'lookup', 'system': 'full_arithmetic'})
+check("D1 皮亚诺算术（加法+乘法）不可判定且引擎不做",
+      rd['entry']['decidability'] == UNDECIDABLE
       and rd['entry']['engine_available'] is False, rd)
-check("D2 未实现条目给出「未实现」说明",
-      '未实现' in rd['entry']['engine_note'], rd)
+check("D2 未实现条目给出「不做/未实现」说明",
+      ('未实现' in rd['entry']['engine_note']
+       or '不做' in rd['entry']['engine_note']), rd)
 check("D3 地图里未实现条目 ≥3（诚实空白）",
       sum(1 for e in FRAGMENTS.values()
           if e.get('engine_component') is None) >= 3,
       str(sum(1 for e in FRAGMENTS.values()
               if e.get('engine_component') is None)))
+check("D4 Presburger 已翻正为「引擎真跑」（可判片段不再挂空）",
+      run({'mode': 'lookup',
+           'system': 'presburger'})['entry']['engine_available'] is True)
 
 # ── 用例E：算术层级
 re_ = run({'mode': 'hierarchy', 'level': 'Σ1'})
@@ -191,5 +195,5 @@ check("I8 PORTS 声明 in/out 且 out 含 entry/level",
       {'entry', 'level'} <= set(__import__('decidability_map').PORTS['out']))
 
 print("=" * 60)
-print(f"结果: {PASS}/51 通过")
-raise SystemExit(0 if PASS == 51 else 1)
+print(f"结果: {PASS}/52 通过")
+raise SystemExit(0 if PASS == 52 else 1)

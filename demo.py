@@ -329,6 +329,12 @@ def main():
               f"｜引擎：{eng}")
     r19b = dmap({'mode': 'hierarchy', 'level': 'Σ1'})
     print(f"  → 层级 Σ1：{r19b['level']['engine_promise'][:40]}…")
+    from engine.classical.presburger import run as _pb
+    _pb1 = _pb({'formula': '∀x ∃y (y + y = x ∨ y + y + 1 = x)'})
+    _pb2 = _pb({'formula': '∃x (2*x = 3)'})
+    print(f"  → 地图上那条「可判」现在真算得动：∀x∃y(奇偶覆盖) → "
+          f"{_pb1['verdict']}；∃x(2x=3) → {_pb2['verdict']}"
+          "（量词消元，整数上判）")
     r19c = dmap({'mode': 'demo'})
     print(f"  → 接线演示 {len(r19c['fragments'])} 件："
           f"{'、'.join(str(x['verdict']) for x in r19c['fragments'])}")

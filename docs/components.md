@@ -2,7 +2,7 @@
 
 > 由 `python engine/_components_doc.py --write` 从各模块 docstring 与 `PORTS` 生成；`--check` 可在改动后比对漂移。手改这份文件会在检查里报不一致。
 
-- 构件数：**39** 个（不含下划线内部件与测试）
+- 构件数：**40** 个（不含下划线内部件与测试）
 
 ## 第 0 层 · 总控（判类/复杂度/路由/五步流水线/工作台）
 
@@ -106,6 +106,13 @@
 - 做什么：自然演绎证明搜索——用引入/消去规则从前提推出结论
 - 输入端口：`premises: list?`、`conclusion: str?`、`system: str?`、`max_steps: int?`
 - 输出端口：`verdict: str`、`proof_tree: list`、`system: str`、`boundary: str`
+- 可独立运行：是（自带自测）
+
+### `engine/classical/presburger.py`
+
+- 做什么：判定一个 Presburger 公式在整数上是不是**恒真**（默认），或**有没有解**：
+- 输入端口：`formula: str`、`mode: str?`
+- 输出端口：`verdict: str`、`explanation: str`、`equivalent: str?`、`counterexample: dict?`、`witness: dict?`、`free_variables: list`、`quantifiers: int`、`boundary: str`
 - 可独立运行：是（自带自测）
 
 ### `engine/classical/propositional.py`

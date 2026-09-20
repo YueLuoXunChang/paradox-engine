@@ -3,7 +3,7 @@
 > 本文件由 `python engine/ai/freeze_tool_schema.py` 从 `engine/ai/tools.py` 的注册表**自动生成**，请勿手改。
 > 工具名与参数名是对外契约（轨 C1）：有意变更须重新生成本文件与 `engine/ai/tool_schema_frozen.json`，并在 CHANGELOG 与变更记账。
 
-共 **31** 件工具。调用方式：
+共 **32** 件工具。调用方式：
 
 ```python
 from engine.ai.tools import tools, call_tool
@@ -44,6 +44,7 @@ print(r['result'])                  # 构件原始输出（含 boundary 边界�
 | `intuitionistic_logic` | `formula`:string `formulas`:array `max_worlds`:integer `mode`:string `order`:array `valuation`:object `world`:string `worlds`:array | 直觉主义逻辑：Kripke 求值/反模型搜索（排中律为何非构造有效）+ 两系统对照 |
 | `decidability_map` | `level`:string `mode`:string `system`:string | 可判定片段地图：这个问题能不能算（判定性结论/算术层级/墙的精确地图） |
 | `monadic_fol` | `formula`:string `mode`:string | 一元谓词逻辑判定：闭的一元谓词公式是否有效（有限域展开，含反模型） |
+| `presburger` | `formula*`:string `mode`:string | Presburger 算术判定：整数上带加减与整除的式子是否恒真/有解（量词消元，含等价式与反例） |
 | `model_check` | `formula`:string `init`:array `labels`:object `states`:array `transitions`:array | CTL 模型检查：显式 Kripke 结构上公式是否在所有初始状态成立（含反例状态） |
 | `classifier` | `debug`:boolean `text`:string | 判类器：12 题型 + 复杂度 L1/L2/L3 + 路由 |
 | `controller` | `debug`:boolean `structured`:object `text*`:string | 总控五步：判类→复杂度→切路→真跑→判输出（中文诊断报告） |

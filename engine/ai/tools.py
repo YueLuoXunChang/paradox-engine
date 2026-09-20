@@ -96,6 +96,9 @@ _TOOL_REGISTRY = [
      '可判定片段地图：这个问题能不能算（判定性结论/算术层级/墙的精确地图）'),
     ('monadic_fol', 'classical.monadic_fol',
      '一元谓词逻辑判定：闭的一元谓词公式是否有效（有限域展开，含反模型）'),
+    ('presburger', 'classical.presburger',
+     'Presburger 算术判定：整数上带加减与整除的式子是否恒真/有解'
+     '（量词消元，含等价式与反例）'),
     ('model_check', 'classical.model_check',
      'CTL 模型检查：显式 Kripke 结构上公式是否在所有初始状态成立（含反例状态）'),
     ('classifier', 'control.classifier',

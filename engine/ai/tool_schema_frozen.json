@@ -429,6 +429,16 @@
         "type": "number"
       }
     },
+    "presburger": {
+      "formula": {
+        "required": true,
+        "type": "string"
+      },
+      "mode": {
+        "required": false,
+        "type": "string"
+      }
+    },
     "propositional": {
       "conclusion": {
         "required": false,
@@ -596,5 +606,5 @@
       }
     }
   },
-  "tool_count": 31
+  "tool_count": 32
 }
