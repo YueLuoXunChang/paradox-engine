@@ -2,7 +2,7 @@
 
 > 由 `python engine/_components_doc.py --write` 从各模块 docstring 与 `PORTS` 生成；`--check` 可在改动后比对漂移。手改这份文件会在检查里报不一致。
 
-- 构件数：**47** 个（不含下划线内部件与测试）
+- 构件数：**48** 个（不含下划线内部件与测试）
 
 ## 第 0 层 · 总控（判类/复杂度/路由/五步流水线/工作台）
 
@@ -215,6 +215,13 @@
 - 做什么：给"新信息来了旧结论还成立吗"一个可跑答案——两个能力：
 - 输入端口：`mode: str?`、`beliefs: list?`、`new_info: str?`、`priorities: dict?`、`defaults: list?`、`facts: list?`、`exceptions: list?`、`max_beliefs: int?`
 - 输出端口：`verdict: str`、`kept: list`、`dropped: list`、`conclusions: list`、`boundary: str`
+- 可独立运行：是（自带自测）
+
+### `engine/cold/asp.py`
+
+- 做什么：给一套**规则**（事实 · 带"否定即失败"的规则 · 完整性约束），算出它**自洽的结论集合**
+- 输入端口：`mode: str?`、`program: str?`、`query: str?`
+- 输出端口：`verdict: str`、`answer_sets: list`、`count: int`、`query: dict?`、`boundary: str`
 - 可独立运行：是（自带自测）
 
 ### `engine/cold/belnap_four.py`

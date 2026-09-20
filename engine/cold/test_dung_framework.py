@@ -9,7 +9,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from dung_framework import run  # noqa: E402
+from dung_framework import PORTS, run  # noqa: E402
 
 PASS = 0
 
@@ -96,8 +96,20 @@ check("{a} 在可接受示例中",
       str(r))
 
 # ── 用例8：诚实边界
-check("论证<2 → input_pending",
-      run({'arguments': ['a']})['verdict'] == 'input_pending')
+r = run({'arguments': ['a']})
+check("单论证框架真算（不再一刀切拦下）：grounded={a}、preferred=[{a}]、stable=[{a}]",
+      r['verdict'] == 'evaluated' and r['grounded'] == ['a']
+      and r['preferred'] == [['a']] and r['stable'] == [['a']], str(r))
+check("空论证 → input_pending（空框架不硬解）",
+      run({'arguments': []})['verdict'] == 'input_pending')
+_shapes = [run({'arguments': []}),
+           run({'arguments': ['a']}),
+           run({'arguments': ['a', 'b'], 'attacks': [('a', 'x')]}),
+           run({'arguments': ['x%d' % i for i in range(15)],
+                'attacks': [('x0', 'x1')]})]
+check("★返回形状统一：各种判定（含早退分支）都不缺 PORTS 声明的键",
+      all(set(x.keys()) == set(PORTS['out'].keys()) for x in _shapes),
+      [sorted(set(PORTS['out']) - set(x)) for x in _shapes])
 check("攻击引用不存在 → input_pending",
       run({'arguments': ['a', 'b'],
            'attacks': [('a', 'x')]})['verdict'] == 'input_pending')
@@ -127,5 +139,5 @@ for _args, _atk in _FRAMES:
 check("有 stable 时它一定是 preferred（抽查 5 个框架）", not _bad, str(_bad))
 
 print("=" * 60)
-print(f"结果: {PASS}/27 通过")
-raise SystemExit(0 if PASS == 27 else 1)
+print(f"结果: {PASS}/29 通过")
+raise SystemExit(0 if PASS == 29 else 1)

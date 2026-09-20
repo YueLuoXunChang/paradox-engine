@@ -34,7 +34,7 @@ Dung 语义（1995）：
 统一接口：
     run(inputs: dict) -> dict
     输入:
-        arguments: list[str]——论证集（至少 2 个）
+        arguments: list[str]——论证集（至少 1 个）
         attacks: list[(a, b)]——a attacks b（a 反对 b）
         max_arguments: int——枚举上限（默认 12）
     输出:
@@ -54,6 +54,15 @@ PORTS = {
             'stable': 'list', 'admissible_examples': 'list',
             'conflict_pairs': 'list', 'boundary': 'str'},
 }
+
+
+def _out(verdict, why, **kw):
+    """统一返回形状：PORTS 声明的字段一个不少——早退分支也不许缺键
+    （2026-09-20 修：早退分支原先漏了 stable，按 PORTS 读会拿到 None）。"""
+    out = {'verdict': verdict, 'grounded': [], 'preferred': [], 'stable': [],
+           'admissible_examples': [], 'conflict_pairs': [], 'boundary': why}
+    out.update(kw)
+    return out
 
 
 def _attacked_by(a, attacks):
@@ -173,58 +182,47 @@ def run(inputs):
     arguments = inputs.get('arguments')
     attacks = inputs.get('attacks') or []
     if not isinstance(arguments, (list, tuple)) or not arguments:
-        return {'verdict': 'input_pending', 'grounded': [], 'preferred': [],
-                'admissible_examples': [], 'conflict_pairs': [],
-                'boundary': '需 arguments 列表（论证名，如 ["a","b"]）——'
-                            '诚实拦截（字符串/数字/空都不硬解）'}
+        return _out('input_pending',
+                    '需 arguments 列表（论证名，如 ["a","b"]）——'
+                    '诚实拦截（字符串/数字/空都不硬解）')
     if not all(isinstance(a, str) and a for a in arguments):
-        return {'verdict': 'input_pending', 'grounded': [], 'preferred': [],
-                'admissible_examples': [], 'conflict_pairs': [],
-                'boundary': 'arguments 元素应为非空字符串（论证名）——诚实拦截'}
+        return _out('input_pending',
+                    'arguments 元素应为非空字符串（论证名）——诚实拦截')
     if len(set(arguments)) != len(arguments):
-        return {'verdict': 'input_pending', 'grounded': [], 'preferred': [],
-                'admissible_examples': [], 'conflict_pairs': [],
-                'boundary': 'arguments 有重名——诚实拦截（同一论证不该出现两次）'}
+        return _out('input_pending',
+                    'arguments 有重名——诚实拦截（同一论证不该出现两次）')
     if not isinstance(attacks, (list, tuple)):
-        return {'verdict': 'input_pending', 'grounded': [], 'preferred': [],
-                'admissible_examples': [], 'conflict_pairs': [],
-                'boundary': 'attacks 应为列表（形如 [("a","b")]）——诚实拦截'}
+        return _out('input_pending',
+                    'attacks 应为列表（形如 [("a","b")]）——诚实拦截')
     for pair in attacks:
         if not (isinstance(pair, (list, tuple)) and len(pair) == 2):
-            return {'verdict': 'input_pending', 'grounded': [],
-                    'preferred': [], 'admissible_examples': [],
-                    'conflict_pairs': [],
-                    'boundary': f'攻击对 {pair!r} 形状不对（应为 (攻击方, 被攻击方)）'
-                                '——诚实拦截'}
+            return _out('input_pending',
+                        f'攻击对 {pair!r} 形状不对（应为 (攻击方, 被攻击方)）'
+                        '——诚实拦截')
         if pair[0] not in arguments or pair[1] not in arguments:
-            return {'verdict': 'input_pending', 'grounded': [],
-                    'preferred': [], 'admissible_examples': [],
-                    'conflict_pairs': [],
-                    'boundary': f'攻击对 {pair!r} 引用了不在 arguments 里的节点'
-                                '——诚实拦截（不隐式添加节点）'}
+            return _out('input_pending',
+                        f'攻击对 {pair!r} 引用了不在 arguments 里的节点'
+                        '——诚实拦截（不隐式添加节点）')
     args = inputs.get('arguments')
-    if not args or len(args) < 2:
-        return {'verdict': 'input_pending', 'grounded': [],
-                'preferred': [], 'admissible_examples': [],
-                'conflict_pairs': [],
-                'boundary': '需 arguments（≥2 论证）与 attacks——诚实'}
+    # 2026-09-20 修：原先这里要求 len(args) >= 2，把「单论证框架」一律判 input_pending。
+    # 一个只含一个论证、没有攻击的框架是**合法**的（grounded={a}、preferred=[{a}]、
+    # stable=[{a}]）——ASP 跨构件对拍把它照出来了（同一框架的 ASP 编码给出 {in_a}）。
+    # 门槛降成"至少一个论证"；空列表仍然诚实拦下。
+    if not args:
+        return _out('input_pending', '需 arguments（至少一个论证）与 attacks——诚实')
     attacks = set()
     for pair in inputs.get('attacks') or []:
         a, b = pair
         if a in args and b in args:
             attacks.add((a, b))
         else:
-            return {'verdict': 'input_pending', 'grounded': [],
-                    'preferred': [], 'admissible_examples': [],
-                    'conflict_pairs': [],
-                    'boundary': f'攻击边 {a}→{b} 引用不存在论证——诚实拦截'}
+            return _out('input_pending',
+                        f'攻击边 {a}→{b} 引用不存在论证——诚实拦截')
     max_args = inputs.get('max_arguments', 12)
     if len(args) > max_args:
-        return {'verdict': 'size_limit', 'grounded': [],
-                'preferred': [], 'admissible_examples': [],
-                'conflict_pairs': [],
-                'boundary': f'论证 {len(args)} 个 > 上限 {max_args}——'
-                            '枚举语义诚实报告规模限制，不硬跑'}
+        return _out('size_limit',
+                    f'论证 {len(args)} 个 > 上限 {max_args}——'
+                    '枚举语义诚实报告规模限制，不硬跑')
 
     grounded = _grounded(args, attacks)
     preferred = _preferred(args, attacks)
@@ -331,7 +329,8 @@ if __name__ == '__main__':
 
     # 5) 边界
     r5 = run({'arguments': ['a']})
-    assert r5['verdict'] == 'input_pending', r5
+    assert r5['verdict'] == 'evaluated' and r5['grounded'] == ['a'] \
+        and r5['stable'] == [['a']], r5
     r6 = run({'arguments': ['a', 'b'],
               'attacks': [('a', 'x')]})
     assert r6['verdict'] == 'input_pending', r6

@@ -16,7 +16,7 @@
 | 第 1 层 · 经典逻辑层 | L1 classical | 命题 → 谓词 → 时序 → 模态（地基，经典共识） | `engine/classical/` |
 | 第 2 层 · 悖论/创生层 | L2 paradox | 悖论测度·注解·递归修正 + 对位创生（引擎主场） | `engine/mechanisms/` |
 | 第 3 层 · 冷门逻辑层 | L3 cold | 次协调 / Dung / 非单调 / 相干 / 直觉主义…（按痛点选） | `engine/cold/` |
-| AI 挂载层 | AI mounting | 构件函数 = AI 可调用工具（**37 件**，契约冻结） | `engine/ai/tools.py` |
+| AI 挂载层 | AI mounting | 构件函数 = AI 可调用工具（**38 件**，契约冻结） | `engine/ai/tools.py` |
 | 总控 | controller | 判类 → 复杂度 → 切路 → 真跑 → 判输出（五步） | `engine/control/controller.py` |
 | 工作台 | workshop | 一批材料 → 会话台账 → 简报/看板/对账 | `engine/control/session.py` |
 
@@ -87,6 +87,10 @@
 | μ 演算 | modal mu-calculus | 不动点逻辑：`μX.φ` 取**最小**解（从空集往上加）、`νX.φ` 取**最大**解（从全集往下砍），配模态 `<>`/`[]` 自己拼时序性质；同一式子 μ 与 ν 常常给出完全不同的集合 |
 | 正出现 / 非单调 | positive / non-monotone | 不动点变量必须落在**偶数层否定**之下；负出现（如 `μX.!X`）没有不动点语义——本构件拦下并摆出振荡过程 |
 | 交替深度 | alternation depth | μ 套 ν（或 ν 套 μ）的层数；CTL 的八个路径量子只到固定形状，交替式（如 `E[GF p] = νZ.μY.(<>(p&Z)|<>Y)`）是 μ 演算多出来的那一口 |
+| 答案集（ASP） | answer set | 「规则 + 否定即失败 + 约束」下**自洽的结论集合**：一个程序可能有多个答案集、也可能一个都没有（没有 = 规则自相矛盾） |
+| 否定即失败 | negation as failure | `not a` 读作"推不出 a 就当它不成立"——不是"a 是假的"，这是非单调的那一半 |
+| 完整性约束 | integrity constraint | `:- 体.` = 体成立就不许；用来写"这些不能同时成立"（筛掉候选，不产生结论） |
+| 推导依据 | support | 每个原子写明它是靠**哪条规则**撑住的（规则的体在答案集里成立）——可复核 |
 
 ## 五、可计算性与判定（decidability）
 
@@ -144,6 +148,7 @@
 | decidability | 可判定 | 有算法给是/否 |
 | default logic extension | 默认逻辑扩展 | Γ 不动点 |
 | mu-calculus | μ 演算 | 最小/最大不动点 + 模态，留痕可复核 |
+| answer set programming | 答案集程序 | 规则 + 否定即失败 → 自洽结论集合 |
 | description logic ALC | 描述逻辑 ALC | 概念包含 / 本体分类（表列 + 子集阻塞） |
 | defeasible | 可废止 | 有反例即阻断 |
 | diagnose, do not decide | 只诊断不决策 | 引擎不替人下结论 |

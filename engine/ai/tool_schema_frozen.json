@@ -35,6 +35,20 @@
         "type": "object"
       }
     },
+    "asp": {
+      "mode": {
+        "required": false,
+        "type": "string"
+      },
+      "program": {
+        "required": false,
+        "type": "string"
+      },
+      "query": {
+        "required": false,
+        "type": "string"
+      }
+    },
     "belnap_four": {
       "assign": {
         "required": false,
@@ -740,5 +754,5 @@
       }
     }
   },
-  "tool_count": 37
+  "tool_count": 38
 }
