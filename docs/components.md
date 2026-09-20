@@ -2,7 +2,7 @@
 
 > 由 `python engine/_components_doc.py --write` 从各模块 docstring 与 `PORTS` 生成；`--check` 可在改动后比对漂移。手改这份文件会在检查里报不一致。
 
-- 构件数：**44** 个（不含下划线内部件与测试）
+- 构件数：**45** 个（不含下划线内部件与测试）
 
 ## 第 0 层 · 总控（判类/复杂度/路由/五步流水线/工作台）
 
@@ -236,6 +236,13 @@
 - 做什么：输入论证集 + 攻击关系图 → 输出站得住的立场集（grounded 唯一 /
 - 输入端口：`arguments: list?`、`attacks: list?`、`max_arguments: int?`
 - 输出端口：`verdict: str`、`grounded: list`、`preferred: list`、`stable: list`、`admissible_examples: list`、`conflict_pairs: list`、`boundary: str`
+- 可独立运行：是（自带自测）
+
+### `engine/cold/interval_algebra.py`
+
+- 做什么：拿一组事件与它们两两之间的**定性关系**（先于／相接／重叠／开始于／包含／
+- 输入端口：`mode: str?`、`events: list?`、`relations: list?`、`relation: str?`
+- 输出端口：`verdict: str`、`matrix: dict`、`conflict: dict?`、`model: dict?`、`composed: str?`、`conversed: str?`、`boundary: str`
 - 可独立运行：是（自带自测）
 
 ### `engine/cold/intuitionistic_logic.py`

@@ -82,6 +82,9 @@ _TOOL_REGISTRY = [
     ('belnap_four', 'cold.belnap_four', 'Belnap 四值：矛盾取"两者"不爆炸'),
     ('many_valued', 'cold.many_valued',
      '多值逻辑：K3 未知传播 / Ł3 中间真值（重言式与推理判定，三套对照）'),
+    ('interval_algebra', 'cold.interval_algebra',
+     '区间代数：事件之间的定性时序关系自不自治（先于/相接/重叠/包含…），矛盾给冲突对，'
+     '不矛盾给可复核的整数区间见证'),
     ('dung_framework', 'cold.dung_framework',
      'Dung 论证框架：哪些立场站得住（grounded/preferred/stable）'),
     ('truth_revision', 'cold.truth_revision',

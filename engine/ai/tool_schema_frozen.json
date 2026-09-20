@@ -217,6 +217,24 @@
         "type": "array"
       }
     },
+    "interval_algebra": {
+      "events": {
+        "required": false,
+        "type": "array"
+      },
+      "mode": {
+        "required": false,
+        "type": "string"
+      },
+      "relation": {
+        "required": false,
+        "type": "string"
+      },
+      "relations": {
+        "required": false,
+        "type": "array"
+      }
+    },
     "intuitionistic_logic": {
       "formula": {
         "required": false,
@@ -650,5 +668,5 @@
       }
     }
   },
-  "tool_count": 34
+  "tool_count": 35
 }

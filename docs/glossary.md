@@ -16,7 +16,7 @@
 | 第 1 层 · 经典逻辑层 | L1 classical | 命题 → 谓词 → 时序 → 模态（地基，经典共识） | `engine/classical/` |
 | 第 2 层 · 悖论/创生层 | L2 paradox | 悖论测度·注解·递归修正 + 对位创生（引擎主场） | `engine/mechanisms/` |
 | 第 3 层 · 冷门逻辑层 | L3 cold | 次协调 / Dung / 非单调 / 相干 / 直觉主义…（按痛点选） | `engine/cold/` |
-| AI 挂载层 | AI mounting | 构件函数 = AI 可调用工具（**34 件**，契约冻结） | `engine/ai/tools.py` |
+| AI 挂载层 | AI mounting | 构件函数 = AI 可调用工具（**35 件**，契约冻结） | `engine/ai/tools.py` |
 | 总控 | controller | 判类 → 复杂度 → 切路 → 真跑 → 判输出（五步） | `engine/control/controller.py` |
 | 工作台 | workshop | 一批材料 → 会话台账 → 简报/看板/对账 | `engine/control/session.py` |
 
@@ -79,6 +79,7 @@
 | 相干 / 不相干 | relevant / irrelevant | 前提与结论是否共享变量（区分真冲突与话术冲突） |
 | 修正序列 | revision sequence | 真值在序列里如何收敛（稳定 / 周期振荡——共振带的学界锚点） |
 | 构造性立场 | constructive stance | 直觉主义：Kripke 反模型；排中律、双重否定消去、Peirce 律都不成立 |
+| 区间代数（Allen） | interval algebra | 事件之间的**定性时序**：13 个基本关系（先于／相接／重叠／开始于／包含于／结束于／同时 + 逆）+ 复合 + 路径一致性；报"没发现冲突"不等于有解 |
 
 ## 五、可计算性与判定（decidability）
 
