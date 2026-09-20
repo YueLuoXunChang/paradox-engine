@@ -38,6 +38,8 @@ check("grounded = [a, c]（无争议迭代）", r['grounded'] == ['a', 'c'],
       str(r))
 check("preferred 含 [a,c]（极大可接受）", ['a', 'c'] in r['preferred'],
       str(r))
+check("stable = [a,c]（a 把 b 攻击到、c 不在被攻之外）",
+      r['stable'] == [['a', 'c']], str(r))
 check("无争议集", r['conflict_pairs'] == [], str(r))
 
 # ── 用例2：互攻 a↔b（争议核）
@@ -47,11 +49,15 @@ check("争议集 = [a,b]", r['conflict_pairs'] == [['a', 'b']], str(r))
 check("preferred 为单点（互斥可接受）",
       all(len(p) == 1 for p in r['preferred']) and len(r['preferred']) >= 1,
       str(r))
+check("互攻对 → stable 给两个单点（grounded 给不出的它给得出）",
+      r['stable'] == [['a'], ['b']], str(r))
 
 # ── 用例3：自攻 a→a
 r = run({'arguments': ['a', 'b'], 'attacks': [('a', 'a'), ('b', 'a')]})
 check("b 不被攻 → grounded 含 b", 'b' in r['grounded'], str(r))
 check("a 自攻被排除 grounded", 'a' not in r['grounded'], str(r))
+check("自攻论证进不了无冲突集 → stable 只剩 [b]",
+      r['stable'] == [['b']], str(r))
 
 # ── 用例4：3-cycle（Dung 标准）
 r = run({'arguments': ['a', 'b', 'c'],
@@ -59,6 +65,10 @@ r = run({'arguments': ['a', 'b', 'c'],
 check("3-cycle grounded=[]", r['grounded'] == [], str(r))
 check("3-cycle preferred=[[]]（唯一极大可接受=空）",
       r['preferred'] == [[]], str(r))
+check("3-cycle stable=[]（奇环本来就没有稳定立场——真结果，不是算不动）",
+      r['stable'] == [], str(r))
+check("没有 stable 时边界如实交代（别让读的人以为是算不出来）",
+      '没有 stable 扩展' in r['boundary'], str(r['boundary']))
 
 # ── 用例5：两链独立（无攻击交集）
 r = run({'arguments': ['a', 'b', 'c', 'd'],
@@ -100,6 +110,22 @@ check("边界声明借鉴来源（Dung 外部共识）", 'Dung' in
 check("边界声明立场建议非判决", '不决策' in
       run({'arguments': ['a', 'b'], 'attacks': [('a', 'b')]})['boundary'])
 
+# ── 用例9：stable ⊆ preferred（Dung 标准关系，抽查若干框架）
+_FRAMES = [
+    (['a', 'b', 'c'], [('a', 'b'), ('b', 'c')]),
+    (['a', 'b'], [('a', 'b'), ('b', 'a')]),
+    (['a', 'b'], [('a', 'b')]),
+    (['a', 'b', 'c'], [('a', 'b'), ('b', 'a'), ('b', 'c')]),
+    (['a', 'b', 'c', 'd'], [('a', 'b'), ('b', 'c'), ('c', 'd'), ('d', 'b')]),
+]
+_bad = []
+for _args, _atk in _FRAMES:
+    _r = run({'arguments': _args, 'attacks': _atk})
+    for _s in _r['stable']:
+        if _s not in _r['preferred']:
+            _bad.append((_args, _atk, _s, _r['preferred']))
+check("有 stable 时它一定是 preferred（抽查 5 个框架）", not _bad, str(_bad))
+
 print("=" * 60)
-print(f"结果: {PASS}/21 通过")
-raise SystemExit(0 if PASS == 21 else 1)
+print(f"结果: {PASS}/27 通过")
+raise SystemExit(0 if PASS == 27 else 1)

@@ -101,7 +101,7 @@ print(r['report'])
 ```bash
 # After cloning, from the repository root
 python demo.py          # twenty-step tour
-python run_tests.py     # full regression (51 test files / 1446 assertions)
+python run_tests.py     # full regression (52 test files / 1479 assertions)
 ```
 
 `demo.py` demonstrates twenty things (①②③ the paradox trio → ④-⑩ the
@@ -184,7 +184,8 @@ paradox-engine/
 │   │   └── mtmp.py               points/threads/topology (12 shapes)/operations (5 kinds)
 │   ├── cold/                  ← Cold logics (L3: chosen by need; external consensus marked as borrowed)
 │   │   ├── belnap_four.py        Belnap four-valued logic (contradiction = "both", no explosion)
-│   │   ├── dung_framework.py     Dung argumentation framework (which positions stand)
+│   │   ├── many_valued.py        many-valued logic (3-valued K3 / Ł3: unknown propagation, tautologies, three-way comparison)
+│   │   ├── dung_framework.py     Dung argumentation framework (grounded / preferred / stable)
 │   │   ├── agm_revision.py       AGM belief revision + non-monotonic defaults (retractable conclusions)
 │   │   ├── default_logic.py      default logic, full fixpoints (all extensions / shared conclusions / competing defaults)
 │   │   ├── relevance_logic.py    relevance logic (real conflict vs empty rhetoric)
@@ -322,10 +323,16 @@ can be discussed, compared, and traced.
   as first-class citizen" moves from slogan to runnable pipeline;
 - **L3 · cold logics (chosen by real need)**: Belnap four-valued logic
   (contradiction = "both", no explosion — a semantic foundation for the
-  resonance band) + Dung argumentation framework (grounded/preferred — which
-  positions can withstand attack) + **AGM belief revision / non-monotonicity**
+  resonance band) + **many-valued logic** (three-valued: K3 propagates
+  "unknown", Ł3 treats ½ as an intermediate truth value — whether `P → P` is a
+  tautology even differs between the two, plus a classical/K3/Ł3 comparison
+  table) + Dung argumentation framework (grounded/preferred/**stable** — which
+  positions can withstand attack; a stable extension may not exist at all) +
+  **AGM belief revision / non-monotonicity**
   (does the old conclusion survive new information — minimal retraction +
-  defeasible defaults) + **relevance logic** (do premises and conclusion share
+  defeasible defaults) + **default logic, full fixpoints** (Reiter's original
+  Γ fixpoints: all extensions, separating "holds in every extension" from
+  "holds in some") + **relevance logic** (do premises and conclusion share
   a variable — real conflict vs empty rhetoric) + Gupta-Belnap truth revision
   (oscillating revision sequences) + **intuitionistic logic** (constructive
   stance: Kripke countermodels + a classical-vs-intuitionistic comparison —
@@ -366,7 +373,7 @@ when a real pain point appears).
 
 ### Test status
 
-- **1446 formal assertions pass** (51 test files), covering every mechanism
+- **1479 formal assertions pass** (52 test files), covering every mechanism
   component plus the controller/scenario/AI-tool layers;
 - **One command runs the whole suite**: `python run_tests.py` (discover + run +
   summarize; a single failing file yields a non-zero exit — the same entry

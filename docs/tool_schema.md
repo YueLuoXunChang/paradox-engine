@@ -3,7 +3,7 @@
 > 本文件由 `python engine/ai/freeze_tool_schema.py` 从 `engine/ai/tools.py` 的注册表**自动生成**，请勿手改。
 > 工具名与参数名是对外契约（轨 C1）：有意变更须重新生成本文件与 `engine/ai/tool_schema_frozen.json`，并在 CHANGELOG 与变更记账。
 
-共 **33** 件工具。调用方式：
+共 **34** 件工具。调用方式：
 
 ```python
 from engine.ai.tools import tools, call_tool
@@ -36,7 +36,8 @@ print(r['result'])                  # 构件原始输出（含 boundary 边界�
 | `stlc` | `context`:object `expected`:string `expr`:string | 简单类型 λ：类型检查/拦自应用（Curry-Howard） |
 | `mtmp` | `a`:string `b`:string `edges`:array `kappa`:number `mode`:string `op`:string `points`:array `threads`:array `verbose`:boolean | MT-MP-TL 骨架：点/线程/拓扑 12 形态/5 操作 |
 | `belnap_four` | `assign`:object `demo`:boolean `formula`:string | Belnap 四值：矛盾取"两者"不爆炸 |
-| `dung_framework` | `arguments`:array `attacks`:array `max_arguments`:integer | Dung 论证框架：哪些立场站得住（grounded/preferred） |
+| `many_valued` | `assignment`:object `conclusion`:string `formula`:string `logic`:string `mode`:string `premises`:array | 多值逻辑：K3 未知传播 / Ł3 中间真值（重言式与推理判定，三套对照） |
+| `dung_framework` | `arguments`:array `attacks`:array `max_arguments`:integer | Dung 论证框架：哪些立场站得住（grounded/preferred/stable） |
 | `truth_revision` | `max_steps`:integer `mode`:string `sentences`:object `start`:object | Gupta-Belnap 真值修正：多句系统修正序列分类（稳定/振荡——共振带锚点） |
 | `recursion_theorem` | `mode`:string `payload`:string `transform`:object | Kleene 递归定理：自指程序构造（quine/程序拿自己——借数学底座） |
 | `agm_revision` | `beliefs`:array `defaults`:array `exceptions`:array `facts`:array `max_beliefs`:integer `mode`:string `new_info`:string `priorities`:object | AGM 信念修正+非单调默认：新信息来了旧结论还成立吗（最小放弃/可废止） |

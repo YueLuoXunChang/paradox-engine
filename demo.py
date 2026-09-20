@@ -225,8 +225,15 @@ def main():
                  'attacks': [('方案A省钱', '方案B全面'),
                              ('方案B全面', '方案C快速')]})
     print(f"  → Dung：grounded（站得住）= {r14b['grounded']}，"
-          f"preferred = {r14b['preferred']}")
-    print("  第 3 层纪律：外部共识（Belnap 1977 / Dung 1995）——借鉴区，标注来源不混原创。")
+          f"preferred = {r14b['preferred']}，stable = {r14b['stable']}")
+    from engine.cold.many_valued import run as mv
+    r14c = mv({'mode': 'compare'})
+    _mv = {x['formula']: x for x in r14c['table']}
+    print(f"  → 三值逻辑：「未知」也当第三种值：K3 里连 P→P 都不是重言式"
+          f"（K3={_mv['P → P']['k3']}），Ł3 里是（Ł3={_mv['P → P']['l3']}），"
+          f"但两套里排中律都不成立（Ł3={_mv['P ∨ ¬P']['l3']}）")
+    print("  第 3 层纪律：外部共识（Belnap 1977 / Dung 1995 / Kleene 1952 / "
+          "Łukasiewicz 1920）——借鉴区，标注来源不混原创。")
 
     banner("⑮ AI 挂载：全量引擎函数 = AI 可调用工具（schema 自动生成）")
     print("场景：把引擎全部构件封装成 function-calling 工具——AI（或任何")

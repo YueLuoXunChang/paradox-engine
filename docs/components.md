@@ -2,7 +2,7 @@
 
 > 由 `python engine/_components_doc.py --write` 从各模块 docstring 与 `PORTS` 生成；`--check` 可在改动后比对漂移。手改这份文件会在检查里报不一致。
 
-- 构件数：**41** 个（不含下划线内部件与测试）
+- 构件数：**42** 个（不含下划线内部件与测试）
 
 ## 第 0 层 · 总控（判类/复杂度/路由/五步流水线/工作台）
 
@@ -235,7 +235,7 @@
 
 - 做什么：输入论证集 + 攻击关系图 → 输出站得住的立场集（grounded 唯一 /
 - 输入端口：`arguments: list?`、`attacks: list?`、`max_arguments: int?`
-- 输出端口：`verdict: str`、`grounded: list`、`preferred: list`、`admissible_examples: list`、`conflict_pairs: list`、`boundary: str`
+- 输出端口：`verdict: str`、`grounded: list`、`preferred: list`、`stable: list`、`admissible_examples: list`、`conflict_pairs: list`、`boundary: str`
 - 可独立运行：是（自带自测）
 
 ### `engine/cold/intuitionistic_logic.py`
@@ -243,6 +243,13 @@
 - 做什么：给"这个公式在构造性立场下成立吗"一个可跑答案——三个能力：
 - 输入端口：`mode: str?`、`formula: str?`、`worlds: list?`、`order: list?`、`valuation: dict?`、`world: str?`、`formulas: list?`、`max_worlds: int?`
 - 输出端口：`verdict: str`、`value: bool?`、`countermodel: dict?`、`comparison: list`、`boundary: str`
+- 可独立运行：是（自带自测）
+
+### `engine/cold/many_valued.py`
+
+- 做什么：在**三值**语义下算命题公式：给指派求值、判重言式（不是就给反例指派）、
+- 输入端口：`logic: str?`、`mode: str?`、`formula: str?`、`assignment: dict?`、`premises: list?`、`conclusion: str?`
+- 输出端口：`verdict: str`、`value: float?`、`counterexample: dict?`、`table: list`、`atoms: list`、`boundary: str`
 - 可独立运行：是（自带自测）
 
 ### `engine/cold/relevance_logic.py`

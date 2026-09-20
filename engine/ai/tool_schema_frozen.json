@@ -283,6 +283,32 @@
         "type": "array"
       }
     },
+    "many_valued": {
+      "assignment": {
+        "required": false,
+        "type": "object"
+      },
+      "conclusion": {
+        "required": false,
+        "type": "string"
+      },
+      "formula": {
+        "required": false,
+        "type": "string"
+      },
+      "logic": {
+        "required": false,
+        "type": "string"
+      },
+      "mode": {
+        "required": false,
+        "type": "string"
+      },
+      "premises": {
+        "required": false,
+        "type": "array"
+      }
+    },
     "modal": {
       "access": {
         "required": false,
@@ -624,5 +650,5 @@
       }
     }
   },
-  "tool_count": 33
+  "tool_count": 34
 }

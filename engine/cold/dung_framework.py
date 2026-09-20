@@ -12,18 +12,23 @@ dung_framework.py — Dung 论证框架构件（第 3 层冷门 3.2，冲突立�
 
 本构件做什么（一句话）：
     输入论证集 + 攻击关系图 → 输出站得住的立场集（grounded 唯一 /
-    preferred 极大可接受）+ 争议集——"矛盾场里哪些立场站得住"。
+    preferred 极大可接受 / stable 把集外都攻击到）+ 争议集——
+    "矛盾场里哪些立场站得住"。
 
 Dung 语义（1995）：
     - 无冲突集 conflict-free：内部无互相攻击；
     - 可接受集 admissible：无冲突 + 每个攻击者都被集内论证反击（可防御）；
     - grounded 扩展：从无争议论证迭代（F 的最小不动点）——唯一最小；
-    - preferred 扩展：极大 admissible 集（按包含序，可能多个）。
+    - preferred 扩展：极大 admissible 集（按包含序，可能多个）；
+    - stable 扩展：无冲突 + **把集外每一个论证都攻击到**——可能多个，
+      也可能**一个都没有**（奇环、自攻这类冲突场本来就没有稳定立场，
+      这是语义结果不是算不动；有 stable 时它一定是 preferred，反之不然）。
 
 诚实边界：
     - 语义枚举对论证数做上限保护（>10 论证诚实报告规模限制，不硬跑）；
-    - grounded/preferred 是**立场建议**（哪些论证可站），不是判决谁对
+    - grounded/preferred/stable 是**立场建议**（哪些论证可站），不是判决谁对
       （只诊断不决策）——攻击图本身由使用者/上层给出；
+    - stable 为空不等于"算不出来"：本构件照实报空，并在边界里说明原因；
     - 争议集 = 互相攻击的对（双向攻击）——标出"打成一团"的核。
 
 统一接口：
@@ -36,6 +41,7 @@ Dung 语义（1995）：
         verdict: str——'evaluated'|'input_pending'|'size_limit'
         grounded: list——grounded 扩展（唯一）
         preferred: list[list]——preferred 扩展（可能多个）
+        stable: list[list]——stable 扩展（可能多个，也可能为空）
         admissible_examples: list——可接受集示例（最多 3 个）
         conflict_pairs: list——争议集（互相攻击对）
         boundary: str——诚实边界声明
@@ -45,8 +51,8 @@ PORTS = {
     'in': {'arguments': 'list?', 'attacks': 'list?',
            'max_arguments': 'int?'},
     'out': {'verdict': 'str', 'grounded': 'list', 'preferred': 'list',
-            'admissible_examples': 'list', 'conflict_pairs': 'list',
-            'boundary': 'str'},
+            'stable': 'list', 'admissible_examples': 'list',
+            'conflict_pairs': 'list', 'boundary': 'str'},
 }
 
 
@@ -128,6 +134,34 @@ def _preferred(args, attacks):
     return out
 
 
+def _stable(args, attacks):
+    """
+    stable 扩展（Dung 1995）：无冲突 + **把集外每一个论证都攻击到**。
+
+    与 grounded/preferred 的关键差别（老实说清，免得被当成"更精确的同一件事"）：
+      - 不是每个框架都有 stable 扩展——奇环（3-cycle）、自攻论证就没有，这时返回 []
+        是**真结果**，不是"算不动"；应用侧要能接受"这个冲突场没有稳定立场"；
+      - 有 stable 扩展时，它一定是 preferred（stable ⊆ preferred）；
+        反过来不成立（有的 preferred 攻击不到全部集外论证）；
+      - grounded 是唯一最小可接受集，stable 往往有多个——两者回答的不是同一个问题。
+    """
+    import itertools
+    n = len(args)
+    argl = sorted(args)
+    out = []
+    for r in range(n + 1):
+        for combo in itertools.combinations(argl, r):
+            s = set(combo)
+            if not _conflict_free(s, attacks):
+                continue
+            if all(any((a, b) in attacks for a in s)
+                   for b in args if b not in s):
+                key = tuple(sorted(s))
+                if key not in {tuple(x) for x in out}:
+                    out.append(sorted(s))
+    return sorted(out, key=lambda x: (-len(x), x))
+
+
 def run(inputs):
     """
     做什么：Dung 论证框架语义——哪些立场站得住。
@@ -194,6 +228,7 @@ def run(inputs):
 
     grounded = _grounded(args, attacks)
     preferred = _preferred(args, attacks)
+    stable = _stable(args, attacks)
 
     # 争议集：互相攻击对（去重——a→b 与 b→a 都命中时只记一对）
     seen_cp = set()
@@ -221,11 +256,17 @@ def run(inputs):
             break
 
     return {'verdict': 'evaluated', 'grounded': grounded,
-            'preferred': preferred, 'admissible_examples': examples,
+            'preferred': preferred, 'stable': stable,
+            'admissible_examples': examples,
             'conflict_pairs': conflict_pairs,
-            'boundary': 'Dung 论证框架（外部共识，借鉴区）。grounded/'
-                        'preferred 是立场建议（哪些论证可站），不是判决'
-                        '谁对（只诊断不决策）。攻击图由使用者/上层给出。'}
+            'boundary': 'Dung 论证框架（外部共识，借鉴区）。grounded/preferred/'
+                        'stable 是立场建议（哪些论证可站），不是判决'
+                        '谁对（只诊断不决策）。攻击图由使用者/上层给出。'
+                        + ('**本框架没有 stable 扩展**（奇环或自攻这类冲突场'
+                           '本来就没有稳定立场）——这是语义结果，不是算不动。'
+                           if not stable else
+                           'stable 扩展是"把集外每个论证都攻击到"的无冲突集，'
+                           '有 stable 时它一定是 preferred（反之不然）。')}
 
 
 # ============================================================
@@ -257,8 +298,11 @@ if __name__ == '__main__':
     assert r2['grounded'] == [], r2
     assert r2['conflict_pairs'] == [['a', 'b']], r2
     assert r2['preferred'] in ([['a']], [['a'], ['b']], [['b']], [['a'], ['b']]), r2
+    # stable：互攻对各自把对方攻击到 → 两个稳定立场（grounded 给不出，stable 给得出）
+    assert r2['stable'] == [['a'], ['b']], r2
     print(f"✅ a↔b 互攻 → grounded=[]（无无争议起点），"
-          f"preferred={r2['preferred']}，争议集={r2['conflict_pairs']}")
+          f"preferred={r2['preferred']}，stable={r2['stable']}，"
+          f"争议集={r2['conflict_pairs']}")
 
     # 3) 自攻论证：a→a（无争议集为空）
     r3 = run({'arguments': ['a', 'b'],
@@ -271,10 +315,19 @@ if __name__ == '__main__':
               'attacks': [('a', 'b'), ('b', 'c'), ('c', 'a')]})
     assert r4['grounded'] == [], r4
     # Dung 标准结果：3-cycle 无无争议论证；每个单点都被攻击且不自卫
-    # → 唯一极大可接受集 = 空（preferred=[[]]）
+    # → 唯一极大可接受集 = 空（preferred=[[]]）；奇环也**没有** stable 扩展
     assert r4['preferred'] == [[]], r4
-    print(f"✅ 3-cycle → grounded=[]，preferred={r4['preferred']}"
-          f"（Dung 标准：无单点可自卫，极大可接受=空）")
+    assert r4['stable'] == [], r4
+    print(f"✅ 3-cycle → grounded=[]，preferred={r4['preferred']}，"
+          f"stable={r4['stable']}（奇环没有稳定立场——语义结果，不是算不动）")
+
+    # 4b) stable ⊆ preferred：链上两者一致；有 stable 时必是 preferred
+    r4b = run({'arguments': ['a', 'b', 'c'],
+               'attacks': [('a', 'b'), ('b', 'c')]})
+    assert r4b['stable'] == [['a', 'c']], r4b
+    assert all(s in r4b['preferred'] for s in r4b['stable']), r4b
+    print(f"✅ 链 a→b→c → stable={r4b['stable']}，且都在 preferred 里"
+          f"（stable ⊆ preferred）")
 
     # 5) 边界
     r5 = run({'arguments': ['a']})
@@ -282,7 +335,17 @@ if __name__ == '__main__':
     r6 = run({'arguments': ['a', 'b'],
               'attacks': [('a', 'x')]})
     assert r6['verdict'] == 'input_pending', r6
-    print('✅ 边界：论证<2/攻击引用不存在 → 诚实拦截')
+    # 5b) 自攻论证：a 自攻 → 没有无冲突集含 a → stable 只剩 {b}
+    r6b = run({'arguments': ['a', 'b'],
+               'attacks': [('a', 'a'), ('b', 'a')]})
+    assert r6b['stable'] == [['b']], r6b
+    assert r6b['stable'] and '本框架没有 stable 扩展' not in r6b['boundary'], r6b
+    # 5c) 没有 stable 扩展时，边界里要如实交代（不是"算不动"）
+    r6c = run({'arguments': ['a', 'b', 'c'],
+               'attacks': [('a', 'b'), ('b', 'c'), ('c', 'a')]})
+    assert '没有 stable 扩展' in r6c['boundary'], r6c
+    print('✅ 边界：论证<2/攻击引用不存在 → 诚实拦截；自攻 → stable 只剩 {b}；'
+          '奇环 → 边界里说明"没有 stable 扩展"')
 
     print('=' * 62)
     print('Dung 论证框架构件自测：全部通过 ✅')
