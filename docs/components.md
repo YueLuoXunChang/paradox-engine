@@ -2,7 +2,7 @@
 
 > 由 `python engine/_components_doc.py --write` 从各模块 docstring 与 `PORTS` 生成；`--check` 可在改动后比对漂移。手改这份文件会在检查里报不一致。
 
-- 构件数：**46** 个（不含下划线内部件与测试）
+- 构件数：**47** 个（不含下划线内部件与测试）
 
 ## 第 0 层 · 总控（判类/复杂度/路由/五步流水线/工作台）
 
@@ -264,6 +264,13 @@
 - 做什么：在**三值**语义下算命题公式：给指派求值、判重言式（不是就给反例指派）、
 - 输入端口：`logic: str?`、`mode: str?`、`formula: str?`、`assignment: dict?`、`premises: list?`、`conclusion: str?`
 - 输出端口：`verdict: str`、`value: float?`、`counterexample: dict?`、`table: list`、`atoms: list`、`boundary: str`
+- 可独立运行：是（自带自测）
+
+### `engine/cold/mu_calculus.py`
+
+- 做什么：给一个**有限迁移系统**（状态 + 迁移 + 每个状态上的原子命题）和一个
+- 输入端口：`mode: str?`、`formula: str?`、`ctl: str?`、`c1: str?`、`c2: str?`、`states: list?`、`transitions: list?`、`labels: dict?`、`init: list?`
+- 输出端口：`verdict: str`、`holds_in: list`、`fails_in: list`、`truth: dict?`、`translation: str?`、`fixpoints: list`、`compare: dict?`、`boundary: str`
 - 可独立运行：是（自带自测）
 
 ### `engine/cold/relevance_logic.py`

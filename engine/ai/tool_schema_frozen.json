@@ -457,6 +457,44 @@
         "type": "boolean"
       }
     },
+    "mu_calculus": {
+      "c1": {
+        "required": false,
+        "type": "string"
+      },
+      "c2": {
+        "required": false,
+        "type": "string"
+      },
+      "ctl": {
+        "required": false,
+        "type": "string"
+      },
+      "formula": {
+        "required": false,
+        "type": "string"
+      },
+      "init": {
+        "required": false,
+        "type": "array"
+      },
+      "labels": {
+        "required": false,
+        "type": "object"
+      },
+      "mode": {
+        "required": false,
+        "type": "string"
+      },
+      "states": {
+        "required": false,
+        "type": "array"
+      },
+      "transitions": {
+        "required": false,
+        "type": "array"
+      }
+    },
     "nd_propositional": {
       "conclusion": {
         "required": false,
@@ -702,5 +740,5 @@
       }
     }
   },
-  "tool_count": 36
+  "tool_count": 37
 }

@@ -88,6 +88,9 @@ _TOOL_REGISTRY = [
     ('description_logic', 'cold.description_logic',
      '描述逻辑 ALC：概念可不可满足、甲包不包含乙、两个概念相不相交、'
      '整张本体的概念层级（谁是谁的子类），可满足给规范模型'),
+    ('mu_calculus', 'cold.mu_calculus',
+     '模态 μ 演算：在给定迁移系统上求不动点式子（μ 最小/ν 最大）成立的状态，'
+     '每轮迭代留痕；CTL 公式可翻成 μ 式子再求值'),
     ('dung_framework', 'cold.dung_framework',
      'Dung 论证框架：哪些立场站得住（grounded/preferred/stable）'),
     ('truth_revision', 'cold.truth_revision',
