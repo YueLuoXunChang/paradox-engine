@@ -2,7 +2,7 @@
 
 > 由 `python engine/_components_doc.py --write` 从各模块 docstring 与 `PORTS` 生成；`--check` 可在改动后比对漂移。手改这份文件会在检查里报不一致。
 
-- 构件数：**43** 个（不含下划线内部件与测试）
+- 构件数：**44** 个（不含下划线内部件与测试）
 
 ## 第 0 层 · 总控（判类/复杂度/路由/五步流水线/工作台）
 
@@ -316,4 +316,11 @@
 
 - 做什么：cli.py — paradox-engine 命令行入口（AI 挂载层 · 阶段 6 扩展）
 - 端口：未声明 `PORTS`
+- 可独立运行：是（自带自测）
+
+### `engine/repl.py`
+
+- 做什么：一个读一行的交互台：**普通文字＝材料**（当场诊断，开着会话就顺手记账），
+- 输入端口：`line: str?`、`state: dict?`、`session: str?`
+- 输出端口：`verdict: str`、`lines: list`、`state: dict`、`quit: bool`、`boundary: str`
 - 可独立运行：是（自带自测）

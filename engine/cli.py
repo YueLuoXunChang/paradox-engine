@@ -92,7 +92,11 @@ def build_parser():
                    help='场景复核模式：逐场景给期望 vs 实际 + 命中信号 + '
                         '可粘贴的复核结论行（配 --scene 单个或 all）')
     p.add_argument('--stats', action='store_true',
-                   help='场景库统计：各题型场景数 / 对照通过数 / 复核进度')
+                   help='场景库统计：各题型场景数 / 对照通过数 / 复核进度 / '
+                        '混淆矩阵 / 覆盖缺口')
+    p.add_argument('--repl', action='store_true',
+                   help='交互式诊断台：普通文字＝材料（当场诊断），斜杠命令看汇总/'
+                        '简报/场景等（配 --session 则逐条记账；管道也能跑）')
     p.add_argument('--mark', type=str, default=None, metavar='ID',
                    help='复核落笔：把结论写回场景表（如 --mark S05；'
                         '配 --verdict 与 --note）——作者不必手改源码')
@@ -958,6 +962,14 @@ def suggest_block(json_out, text):
 def main(argv=None):
     ensure_utf8_console()   # Windows GBK 控制台：报告含 ⚠/✅，先自愈编码
     args = build_parser().parse_args(argv)
+
+    if args.repl:                     # 交互台：放在守卫之前（它自己管会话文件）
+        try:
+            from engine.repl import main as repl_main
+        except ImportError:
+            sys.path.insert(0, _REPO)
+            from engine.repl import main as repl_main
+        return repl_main(argv if argv is not None else sys.argv[1:])
 
     guard = mark_guard_error(args, args.json)
     if guard is not None:

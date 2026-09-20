@@ -78,6 +78,7 @@ paradox-engine --session 会话.json --brief                        # 一页简�
 paradox-engine --session 会话.json --reconcile                    # 对账：会话记的依据 vs 场景表标记（只报差异）
 paradox-engine --session 会话.json --export 台账.md               # 导出 Markdown 诊断台账
 paradox-engine --session 会话.json --export 台账.md --redact      # 隐私导出：材料原文只留字数与开头
+paradox-engine --repl --session 会话.json     # 交互台：普通文字＝材料当场诊断，斜杠命令看汇总/简报/场景
 
 # 或作为 Python 包 import
 from engine.control.controller import run as controller
@@ -90,7 +91,7 @@ print(r['report'])
 ```bash
 # 克隆后，在仓库根目录
 python demo.py          # 二十步演示
-python run_tests.py     # 全量回归（一条命令：55 个测试文件 / 1536 项断言）
+python run_tests.py     # 全量回归（一条命令：56 个测试文件 / 1568 项断言）
 ```
 
 `demo.py` 演示二十件事（①②③ 悖论三件套 → ④-⑩ 经典逻辑地基 → ⑪ 撞墙管线 → ⑫ 总控五步 → ⑬ MT-MP-TL 骨架 → ⑭ 冷门逻辑 → ⑮ AI 挂载 → ⑯ 数学底座 → ⑰ 冷门补完 → ⑱ 构造性立场 → ⑲ 墙的精确地图 → ⑳ 工作台）：
@@ -194,14 +195,15 @@ paradox-engine/
 │       ├── recursion_theorem.py  Kleene 递归定理（自指程序构造）
 │       └── decidability_map.py   可判定片段 + 算术层级（墙的精确地图）
 │       （每个构件配 test_*.py 正式测试 + 公式卡）
-│   └── cli.py                 ← 命令行入口（--text/--json/--file/--tools）
+│   ├── cli.py                 ← 命令行入口（--text/--json/--file/--tools/--repl）
+│   └── repl.py                ← 交互式诊断台（命令行薄前端：普通文字＝材料）
 ├── demo.py                  ← 2 分钟上手演示（二十步）
 ├── run_tests.py             ← 全量回归入口（一条命令，CI 同款）
 ├── verify_install.py        ← 安装路径端到端验证（构建 wheel→venv 装→真跑命令行）
 ├── pyproject.toml           ← pip 打包（paradox-engine console 命令）
 ├── .github/workflows/       ← CI（跑全量回归 + 演示 + CLI 冒烟）
 ├── docs/
-│   ├── components.md            构件参考（43 个构件：做什么/端口/能否自跑，自动生成）
+│   ├── components.md            构件参考（44 个构件：做什么/端口/能否自跑，自动生成）
 │   ├── mechanisms.md            分层能力总表（每构件：自测N+正式M）
 │   ├── tool_schema.md           工具协议（34 工具契约表，自动生成，供调用方）
 │   ├── glossary.md              术语表（引擎自己的术语定死；中英对照）
@@ -327,7 +329,7 @@ run(inputs: dict) -> dict
 
 ### 测试状态
 
-- **1536 项正式断言全过**（55 个测试文件），覆盖全部
+- **1568 项正式断言全过**（56 个测试文件），覆盖全部
   机制构件与总控/场景/AI 工具层；
 - **一条命令跑全量回归**：`python run_tests.py`（发现 + 运行 + 汇总；
   任一文件失败即非零退出——CI 与本地同一入口）；
