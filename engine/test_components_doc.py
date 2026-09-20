@@ -6,6 +6,7 @@ test_components_doc.py — 正式测试：构件参考自动生成（docs/compon
 """
 import io
 import os
+import re
 import subprocess
 import sys
 import tempfile
@@ -78,6 +79,17 @@ finally:
     import shutil
     shutil.rmtree(d, ignore_errors=True)
 
+
+# ── 用例N：能力总表（docs/mechanisms.md）必须覆盖每个构件
+#    （2026-09-20 补：README 说它是"每构件"的总表，可实际缺了 10 个——人肉清单必漏）
+_mech_path = os.path.join(_REPO, 'docs', 'mechanisms.md')
+_mech = io.open(_mech_path, encoding='utf-8').read()
+_doc = io.open(cd.DOC, encoding='utf-8').read()
+_all_comp = sorted(set(re.findall(r'`(engine/[^`]+?\.py)`', _doc)))
+_miss = [p for p in _all_comp if p not in _mech]
+check("★docs/mechanisms.md 覆盖每个构件（总表不许漏）", not _miss,
+      f"缺 {len(_miss)} 个：{_miss[:6]}")
+
 print("=" * 60)
-print(f"结果: {PASS}/9 通过")
-raise SystemExit(0 if PASS == 9 else 1)
+print(f"结果: {PASS}/10 通过")
+raise SystemExit(0 if PASS == 10 else 1)

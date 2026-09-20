@@ -18,6 +18,8 @@
 |---|---|---|
 | engine/control/classifier.py | 判类器+复杂度+路由：12 题型信号表计分 → 主型/副型/置信度 → L1/L2/L3 → ROUTE 36 键（带 reason 白箱；T2/T5 路由接入冷门构件） | ✅ 自测6+正式72 |
 | engine/control/controller.py | 总控五步流水线：判类→复杂度→切路→真跑构件→五查判输出（中文报告+结构化对象）；声明式 ADAPTER_SPECS（含冷门三件+ltl/nd） | ✅ 自测6+正式43 |
+| engine/control/clue_suggester.py | 线索建议：从材料里挑出能拼成**结构化线索**的片段（给结构化线索即能真跑构件）——只建议、不产生逻辑式 | ✅ 正式27 |
+| engine/control/session.py | 工作台（多轮会话台账）：材料逐段导入 → 逐条诊断记账 → 批次汇总/简报/复核依据/Markdown 导出；信念修正可挂到对应材料上 | ✅ 自测2项+正式243 |
 
 ## 第 0 层 · MT-MP-TL 骨架（结构表达，不掺判定）
 
@@ -78,8 +80,26 @@
 | engine/classical/stlc.py | 简单类型 λ STLC（类型检查/推导，拦自应用，Curry-Howard） | ✅ 自测8+正式15 |
 | engine/classical/recursion_theorem.py | Kleene 递归定理：自指程序构造（quine/递归定理形态，借数学底座） | ✅ 自测5组+正式16 |
 | engine/classical/decidability_map.py | 可判定片段 + 算术层级（墙的精确地图）：16 条片段标判定性（逐条标源）+ Δ1/Σ1/Π1/Σ2/Π2 引擎承诺 + 与 1.6/1.7/2.3 接线演示 | ✅ 自测7组+正式51 |
+| engine/classical/model_check.py | CTL 模型检查（Clarke-Emerson 1981）：显式 Kripke 结构上公式在每个状态成立与否（含反例状态）；与 ltl 互补 | ✅ 正式15 |
+| engine/classical/monadic_fol.py | 一元谓词逻辑判定：闭的一元谓词公式是否有效（有限域展开，含反模型） | ✅ 正式13 |
+| engine/classical/presburger.py | Presburger 算术判定（量词消去）：整数上带加减与常数乘的式子恒真/有解，给等价式与反例/见证 | ✅ 正式26 |
 
 > 每构件完整规格见《体系内部详规》（内部规划文档，未随本仓库公开）。
+
+## 场景库（真实输入 + 期望 + 对照 + 复核）
+
+| 文件 | 一句话 | 状态 |
+|---|---|---|
+| engine/scenarios/scenarios.py | 场景库：28 个真实输入（T1–T12 每型 ≥2），每条带**期望型别**与**对照结论**；判类与构件结论都拿它回归 | ✅ 自测5项+正式26 |
+| engine/scenarios/corpus_stats.py | 语料统计：对照一致率（逐型+总体）· 混淆矩阵 · 覆盖缺口 · 复核进度；**误判率按人工复核口径，复核没做完不报数** | ✅ 自测7项+正式31 |
+| engine/scenarios/review_marks.py | 复核落笔：把复核结论写回场景表（**只改 checked/review 两列**）；AI 不代签 | ✅ 正式24 |
+
+## 入口（给人用的两个口子）
+
+| 文件 | 一句话 | 状态 |
+|---|---|---|
+| engine/cli.py | 命令行入口：诊断/工作台/场景/复核/统计/`--tools` 清单/`--call` 直接调工具/`--repl` 交互台 | ✅ 正式64 |
+| engine/repl.py | 交互式诊断台：普通文字＝材料当场诊断（开会话就顺手记账），斜杠命令看汇总/简报/场景；是命令行的**薄前端** | ✅ 自测9项+正式45 |
 
 ## 工程不变式（`engine/test_packaging.py`——每条对应一次真实踩坑）
 
