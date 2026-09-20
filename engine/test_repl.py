@@ -220,6 +220,13 @@ check("没往仓库里落文件（会话/台账都在临时目录）",
       all(os.path.dirname(p).startswith(tempfile.gettempdir())
           for p in (sp, _out, _ep)))
 
+# /call：交互台也能直接调工具（薄前端翻成 CLI 的 --call）
+_r = handle('/call asp {"program": "p :- not q. q :- not p."}', new_state())
+check("/call 直接调工具：跑通", _r['verdict'] == 'handled', _r)
+_r = handle('/call nosuch', new_state())
+check("/call 工具名不认识 → 报错并提示去看清单",
+      _r['verdict'] == 'error' and '没有这个工具' in _r['lines'][0], _r)
+
 print("=" * 60)
-print(f"结果: {PASS}/43 通过")
-raise SystemExit(0 if PASS == 43 else 1)
+print(f'结果: {PASS}/45 通过')
+raise SystemExit(0 if PASS == 45 else 1)

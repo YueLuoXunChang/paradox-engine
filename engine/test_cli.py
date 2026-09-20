@@ -242,6 +242,27 @@ check("单给 --chunk 不炸（按缺 --session 拦下）", code == 2, f"exit={c
 import tempfile  # noqa: E402
 shutil.rmtree(_d, ignore_errors=True)
 
+# ── 直接调工具（--call）：38 件工具里只有一部分能走判类路由，其余此前命令行到不了
+code, out = run_cli('--call', 'mu_calculus', '--args',
+                    '{"mode": "evaluate", "formula": "p", "states": ["a"],'
+                    ' "labels": {"a": ["p"]}}')
+check("--call 能调非路由工具（μ 演算）", code == 0 and 'holds_in' in out
+      and 'evaluated' in out, out[:200])
+code, out = run_cli('--call', 'asp', '--args',
+                    '{"program": "p :- not q. q :- not p."}', '--json')
+check("--call --json 给结构化结果（能解析、verdict=ok）",
+      code == 0 and json.loads(out)['verdict'] == 'ok', out[:200])
+code, out = run_cli('--call', 'presburger', '--json')
+check("--call 不给 --args 也能跑（默认空参数，构件自己诚实拦截）",
+      code == 0 and json.loads(out)['result']['verdict']
+      in ('input_pending', 'parse_error'), out[:200])
+code, out = run_cli('--call', 'no_such_tool')
+check("--call 工具名不认识 → 退出码 2 + 报清", code == 2
+      and '没有这个工具' in out, out[:200])
+code, out = run_cli('--call', 'asp', '--args', '{bad json')
+check("--call --args 不是合法 JSON → 退出码 2（不替使用者补参数）",
+      code == 2 and '不是合法 JSON' in out, out[:200])
+
 print("=" * 60)
-print(f"结果: {PASS}/59 通过")
-raise SystemExit(0 if PASS == 59 else 1)
+print(f'结果: {PASS}/64 通过')
+raise SystemExit(0 if PASS == 64 else 1)

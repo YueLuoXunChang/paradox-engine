@@ -25,6 +25,7 @@ repl.py — 交互式诊断台（诊断工作台的交互版）
     /export 文件      导出 Markdown 台账（可加 --redact 走隐私导出）
     /revise 命题式    给新信息触发信念修正（第 N 轮可写 /revise N 命题式）
     /scene 场景号     跑单个场景（期望 vs 实际）  /scenes  场景清单  /stats 场景库统计
+    '  /call 工具 {参数JSON}  直接调一个工具（不经判类路由；清单 paradox-engine --tools）',
     /json on|off      命令输出是否走 JSON      /help  本帮助   /quit 退出
 
 诚实边界（本构件的红线）：
@@ -87,6 +88,7 @@ _HELP = [
     '  /export 文件        导出 Markdown 台账（加 redact 走隐私导出：/export 文件 redact）',
     '  /revise [轮次] 命题式  新信息触发 AGM 信念修正（命题式由人给，引擎不抽公式）',
     '  /scene 场景号       跑单个场景（期望 vs 实际）  ·  /scenes 场景清单  ·  /stats 统计',
+    '  /call 工具 {参数JSON}  直接调一个工具（不经判类路由；清单 paradox-engine --tools）',
     '  /file 材料.md [para|line] [chunk N] [from N]  整篇材料逐段诊断并记账（分段/分块/续跑）',
     '  /clues on|off       材料记账时是否顺手记下线索建议（默认关）',
     '  /struct {...}       给下一段材料挂结构化线索（JSON），好让构件真跑；/struct clear 清掉',
@@ -166,6 +168,14 @@ def to_argv(line, state):
         return ['--suggest', rest] + jf, None, None
     if cmd == '/stats':
         return ['--stats'] + jf, None, None
+    if cmd == '/call':
+        if not rest:
+            return None, ('用法：/call 工具名 {"参数": ...}——直接调一个工具，'
+                          '不经判类路由；工具清单用命令行 `paradox-engine --tools`'), None
+        bits = rest.split(maxsplit=1)
+        name = bits[0]
+        raw = bits[1].strip() if len(bits) > 1 else '{}'
+        return ['--call', name, '--args', raw] + jf, None, None
     if cmd == '/scenes':
         return ['--scenarios'] + jf, None, None
     if cmd == '/file':

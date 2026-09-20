@@ -12,6 +12,14 @@ r = call_tool('paradox_measure', {'mode': 'mu1', 'wA': 5, 'wNotA': 5})
 print(r['result'])                  # 构件原始输出（含 boundary 边界声明）
 ```
 
+命令行也能直接调（不经判类路由；“--tools”看清单、“--json”给结构化结果）：
+
+```bash
+paradox-engine --call mu_calculus --args '{"mode": "evaluate", "formula": "p", "states": ["a"], "labels": {"a": ["p"]}}'
+paradox-engine --call presburger --args '{"formula": "2*x = 4"}' --json
+```
+
+
 ## 契约表（工具名 → 参数）
 
 | 工具 | 参数（必填加 *）| 一句话 |

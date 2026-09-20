@@ -75,6 +75,11 @@ def snapshot_doc(tool_list):
             'contract': contract(tool_list)}
 
 
+def _call_doc(tool, args, extra=""):
+    """命令行示例那一行——分开拼，免得示例里的引号把源码咬坏。"""
+    return "paradox-engine --call %s --args '%s'%s" % (tool, args, extra)
+
+
 def render_markdown(tool_list):
     """给调用方的中文文档（人可读）。"""
     lines = [
@@ -94,6 +99,15 @@ def render_markdown(tool_list):
         "r = call_tool('paradox_measure', {'mode': 'mu1', 'wA': 5, 'wNotA': 5})",
         "print(r['result'])                  # 构件原始输出（含 boundary 边界声明）",
         '```',
+        '',
+        '命令行也能直接调（不经判类路由；“--tools”看清单、“--json”给结构化结果）：',
+        '',
+        '```bash',
+        _call_doc('mu_calculus',
+                  '{"mode": "evaluate", "formula": "p", "states": ["a"], "labels": {"a": ["p"]}}'),
+        _call_doc('presburger', '{"formula": "2*x = 4"}', extra=' --json'),
+        '```',
+        '',
         '',
         '## 契约表（工具名 → 参数）',
         '',

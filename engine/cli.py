@@ -67,6 +67,10 @@ def build_parser():
                    help='跑完整演示 demo.py（步数见脚本自身输出）')
     p.add_argument('--tools', action='store_true',
                    help='列出全部可用工具（function-calling schema）')
+    p.add_argument('--call', type=str, default=None, metavar='工具',
+                   help='直接调一个工具（不经判类路由）；配 --args 传 JSON 参数')
+    p.add_argument('--args', type=str, default=None, metavar='JSON',
+                   help='给 --call 的参数（JSON 对象，默认 {}）')
     p.add_argument('--structured', type=str, default=None,
                    help='结构化线索 JSON（如 {"A":"要快","B":"要稳"}，'
                         '给 T2 用）')
@@ -1056,6 +1060,71 @@ def suggest_block(json_out, text):
     return 0
 
 
+def call_tool_cmd(args):
+    """
+    直接调一个工具（不经判类路由）——把 38 件工具的**全部**从命令行打开。
+
+    口径：
+      · 参数是 JSON 对象（--args '{"mode":"query","program":"p :- not q."}'）；
+      · 默认给人看的中文摘要；加 --json 给结构化结果（原样透传工具输出）；
+      · 工具名不认识 → 报清并列出改名最接近的几个（不猜、不硬跑）；
+      · JSON 写坏 → 报清位置，不替使用者补参数。
+    """
+    import json as _json
+    try:
+        from engine.ai.tools import call_tool, tools
+    except ImportError:
+        sys.path.insert(0, os.path.join(_REPO, 'engine', 'ai'))
+        from tools import call_tool, tools
+
+    raw = args.args
+    if raw is None or not str(raw).strip():
+        params = {}
+    else:
+        try:
+            params = _json.loads(raw)
+        except ValueError as e:
+            print(f'--args 不是合法 JSON：{e}\n'
+                  '写法示例：--args \'{"mode": "query", "program": "p :- not q."}\'')
+            return 2
+        if not isinstance(params, dict):
+            print('--args 要给 JSON **对象**（形如 {"mode": "..."}），'
+                  f'得到 {type(params).__name__}')
+            return 2
+
+    names = [t['function']['name'] for t in tools()]
+    desc = {t['function']['name']: t['function']['description'] for t in tools()}
+    if args.call not in names:
+        near = [n for n in names if args.call.lower() in n.lower()
+                or n.lower() in args.call.lower()]
+        print(f'没有这个工具：{args.call}')
+        if near:
+            print('名字接近的有：' + '、'.join(near[:5]))
+        print('可用工具 %d 件（全清单：paradox-engine --tools）：%s'
+              % (len(names), '、'.join(names[:12]) + ' …'))
+        return 2
+
+    out = call_tool(args.call, params)
+    if args.json:
+        print(_json.dumps(out, ensure_ascii=False, indent=2))
+        return 0
+    print('=' * 62)
+    print(f'工具：{args.call}——{desc.get(args.call, "")}')
+    print('=' * 62)
+    print(f'挂载层：{out.get("verdict")}')
+    result = out.get('result') or {}
+    for k, v in result.items():
+        if k == 'boundary' or k.startswith('_'):
+            continue          # 挂载层的内部记账（_tool/_input）不占人看的版面
+        print(f'  {k}: {v}')
+    if result.get('boundary'):
+        print()
+        print(f'边界：{result["boundary"]}')
+    print()
+    print('（要结构化结果加 --json；工具清单 --tools）')
+    return 0
+
+
 def main(argv=None):
     ensure_utf8_console()   # Windows GBK 控制台：报告含 ⚠/✅，先自愈编码
     args = build_parser().parse_args(argv)
@@ -1121,6 +1190,9 @@ def main(argv=None):
             fn = t['function']
             print(f'  · {fn["name"]}：{fn["description"]}')
         return 0
+
+    if args.call:
+        return call_tool_cmd(args)
 
     if args.suggest:
         text = args.text
