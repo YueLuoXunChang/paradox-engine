@@ -101,7 +101,7 @@ print(r['report'])
 ```bash
 # After cloning, from the repository root
 python demo.py          # twenty-step tour
-python run_tests.py     # full regression (54 test files / 1520 assertions)
+python run_tests.py     # full regression (55 test files / 1531 assertions)
 ```
 
 `demo.py` demonstrates twenty things (①②③ the paradox trio → ④-⑩ the
@@ -216,8 +216,10 @@ paradox-engine/
 ├── pyproject.toml           ← pip packaging (provides the `paradox-engine` command)
 ├── .github/workflows/       ← CI (full suite + demo + CLI smoke)
 ├── docs/
-│   ├── components.md             component reference (37 components: purpose / ports / self-run, generated)
+│   ├── components.md             component reference (43 components: purpose / ports / self-run, generated)
 │   ├── mechanisms.md             layered capability index (self-test N + formal M per component)
+│   ├── tool_schema.md            tool protocol (34 tool contracts, generated)
+│   ├── glossary.md               glossary (the engine's own terms, zh/en)
 │   ├── ROADMAP.md                layered roadmap
 │   └── formulas/                 concept cards (×15 for the classical layer)
 ├── README.md                ← Chinese readme (this English one: README.en.md)
@@ -374,7 +376,7 @@ when a real pain point appears).
 
 ### Test status
 
-- **1520 formal assertions pass** (54 test files), covering every mechanism
+- **1531 formal assertions pass** (55 test files), covering every mechanism
   component plus the controller/scenario/AI-tool layers;
 - **One command runs the whole suite**: `python run_tests.py` (discover + run +
   summarize; a single failing file yields a non-zero exit — the same entry

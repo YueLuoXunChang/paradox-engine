@@ -90,7 +90,7 @@ print(r['report'])
 ```bash
 # 克隆后，在仓库根目录
 python demo.py          # 二十步演示
-python run_tests.py     # 全量回归（一条命令：54 个测试文件 / 1520 项断言）
+python run_tests.py     # 全量回归（一条命令：55 个测试文件 / 1531 项断言）
 ```
 
 `demo.py` 演示二十件事（①②③ 悖论三件套 → ④-⑩ 经典逻辑地基 → ⑪ 撞墙管线 → ⑫ 总控五步 → ⑬ MT-MP-TL 骨架 → ⑭ 冷门逻辑 → ⑮ AI 挂载 → ⑯ 数学底座 → ⑰ 冷门补完 → ⑱ 构造性立场 → ⑲ 墙的精确地图 → ⑳ 工作台）：
@@ -201,8 +201,10 @@ paradox-engine/
 ├── pyproject.toml           ← pip 打包（paradox-engine console 命令）
 ├── .github/workflows/       ← CI（跑全量回归 + 演示 + CLI 冒烟）
 ├── docs/
+│   ├── components.md            构件参考（43 个构件：做什么/端口/能否自跑，自动生成）
 │   ├── mechanisms.md            分层能力总表（每构件：自测N+正式M）
 │   ├── tool_schema.md           工具协议（34 工具契约表，自动生成，供调用方）
+│   ├── glossary.md              术语表（引擎自己的术语定死；中英对照）
 │   ├── ROADMAP.md               分层路线（7 阶段）
 │   └── formulas/                公式卡 ×15（第 1 层每构件一张概念说明）
 ├── bench.py                 ← 性能基准（冒烟级：数量级护栏，不对外报数）
@@ -324,7 +326,7 @@ run(inputs: dict) -> dict
 
 ### 测试状态
 
-- **1520 项正式断言全过**（54 个测试文件），覆盖全部
+- **1531 项正式断言全过**（55 个测试文件），覆盖全部
   机制构件与总控/场景/AI 工具层；
 - **一条命令跑全量回归**：`python run_tests.py`（发现 + 运行 + 汇总；
   任一文件失败即非零退出——CI 与本地同一入口）；
