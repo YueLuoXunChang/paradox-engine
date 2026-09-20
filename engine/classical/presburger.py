@@ -8,6 +8,7 @@ presburger.py — Presburger 算术判定（整数 + 加法 + 常数乘）· 第
 为什么=引擎的分层主张要"能算的算清"，而此前这类算术只能说"可判但引擎没做"，
 地图上那条一直是 engine_available=False——挂着不算数；怎么记账=来源标在 docstring
 与地图条目，归借鉴区）。
+公式卡：docs/formulas/presburger.md
 
 本构件做什么（一句话）：
     判定一个 Presburger 公式在整数上是不是**恒真**（默认），或**有没有解**：
