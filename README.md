@@ -61,7 +61,7 @@ paradox-engine --review                        # 场景复核模式（逐条给�
 paradox-engine --review --board --pending-only # 复核看板：只看待复核（只读，落笔仍是你的判断）
 paradox-engine --session 会话.json --review --scene all   # 复核依据记进会话台账
 paradox-engine --mark S05 --verdict ok         # 复核落笔：结论写回场景表
-paradox-engine --stats                         # 场景库统计（题型分布/通过数/复核分布）
+paradox-engine --stats                         # 场景库统计（题型分布/通过数/复核分布/混淆矩阵/覆盖缺口）
 
 # 多轮会话：一批材料一条条看，跨命令记住前文
 paradox-engine --session 会话.json --add "产品既要快又要稳" --clues   # 顺手记下线索建议
@@ -90,7 +90,7 @@ print(r['report'])
 ```bash
 # 克隆后，在仓库根目录
 python demo.py          # 二十步演示
-python run_tests.py     # 全量回归（一条命令：52 个测试文件 / 1479 项断言）
+python run_tests.py     # 全量回归（一条命令：53 个测试文件 / 1510 项断言）
 ```
 
 `demo.py` 演示二十件事（①②③ 悖论三件套 → ④-⑩ 经典逻辑地基 → ⑪ 撞墙管线 → ⑫ 总控五步 → ⑬ MT-MP-TL 骨架 → ⑭ 冷门逻辑 → ⑮ AI 挂载 → ⑯ 数学底座 → ⑰ 冷门补完 → ⑱ 构造性立场 → ⑲ 墙的精确地图 → ⑳ 工作台）：
@@ -164,6 +164,7 @@ paradox-engine/
 │   │   └── wall_pipeline.py     撞墙管线 A（测→注→钻→看→旁→创 → 五选一诊断）
 │   ├── scenarios/             ← 场景库（真实输入+期望诊断+复核——语料回馈判类器）
 │   │   ├── scenarios.py          28 场景注册表 + run_all 对照（期望 vs 实际）
+│   │   ├── corpus_stats.py       语料统计（一致率/混淆矩阵/覆盖缺口/复核进度）
 │   │   └── review_marks.py       复核落笔（结论写回场景表，只改 checked/review）
 │   ├── skeleton/              ← MT-MP-TL 骨架（第 0 层：结构表达，不掺判定）
 │   │   └── mtmp.py              点/线程/拓扑（12 形态）/操作（5 种）
@@ -323,7 +324,7 @@ run(inputs: dict) -> dict
 
 ### 测试状态
 
-- **1479 项正式断言全过**（52 个测试文件），覆盖全部
+- **1510 项正式断言全过**（53 个测试文件），覆盖全部
   机制构件与总控/场景/AI 工具层；
 - **一条命令跑全量回归**：`python run_tests.py`（发现 + 运行 + 汇总；
   任一文件失败即非零退出——CI 与本地同一入口）；

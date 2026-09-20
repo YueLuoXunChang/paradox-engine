@@ -2,7 +2,7 @@
 
 > 由 `python engine/_components_doc.py --write` 从各模块 docstring 与 `PORTS` 生成；`--check` 可在改动后比对漂移。手改这份文件会在检查里报不一致。
 
-- 构件数：**42** 个（不含下划线内部件与测试）
+- 构件数：**43** 个（不含下划线内部件与测试）
 
 ## 第 0 层 · 总控（判类/复杂度/路由/五步流水线/工作台）
 
@@ -267,6 +267,13 @@
 - 可独立运行：是（自带自测）
 
 ## 场景库（真实输入 + 期望 + 对照 + 复核）
+
+### `engine/scenarios/corpus_stats.py`
+
+- 做什么：把场景库的对照结果统计成三张表——**一致率**（逐型 + 总体）、
+- 输入端口：`mode: str?`、`per_type_target: int?`
+- 输出端口：`verdict: str`、`scenes: int`、`types: list`、`matrix: dict`、`agreement: dict`、`confusions: list`、`coverage: dict`、`review: dict`、`boundary: str`
+- 可独立运行：是（自带自测）
 
 ### `engine/scenarios/review_marks.py`
 

@@ -72,7 +72,7 @@ paradox-engine --review                        # scenario review mode (evidence 
 paradox-engine --review --board --pending-only # review board: pending only (read-only)
 paradox-engine --session s.json --review --scene all   # record review evidence into the session
 paradox-engine --mark S05 --verdict ok         # record a review verdict back into the registry
-paradox-engine --stats                         # scenario stats (per type / passed / review breakdown)
+paradox-engine --stats                         # scenario stats (per type / passed / review / confusion matrix / coverage gap)
 
 # Multi-turn session: read a batch of material one by one, remembered across commands
 paradox-engine --session s.json --add "产品既要快又要稳" --clues   # also record clue suggestions
@@ -101,7 +101,7 @@ print(r['report'])
 ```bash
 # After cloning, from the repository root
 python demo.py          # twenty-step tour
-python run_tests.py     # full regression (52 test files / 1479 assertions)
+python run_tests.py     # full regression (53 test files / 1510 assertions)
 ```
 
 `demo.py` demonstrates twenty things (①②③ the paradox trio → ④-⑩ the
@@ -179,6 +179,7 @@ paradox-engine/
 │   │   └── wall_pipeline.py      wall pipeline A (measure→annotate→drill→view→bypass→create → 5-way verdict)
 │   ├── scenarios/             ← Scenario library (real input + expected diagnosis + review — corpus feedback)
 │   │   ├── scenarios.py          28-scenario registry + run_all comparison (expected vs actual)
+│   │   ├── corpus_stats.py       corpus statistics (agreement / confusion matrix / coverage gap / review progress)
 │   │   └── review_marks.py       review verdicts written back to the registry (checked/review only)
 │   ├── skeleton/              ← MT-MP-TL skeleton (L0: structure only, no judging)
 │   │   └── mtmp.py               points/threads/topology (12 shapes)/operations (5 kinds)
@@ -373,7 +374,7 @@ when a real pain point appears).
 
 ### Test status
 
-- **1479 formal assertions pass** (52 test files), covering every mechanism
+- **1510 formal assertions pass** (53 test files), covering every mechanism
   component plus the controller/scenario/AI-tool layers;
 - **One command runs the whole suite**: `python run_tests.py` (discover + run +
   summarize; a single failing file yields a non-zero exit — the same entry
@@ -383,7 +384,7 @@ when a real pain point appears).
 - Every component is self-contained: `python engine/<layer>/<name>.py` runs
   its self-test; `python engine/<layer>/test_<name>.py` runs its formal tests;
 - Demo: `python demo.py` walks through twenty steps; end-to-end scenarios:
-  `python engine/ai/ai_scenarios.py`; scenario comparison: 25 scenes (≥2 per problem type)
+  `python engine/ai/ai_scenarios.py`; scenario comparison: 28 scenes (≥2 per problem type)
   (`python engine/scenarios/scenarios.py`);
 - Zero third-party dependencies — pure Python standard library (≥3.9);
 - **LF line endings everywhere**: `.gitattributes` pins `eol=lf` globally, so

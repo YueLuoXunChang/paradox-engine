@@ -353,6 +353,12 @@ def scenes_stats(json_out):
         sys.path.insert(0, os.path.join(_REPO, 'engine', 'scenarios'))
         from review_marks import review_state
     state = review_state()
+    try:
+        from engine.scenarios.corpus_stats import run as corpus_run
+    except ImportError:
+        sys.path.insert(0, os.path.join(_REPO, 'engine', 'scenarios'))
+        from corpus_stats import run as corpus_run
+    cs = corpus_run({})                       # 对照一致率/混淆矩阵/覆盖缺口
     if json_out:
         print(json.dumps({
             'scenes': len(scenes), 'passed': passed, 'checked': checked,
@@ -360,6 +366,11 @@ def scenes_stats(json_out):
             'review_state': state,
             'per_type': dict(sorted(per_type.items())),
             'per_type_passed': dict(sorted(per_type_passed.items())),
+            'agreement': (cs.get('agreement') or {}).get('overall'),
+            'confusions': cs.get('confusions'),
+            'coverage': cs.get('coverage'),
+            'misclassification_rate':
+                (cs.get('review') or {}).get('misclassification_rate'),
         }, ensure_ascii=False, indent=2))
         return 0
     print(f"场景库统计：{len(scenes)} 个场景 / 对照通过 {passed}"
@@ -375,6 +386,19 @@ def scenes_stats(json_out):
             row = []
     if row:
         print('    ' + '  '.join(row))
+    if cs.get('confusions'):
+        print("  判类不一致的格子（期望→实际，用来定位该扩的信号表）：")
+        for c in cs['confusions'][:6]:
+            print(f"    {c['expect']}→{c['actual']} ×{c['count']}"
+                  f"（{'、'.join(c['scenes'])}）")
+    else:
+        print("  判类不一致的格子：无（对照全通过——这是与场景期望的一致，"
+              "不是误判率）")
+    cov = cs.get('coverage') or {}
+    if cov:
+        print(f"  语料覆盖：每型目标 {cov['target']} 个，还缺 {cov['total_gap']}"
+              f" 个（最缺：" + '、'.join(f"{x['type']} 缺 {x['gap']}"
+                                         for x in cov['next_to_add'][:6]) + '）')
     print("  判类误判率口径：待复核场景全部复核后，「⚠️ 数 / 场景数」才是"
           "可报的误判率（当前复核未完成，故不报数）。")
     return 0
