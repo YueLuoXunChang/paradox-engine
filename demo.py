@@ -289,6 +289,13 @@ def main():
     r17c = rel({'premises': ['P', '¬P'], 'conclusion': 'Q'})
     print(f"  → 相干检查：P, ¬P ⊢ Q → {r17c['verdict']}"
           f"（经典层判爆炸有效，相干层判不相干——废话有效）")
+    from engine.cold.default_logic import run as dfl
+    r17d = dfl({'facts': ['鸟', '企鹅'],
+                'defaults': [('鸟', '会飞'), ('企鹅', '¬会飞')]})
+    print(f"  → 默认逻辑完整不动点：鸟+企鹅（两条默认各管各的）→ "
+          f"{len(r17d['extensions'])} 个扩展，共同结论 {r17d['in_all']}"
+          f"、只有部分扩展成立 {r17d['in_some']}（Reiter 原义的歧义）；"
+          "把例外写进前提就只剩一个扩展")
     r17d = rel({'mode': 'conflict', 'prop_a': 'P∧¬P', 'prop_b': 'Q∧¬Q'})
     print(f"  → 冲突定性：两个不相干的矛盾 → {r17d['verdict']}"
           f"（话术冲突：连相关性都没有，更可能是废话而非悖论）")

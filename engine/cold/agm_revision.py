@@ -194,8 +194,10 @@ def run(inputs):
                 'conclusions': conclusions,
                 'boundary': '非单调默认推理（外部共识：Reiter 默认逻辑，'
                             '借鉴区）。默认结论是**可废止**的：有例外即阻断，'
-                            '不给绝对真值；本实现为工程简化（不做完整默认'
-                            '逻辑不动点），诚实标注。'}
+                            '不给绝对真值；本实现为工程简化（按例外阻断），'
+                            '**不是** Reiter 原义的 Γ 不动点——要完整不动点'
+                            '（算出所有扩展、区分怀疑论/轻信论结论）见 '
+                            'cold.default_logic 构件，两边各说自己算的是什么。'}
 
     if mode != 'revise':
         return {'verdict': 'input_pending', 'kept': [], 'dropped': [],

@@ -88,6 +88,8 @@ _TOOL_REGISTRY = [
      'Kleene 递归定理：自指程序构造（quine/程序拿自己——借数学底座）'),
     ('agm_revision', 'cold.agm_revision',
      'AGM 信念修正+非单调默认：新信息来了旧结论还成立吗（最小放弃/可废止）'),
+    ('default_logic', 'cold.default_logic',
+     '默认逻辑（Reiter 完整不动点）：默认规则下所有扩展、共同结论与立场之争'),
     ('relevance_logic', 'cold.relevance_logic',
      '相干逻辑：前提结论是否共享变量（区分真冲突与话术冲突）'),
     ('intuitionistic_logic', 'cold.intuitionistic_logic',

@@ -206,8 +206,10 @@ check("场景覆盖 T1-T12 全 12 题型（README 声称的口径）",
       len(_covered) == 12, f"{sorted(_covered)}")
 
 # ── ⑤ 冷门构件数
-check("中文 README 冷门件数与实测一致（六件齐口径）",
-      ('六件齐' in _zh and _n_cold == 6) or f'{_n_cold} 件' in _zh,
+_CN_COLD = {6: '六', 7: '七', 8: '八', 9: '九', 10: '十', 11: '十一', 12: '十二'}
+check("中文 README 冷门件数与实测一致（第 3 层 N 件齐口径）",
+      (f'{_CN_COLD.get(_n_cold, _n_cold)}件齐' in _zh)
+      or f'{_n_cold} 件' in _zh,
       f"实测 {_n_cold}: {sorted(_cold)}")
 
 # ── ⑥ 文档文件清单与实物一致

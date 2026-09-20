@@ -3,7 +3,7 @@
 > 本文件由 `python engine/ai/freeze_tool_schema.py` 从 `engine/ai/tools.py` 的注册表**自动生成**，请勿手改。
 > 工具名与参数名是对外契约（轨 C1）：有意变更须重新生成本文件与 `engine/ai/tool_schema_frozen.json`，并在 CHANGELOG 与变更记账。
 
-共 **32** 件工具。调用方式：
+共 **33** 件工具。调用方式：
 
 ```python
 from engine.ai.tools import tools, call_tool
@@ -40,6 +40,7 @@ print(r['result'])                  # 构件原始输出（含 boundary 边界�
 | `truth_revision` | `max_steps`:integer `mode`:string `sentences`:object `start`:object | Gupta-Belnap 真值修正：多句系统修正序列分类（稳定/振荡——共振带锚点） |
 | `recursion_theorem` | `mode`:string `payload`:string `transform`:object | Kleene 递归定理：自指程序构造（quine/程序拿自己——借数学底座） |
 | `agm_revision` | `beliefs`:array `defaults`:array `exceptions`:array `facts`:array `max_beliefs`:integer `mode`:string `new_info`:string `priorities`:object | AGM 信念修正+非单调默认：新信息来了旧结论还成立吗（最小放弃/可废止） |
+| `default_logic` | `defaults`:array `facts`:array `max_defaults`:integer `query`:string | 默认逻辑（Reiter 完整不动点）：默认规则下所有扩展、共同结论与立场之争 |
 | `relevance_logic` | `conclusion`:string `mode`:string `premises`:array `prop_a`:string `prop_b`:string | 相干逻辑：前提结论是否共享变量（区分真冲突与话术冲突） |
 | `intuitionistic_logic` | `formula`:string `formulas`:array `max_worlds`:integer `mode`:string `order`:array `valuation`:object `world`:string `worlds`:array | 直觉主义逻辑：Kripke 求值/反模型搜索（排中律为何非构造有效）+ 两系统对照 |
 | `decidability_map` | `level`:string `mode`:string `system`:string | 可判定片段地图：这个问题能不能算（判定性结论/算术层级/墙的精确地图） |

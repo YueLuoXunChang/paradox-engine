@@ -149,6 +149,24 @@
         "type": "string"
       }
     },
+    "default_logic": {
+      "defaults": {
+        "required": false,
+        "type": "array"
+      },
+      "facts": {
+        "required": false,
+        "type": "array"
+      },
+      "max_defaults": {
+        "required": false,
+        "type": "integer"
+      },
+      "query": {
+        "required": false,
+        "type": "string"
+      }
+    },
     "dung_framework": {
       "arguments": {
         "required": false,
@@ -606,5 +624,5 @@
       }
     }
   },
-  "tool_count": 32
+  "tool_count": 33
 }

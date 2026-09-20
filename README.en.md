@@ -101,7 +101,7 @@ print(r['report'])
 ```bash
 # After cloning, from the repository root
 python demo.py          # twenty-step tour
-python run_tests.py     # full regression (50 test files / 1422 assertions)
+python run_tests.py     # full regression (51 test files / 1446 assertions)
 ```
 
 `demo.py` demonstrates twenty things (①②③ the paradox trio → ④-⑩ the
@@ -186,6 +186,7 @@ paradox-engine/
 │   │   ├── belnap_four.py        Belnap four-valued logic (contradiction = "both", no explosion)
 │   │   ├── dung_framework.py     Dung argumentation framework (which positions stand)
 │   │   ├── agm_revision.py       AGM belief revision + non-monotonic defaults (retractable conclusions)
+│   │   ├── default_logic.py      default logic, full fixpoints (all extensions / shared conclusions / competing defaults)
 │   │   ├── relevance_logic.py    relevance logic (real conflict vs empty rhetoric)
 │   │   ├── truth_revision.py     Gupta-Belnap truth revision (revision-sequence oscillation)
 │   │   └── intuitionistic_logic.py intuitionistic logic (Kripke evaluation / countermodel search / comparison)
@@ -365,7 +366,7 @@ when a real pain point appears).
 
 ### Test status
 
-- **1422 formal assertions pass** (50 test files), covering every mechanism
+- **1446 formal assertions pass** (51 test files), covering every mechanism
   component plus the controller/scenario/AI-tool layers;
 - **One command runs the whole suite**: `python run_tests.py` (discover + run +
   summarize; a single failing file yields a non-zero exit — the same entry
