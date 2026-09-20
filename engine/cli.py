@@ -186,6 +186,14 @@ def build_parser():
     p.add_argument('--redact', action='store_true',
                    help='配合 --session --export：隐私导出（材料原文只留'
                         '字数与开头），便于把台账给别人看')
+    p.add_argument('--packet', action='store_true',
+                   help='配合 --review：生成「复核包」——逐个场景把材料原文、期望 vs '
+                        '实际、命中信号、真跑构件、场景说明与可粘贴落笔命令排好'
+                        '（只摆依据，结论留给你写；不代签 checked）')
+    p.add_argument('--packet-out', type=str, default=None,
+                   dest='packet_out', metavar='文件',
+                   help='配合 --review --packet：把复核包写成 Markdown 文件'
+                        '（默认只打印；已存在默认不覆盖，配 --export-overwrite 才盖）')
     p.add_argument('--export-overwrite', action='store_true',
                    dest='export_overwrite',
                    help='配合 --export：允许覆盖已存在的台账文件')
@@ -487,6 +495,95 @@ def _run_scenarios(json_out, scene_id=None, explain=False):
                 print(f"—— {x['id']} 的判类依据 ——")
                 print(explain_block(smap[x['id']]['text']))
     return 0 if report['passed'] == report['total'] else 1
+
+
+def review_packet(json_out, scene_id=None, pending_only=True, out_file=None,
+                  overwrite=False):
+    """
+    复核包：把待复核场景排成一份可批阅的 Markdown。
+
+    只摆依据、不写结论——结论与落笔都是作者的动作（`--mark`）。写文件默认不覆盖。
+    """
+    import io as _io
+    scenes = _scene_map()
+    if scene_id and scene_id != 'all' and scene_id not in scenes:
+        msg = (f"场景 {scene_id!r} 不存在——可用："
+               + '、'.join(scenes) + '（或 all=全部）')
+        print(json.dumps({'error': msg}, ensure_ascii=False, indent=2)
+              if json_out else msg)
+        return 2
+    if out_file is not None and os.path.exists(out_file) and not overwrite:
+        msg = (f'复核包目标已存在：{out_file}——默认不覆盖'
+               '（确认要盖就加 --export-overwrite）')
+        print(json.dumps({'error': msg}, ensure_ascii=False, indent=2)
+              if json_out else msg)
+        return 2
+    try:
+        from engine.scenarios.scenarios import run as scenes_run
+    except ImportError:
+        from scenarios import run as scenes_run
+    one = None if (scene_id is None or scene_id == 'all') else scene_id
+    results = scenes_run({'action': 'run', 'scene_id': one})['scenes']
+    cl = _load_classifier()
+
+    picked = []
+    for x in results:
+        s = scenes[x['id']]
+        if pending_only and s.get('checked'):
+            continue
+        c = cl({'text': s['text']})
+        picked.append((s, x, c))
+
+    scope = (f'指定场景 {one}' if one
+             else ('只看还没落笔的' if pending_only else '全部场景'))
+    L = ['# 场景复核包',
+         '',
+         f'> 共 {len(picked)} 个场景（口径：{scope}）。**引擎只把依据摆出来，'
+         '结论是你的判断**——本文件不改场景表一个字节；落笔用命令行 `--mark`。',
+         '',
+         '每个场景给：材料原文 · 期望 vs 实际 · 判类命中信号 · 真跑构件 · '
+         '场景说明 · 可粘贴落笔命令 · 留给你的结论位。',
+         '',
+         '落笔格式：`paradox-engine --mark 场景号 --verdict ok|wrong|edge '
+         '[--note "一句话"]`（ok=判定正确 / wrong=误判待修 / edge=边界情况 / '
+         'pending=退回待复核）。',
+         '']
+    for s, x, c in picked:
+        L += ['---', '',
+              f"## {s['id']} · {s['title']}", '',
+              f"- 复核状态：{'已复核' if s.get('checked') else '**待复核**'}"
+              + (f"（记录：{s['review']}）" if s.get('review') else ''),
+              f"- 期望：{s['expect_type']}-{s['expect_level']}"
+              f"（路由 {s['expect_route']}）｜实际：{x['actual_type']}-"
+              f"{x['actual_level']}（路由 {x['actual_route']}）",
+              f"- 对照：{'符合期望' if x['passed'] else '**与期望不符**'}"
+              + (f"（{'；'.join(x['diffs'])}）" if x['diffs'] else ''),
+              f"- 判类命中：{'、'.join(c['types'][0]['signals']) if c['types'] else '（无命中）'}"
+              f"（置信度 {c['confidence']}）",
+              f"- 真跑构件：{('、'.join('%s(%s)' % (e['component'], e['status']) for e in x['execution'])) or '（无）'}",
+              f"- 场景说明：{s.get('note') or '（无）'}",
+              '',
+              '**材料原文**：',
+              '',
+              '```text',
+              s['text'],
+              '```',
+              '',
+              '**你的结论**（看完再写；引擎不替你写）：',
+              '',
+              f"    paradox-engine --mark {s['id']} --verdict ____"
+              '   # ok / wrong / edge / pending',
+              '']
+    text = '\n'.join(L)
+    if out_file is None:
+        print(text)
+        return 0
+    with _io.open(out_file, 'w', encoding='utf-8', newline='\n') as fh:
+        fh.write(text + '\n')
+    print(f'复核包已写出：{out_file}（{len(picked)} 个场景）')
+    print('  落笔仍是你的判断：paradox-engine --mark S05 --verdict ok'
+          '（本文件不改场景表）')
+    return 0
 
 
 def mark_scenes(json_out, scene_id, verdict='ok', note=''):
@@ -992,6 +1089,12 @@ def main(argv=None):
     if args.review:
         if args.session:
             return session_cmd(args)
+        if args.packet or args.packet_out is not None:
+            # 复核包的用途是批阅**待复核**队列：默认只看没落笔的；
+            # 点名某一个场景时照给（哪怕它已复核过）。
+            want_one = bool(args.scene and args.scene != 'all')
+            return review_packet(args.json, args.scene, not want_one,
+                                 args.packet_out, args.export_overwrite)
         return review_scenes(args.json, args.scene, args.board,
                             args.pending_only)
 

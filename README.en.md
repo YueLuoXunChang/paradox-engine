@@ -70,6 +70,8 @@ paradox-engine --text "..." --structured '{"A":"...","B":"...","wA":5,"wNotA":5}
 paradox-engine --text "..." --suggest          # structured-clue suggestions (paste-ready; never auto-applied)
 paradox-engine --review                        # scenario review mode (evidence + mark command)
 paradox-engine --review --board --pending-only # review board: pending only (read-only)
+paradox-engine --review --packet               # review packet: every pending case laid out (text + evidence + mark command)
+paradox-engine --review --packet --packet-out packet.md   # same, written as Markdown (no overwrite by default)
 paradox-engine --session s.json --review --scene all   # record review evidence into the session
 paradox-engine --mark S05 --verdict ok         # record a review verdict back into the registry
 paradox-engine --stats                         # scenario stats (per type / passed / review / confusion matrix / coverage gap)
@@ -102,7 +104,7 @@ print(r['report'])
 ```bash
 # After cloning, from the repository root
 python demo.py          # twenty-step tour
-python run_tests.py     # full regression (56 test files / 1579 assertions)
+python run_tests.py     # full regression (57 test files / 1595 assertions)
 ```
 
 `demo.py` demonstrates twenty things (①②③ the paradox trio → ④-⑩ the
@@ -380,7 +382,7 @@ when a real pain point appears).
 
 ### Test status
 
-- **1579 formal assertions pass** (56 test files), covering every mechanism
+- **1595 formal assertions pass** (57 test files), covering every mechanism
   component plus the controller/scenario/AI-tool layers;
 - **One command runs the whole suite**: `python run_tests.py` (discover + run +
   summarize; a single failing file yields a non-zero exit — the same entry
