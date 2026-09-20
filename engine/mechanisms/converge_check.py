@@ -18,11 +18,18 @@ converge_check.py — 收敛判定四分支（核心机制）
 """
 
 # 端口声明（v2 决策2：装配早期失败）
+BOUNDARY = ('收敛判定（第 2 层机制，来源：体系内部机制口径）：四分支各按自己的'
+            '判据说「收敛 / 不收敛 / 数据不足」——判据写在返回的 detail 里，'
+            '可复核；数据不足就报不足，**不拿缺样本硬凑结论**；'
+            '只诊断不决策：不替使用者定这套递归该不该继续。')
+
+
 PORTS = {
     'in': {'branch': 'str?', 'f': 'callable', 'err_fn': 'callable',
            'x0': 'float?'},
+    # 2026-09-20 对齐实际返回：补上 branch/boundary（各分支都会带）
     'out': {'verdict': 'str', 'converges': 'bool', 'rate': 'any',
-            'detail': 'dict'},
+            'detail': 'dict', 'branch': 'str?', 'boundary': 'str'},
 }
 
 
@@ -188,13 +195,14 @@ def run(inputs):
                                 inputs.get("max_steps", 1000),
                                 inputs.get("tol", 1e-6))
         return {'branch': branch, 'verdict': detail['verdict'],
-                'converges': detail['reached'], 'rate': None, 'detail': detail}
+                'converges': detail['reached'], 'rate': None,
+                'detail': detail, 'boundary': BOUNDARY}
 
     if branch == 'asymptotic':
         detail = branch3_asymptotic(f, err_fn, x0, inputs.get("steps", 1000))
         return {'branch': branch, 'verdict': detail['verdict'],
                 'converges': detail['decreasing'], 'rate': None,
-                'detail': detail}
+                'detail': detail, 'boundary': BOUNDARY}
 
     if branch == 'oscillation':
         detail = branch4_oscillation(f, err_fn, x0,
@@ -202,7 +210,7 @@ def run(inputs):
                                      inputs.get("steps", 200))
         return {'branch': branch, 'verdict': detail['verdict'],
                 'converges': detail['converges'], 'rate': detail['q_T'],
-                'detail': detail}
+                'detail': detail, 'boundary': BOUNDARY}
 
     # 默认：压缩映射（分方向采样版）
     detail = branch1_compression(
@@ -211,7 +219,7 @@ def run(inputs):
         inputs.get("L_est"))
     return {'branch': 'compression', 'verdict': detail['verdict'],
             'converges': detail['converges'], 'rate': detail['lambda'],
-            'detail': detail}
+            'detail': detail, 'boundary': BOUNDARY}
 
 
 # ============================================================

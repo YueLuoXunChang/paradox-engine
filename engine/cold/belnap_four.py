@@ -253,12 +253,14 @@ def run(inputs):
     if not formula:
         return {'verdict': 'input_pending', 'value': None,
                 'truth_set': None, 'rows': [],
+                'note': '没给 formula 也没要 demo——先说要算什么',
                 'boundary': '需给 formula（命题公式）或 demo=True——诚实'}
     try:
         ast = _parse(formula)
     except ValueError as e:
         return {'verdict': 'parse_error', 'value': None,
                 'truth_set': None, 'rows': [],
+                'note': '公式没解析成功，没往下算',
                 'boundary': f'公式解析失败（诚实拦截）：{e}'}
     atoms = sorted(_atoms(ast))
     assign = {}
@@ -267,12 +269,14 @@ def run(inputs):
         if v not in _FULL:
             return {'verdict': 'assign_pending', 'value': None,
                     'truth_set': None, 'rows': [],
+                    'note': f'赋值 {k}={v!r} 这个值不认——四值只认 T/F/B/N',
                     'boundary': f'赋值 {k}={v!r} 非法（应为 T/F/B/N）'
                                 '——诚实拦截'}
         assign[k] = v
     if not assign:
         return {'verdict': 'assign_pending', 'value': None,
                 'truth_set': None, 'rows': [],
+                'note': '缺赋值——四值求值要知道每个原子取 T/F/B/N',
                 'boundary': f'需给 assign（原子→T/F/B/N），原子为 '
                             f'{atoms}——四值求值必须有赋值（无信息=N）'}
     val = _eval(ast, assign)

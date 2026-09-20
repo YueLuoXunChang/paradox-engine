@@ -5,6 +5,7 @@ test_tool_contract.py — 正式测试：工具协议冻结（轨 C1）
          改了要让调用方知道（快照 + 文档 + 记账），不能静默漂移。
 运行：python engine/ai/test_tool_contract.py
 """
+import io
 import json
 import os
 import sys
@@ -144,6 +145,88 @@ from freeze_tool_schema import PORTS  # noqa: E402
 check_("PORTS.out 含 verdict/changed",
       {'verdict', 'changed'} <= set(PORTS['out']), sorted(PORTS['out']))
 
+
+# ── 用例N：PORTS 声明 == 实际返回形状（2026-09-20 补：这条当场抓出四处不一致）
+import importlib  # noqa: E402
+
+
+def _shape_check():
+    """每件工具 × 3 类输入，比对 PORTS['out'] 与实际返回的键。
+
+    口径：
+      · 挂载层会往结果里塞 `_tool`/`_input`（它自己的记账），**不算构件的字段**；
+      · PORTS 里带 `?` 的是可选字段，允许缺席；不带 `?` 的必须在；
+      · 反过来，返回里出现的键也必须在 PORTS 里声明——PORTS 是对外声明，
+        多返回少声明同样是文档说谎。
+    """
+    missing, extra, no_verdict, no_boundary = [], [], [], []
+    for name, modpath, _desc in _TOOL_REGISTRY:
+        mod = importlib.import_module('engine.' + modpath)
+        ports_out = (getattr(mod, 'PORTS', {}) or {}).get('out') or {}
+        required = {k for k, v in ports_out.items()
+                    if not str(v).endswith('?')}
+        for args in ({}, {'x': 1}, {'mode': 'zzz'}):
+            from tools import call_tool
+            r = call_tool(name, args)
+            res = (r.get('result') or {})
+            body = set(res) - {'_tool', '_input'}
+            if required - body:
+                missing.append((name, sorted(required - body)))
+            if body - set(ports_out):
+                extra.append((name, sorted(body - set(ports_out))))
+            if 'verdict' not in res:
+                no_verdict.append(name)
+            if 'boundary' not in res or 'boundary' not in ports_out:
+                no_boundary.append(name)
+    return missing, extra, no_verdict, no_boundary
+
+
+_missing, _extra, _no_verdict, _no_boundary = _shape_check()
+check_("★PORTS 声明了就必须返回：非可选字段一个都不许缺", not _missing,
+       _missing[:4])
+check_("★返回的键必须在 PORTS 里声明（多返回少声明也是文档说谎）", not _extra,
+       _extra[:4])
+check_("每个构件的每个返回点都带 verdict", not _no_verdict,
+       sorted(set(_no_verdict))[:4])
+check_("每个构件都带 boundary，且 PORTS 里声明了它（全仓约定）",
+       not _no_boundary, sorted(set(_no_boundary))[:4])
+
+
+# ── 用例N+1：静态查所有返回点（动态那条只喂空参，走不到成功路径）
+import ast as _ast  # noqa: E402
+
+
+def _static_return_gaps():
+    """每个带 verdict 的 return 字典都必须带 boundary（静态 AST 查，路径全覆盖）。"""
+    gaps = []
+    seen = set()
+    for name, modpath, _desc in _TOOL_REGISTRY:
+        mod = importlib.import_module('engine.' + modpath)
+        path = getattr(mod, '__file__', None)
+        if not path or path in seen:
+            continue
+        seen.add(path)
+        tree = _ast.parse(io.open(path, encoding='utf-8').read())
+        # 只看 run() 里的返回——**对外契约是 run 的返回**；helper 里那种带 verdict 的
+        # 中间结构（如 converge_check 的分支小结果）不是对外输出，不该被这条管。
+        for fn in [n for n in tree.body
+                   if isinstance(n, _ast.FunctionDef) and n.name == 'run']:
+            for st in fn.body:
+                for node in _ast.walk(st):
+                    if not isinstance(node, _ast.Return) or \
+                            not isinstance(node.value, _ast.Dict):
+                        continue
+                    keys = [k.value for k in node.value.keys
+                            if isinstance(k, _ast.Constant)]
+                    if 'verdict' in keys and 'boundary' not in keys:
+                        gaps.append((os.path.basename(path), node.lineno))
+    return gaps
+
+
+_gaps = _static_return_gaps()
+check_("★静态查返回点：每个带 verdict 的返回字典都带 boundary（含成功路径）",
+       not _gaps, _gaps[:5])
+
 print("=" * 60)
-print(f"结果: {PASS}/22 通过")
-raise SystemExit(0 if PASS == 22 else 1)
+print(f"结果: {PASS}/27 通过")
+raise SystemExit(0 if PASS == 27 else 1)

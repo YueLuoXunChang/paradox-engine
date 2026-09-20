@@ -28,9 +28,18 @@ EPS = 1e-9
 
 # 端口类型声明（v2 决策2：builder 装配早期校验用）
 # in: 输入字段及类型；out: 输出字段及类型
+BOUNDARY = ('悖论强度测度 μ∈[0,1]（第 2 层旗舰构件，来源：体系内部机制口径）：'
+            '权重是**证据度量**，负值/非数值无意义——非法输入一律拦截、'
+            '**不编造数值**；μ 只描述「矛盾在当前证据下有多尖锐」，不是对错判决；'
+            '只诊断不决策：不替使用者定该怎么处理这条矛盾。')
+
+
 PORTS = {
     'in': {'mode': 'str', 'wA': 'float?', 'wNotA': 'float?'},
-    'out': {'mu': 'float', 'branch': 'str'},
+    # 2026-09-20 对齐实际返回：原来只写了 mu/branch，漏了
+    # verdict/proposition/error/boundary——PORTS 是对外声明，少写就是文档说谎
+    'out': {'verdict': 'str', 'mu': 'float', 'branch': 'str',
+            'proposition': 'dict?', 'error': 'str?', 'boundary': 'str'},
 }
 
 
@@ -141,12 +150,14 @@ def run(inputs):
         return {'verdict': 'input_pending', 'mu': None, 'branch': mode,
                 'proposition': proposition,
                 'error': f'未知分支 mode={mode!r}（应为 mu1/mu2/mu3/mu4）'
-                         '——诚实拦截，不静默落默认'}
+                         '——诚实拦截，不静默落默认',
+                'boundary': BOUNDARY}
     if mode == 'mu3' and (tau_L1 is None or tau_L2 is None):
         return {'verdict': 'input_pending', 'mu': None, 'branch': mode,
                 'proposition': proposition,
                 'error': 'mu3 层级型需 tau_L1/tau_L2（跨层真值）——'
-                         '诚实拦截，不硬算'}
+                         '诚实拦截，不硬算',
+                'boundary': BOUNDARY}
     # 数值语义校验（2026-09-07 补：原先不校验——wA=5,wNotA=-5 算出 μ=-1e10，
     # 违反自身声明的 μ∈[0,1]；wA="五" 直接 TypeError 崩。诚实边界要求拦截而非硬算）
     check = _validate()
@@ -183,7 +194,7 @@ def run(inputs):
                          '宁可诚实报错也不返回越界值（请报告此输入）',
                 'boundary': 'μ 越界：未返回（诚实边界优先于给结果）'}
     return {'verdict': 'measured', 'mu': mu, 'branch': mode,
-            'proposition': proposition}
+            'proposition': proposition, 'boundary': BOUNDARY}
 
 
 # ============================================================

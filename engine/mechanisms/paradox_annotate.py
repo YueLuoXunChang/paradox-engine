@@ -17,6 +17,11 @@ paradox_annotate.py — 悖论注解机制（核心机制）
         ID = 悖论_P-{级别}_{序号:03d}
 """
 
+BOUNDARY = ('悖论注解（8 字段卡 + P-A/B/C 分级，来源：体系内部机制口径）：'
+            '非法输入拦下并说明，**不硬造注解卡**；分级只是分级、不是判决；'
+            '只诊断不决策：不替使用者定这条矛盾该怎么处理。')
+
+
 PORTS = {
     'in': {
         'paradox': 'dict?',  # {A, notA, pos, src, effect, note} 悖论对象（run 默认空）
@@ -26,8 +31,12 @@ PORTS = {
         'seq': 'int?',       # 序号（ID 唯一性用，默认自增）
     },
     'out': {
-        'annotation': 'dict',  # 8字段注解卡片
-        'grade': 'str',        # 'P-A'|'P-B'|'P-C'
+        # 2026-09-20 对齐实际返回：补上 verdict/error/boundary
+        'verdict': 'str',       # 'annotated'|'input_pending'
+        'annotation': 'dict?',  # 8字段注解卡片
+        'grade': 'str?',        # 'P-A'|'P-B'|'P-C'
+        'error': 'str?',        # 诚实拦截时的说明
+        'boundary': 'str',
     }
 }
 
@@ -131,17 +140,20 @@ def run(inputs):
     if not isinstance(paradox, dict) or not paradox:
         return {'verdict': 'input_pending', 'annotation': None, 'grade': None,
                 'error': '需 paradox 字典（含 A/notA 等字段）——诚实拦截，'
-                         '不硬造注解卡'}
+                         '不硬造注解卡',
+                'boundary': BOUNDARY}
     source = inputs.get('source', 'runtime')
     if source not in _LEGAL_SOURCE:
         return {'verdict': 'input_pending', 'annotation': None, 'grade': None,
                 'error': f'source={source!r} 非法（应为 axiom/runtime/observer）'
-                         '——诚实拦截'}
+                         '——诚实拦截',
+                'boundary': BOUNDARY}
     impact = inputs.get('impact', 'local')
     if not isinstance(impact, str):
         return {'verdict': 'input_pending', 'annotation': None, 'grade': None,
                 'error': f'impact={impact!r} 应为字符串（local/global）'
-                         '——诚实拦截'}
+                         '——诚实拦截',
+                'boundary': BOUNDARY}
     card = annotate(
         paradox,
         source,
@@ -149,7 +161,8 @@ def run(inputs):
         inputs.get('eliminable', True),
         inputs.get('seq'),
     )
-    return {'verdict': 'annotated', 'annotation': card, 'grade': card['LV']}
+    return {'verdict': 'annotated', 'annotation': card, 'grade': card['LV'],
+            'boundary': BOUNDARY}
 
 
 _seq_counter = 0

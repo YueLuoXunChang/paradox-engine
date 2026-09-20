@@ -163,7 +163,7 @@
 
 - 做什么：converge_check.py — 收敛判定四分支（核心机制）
 - 输入端口：`branch: str?`、`f: callable`、`err_fn: callable`、`x0: float?`
-- 输出端口：`verdict: str`、`converges: bool`、`rate: any`、`detail: dict`
+- 输出端口：`verdict: str`、`converges: bool`、`rate: any`、`detail: dict`、`branch: str?`、`boundary: str`
 - 可独立运行：是（自带自测）
 
 ### `engine/mechanisms/counterpoint_gen.py`
@@ -184,14 +184,14 @@
 
 - 做什么：paradox_annotate.py — 悖论注解机制（核心机制）
 - 输入端口：`paradox: dict?`、`source: str?`、`impact: str?`、`eliminable: bool?`、`seq: int?`
-- 输出端口：`annotation: dict`、`grade: str`
+- 输出端口：`verdict: str`、`annotation: dict?`、`grade: str?`、`error: str?`、`boundary: str`
 - 可独立运行：是（自带自测）
 
 ### `engine/mechanisms/paradox_measure.py`
 
 - 做什么：paradox_measure.py — 悖论测度 μ（核心机制）
 - 输入端口：`mode: str`、`wA: float?`、`wNotA: float?`
-- 输出端口：`mu: float`、`branch: str`
+- 输出端口：`verdict: str`、`mu: float`、`branch: str`、`proposition: dict?`、`error: str?`、`boundary: str`
 - 可独立运行：是（自带自测）
 
 ### `engine/mechanisms/selfref_fixpoint.py`

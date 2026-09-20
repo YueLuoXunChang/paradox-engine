@@ -73,7 +73,7 @@ for dp, dn, fn in os.walk(_HERE):
 _n_test_files = len(_test_files)
 
 # 断言总数：解析各测试文件末行的「结果: ... N 通过」——注意测试里写的是
-# f-string（`print(f"结果: {PASS}/869 通过")`），源码中没有字面总数，
+# f-string（`print(f"结果: {PASS}/870 通过")`），源码中没有字面总数，
 # 所以要同时认「{PASS}/N」与「N/M」两种形态（取分母 = 声明的通过线）。
 # 不执行测试：执行是 run_tests.py 的活，在测试里跑全部测试会递归。
 _total_asserts = 0
@@ -104,6 +104,20 @@ print(f"  实测：测试文件 {_n_test_files} 个 / 断言 {_total_asserts} �
       f"工具 {_n_tools} 件 / demo {_demo_steps} 步 / 场景 {_n_scenes} 个 / "
       f"冷门构件 {_n_cold} 件")
 
+# 2026-09-20 补：一个测试文件里**只许有一条**通过线。
+# 起因是两次真事故——插新通过线时忘了删旧行，而下面取的是**最后一次出现**，
+# 于是旧数字把新数字盖住（README 的断言数就是这么被误导的）。
+# 注意口径：早退路径写 `print("结果: 1/1 通过")`（字面、与 PASS 无关）是**合法**的，
+# 隐患只是"两条引用 {PASS} 的通过线"（旧行盖新数字），所以只卡那一种。
+_pass_line = re.compile(r'^\s*print\(f?[\'"][^\'"]*结果:[^\'"]*\{PASS\}',
+                        re.M)
+_dup = []
+for p in _test_files:
+    _n = len(_pass_line.findall(open(p, encoding='utf-8').read()))
+    if _n > 1:
+        _dup.append((os.path.relpath(p, _REPO), _n))
+check("每个测试文件只有一条 `{PASS}` 通过线（旧行不许留着盖新数字）", not _dup,
+      _dup)
 check("每个测试文件都声明通过线（无可解析『结果:』的漏网）",
       not _unknown, f"缺声明: {_unknown}")
 
@@ -268,5 +282,5 @@ check("根目录每个被跟踪的文件都在中英 README 里有交代",
       not _unlisted, f"没交代：{_unlisted}")
 
 print("=" * 60)
-print(f"结果: {PASS}/26 通过")
-raise SystemExit(0 if PASS == 26 else 1)
+print(f"结果: {PASS}/27 通过")
+raise SystemExit(0 if PASS == 27 else 1)
