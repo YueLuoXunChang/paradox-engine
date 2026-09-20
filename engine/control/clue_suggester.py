@@ -131,8 +131,13 @@ def run(inputs):
     a, b, ab_why = _suggest_ab(text)
     sent, sent_why = _suggest_sentence(text)
 
+    # 口径：只按**默认管线**列（"按实际路由列出每个构件要什么"）。
+    # 线索触发补跑的那些构件（要人写正式式子才跑）**不算进来**——把它们算进来会让
+    # 本来线索齐了的材料显示"还欠 arguments/attacks"，工作单虚增。它们的线索要求
+    # 在 `docs/capability_matrix.md` 里列（该文件按活代码自动生成）。
     components, paste = [], {}
     for comp in route['pipeline']:
+        _via = None
         spec = ADAPTER_SPECS.get(comp)
         if spec is None:
             components.append({'component': comp, 'hint': '未映射构件',
@@ -161,9 +166,11 @@ def run(inputs):
                                  k, '需人给（引擎不猜）')})
         if ready:
             paste[comp] = {s['key']: s['value'] for s in ready}
-        components.append({'component': comp, 'hint': hint, 'ready': ready,
-                           'need_human': need,
-                           'has_defaults': bool(defaults)})
+        entry = {'component': comp, 'hint': hint, 'ready': ready,
+                 'need_human': need, 'has_defaults': bool(defaults)}
+        if _via:
+            entry['via'] = _via      # 白箱：它是"线索补跑"才进来的
+        components.append(entry)
 
     verdict = 'suggested' if any(c['ready'] for c in components) else \
         'no_suggestion'

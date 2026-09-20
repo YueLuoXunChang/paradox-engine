@@ -106,7 +106,7 @@ print(r['report'])
 python demo.py          # twenty-step tour
 python -m engine.cli --tools          # list all 38 tools
 python -m engine.cli --call asp --args '{"program": "p :- not q. q :- not p."}'
-python run_tests.py     # full regression (63 test files / 1781 assertions)
+python run_tests.py     # full regression (63 test files / 1796 assertions)
 ```
 
 `demo.py` demonstrates twenty things (①②③ the paradox trio → ④-⑩ the
@@ -389,7 +389,7 @@ when a real pain point appears).
 
 ### Test status
 
-- **1781 formal assertions pass** (63 test files), covering every mechanism
+- **1796 formal assertions pass** (63 test files), covering every mechanism
   component plus the controller/scenario/AI-tool layers;
 - **One command runs the whole suite**: `python run_tests.py` (discover + run +
   summarize; a single failing file yields a non-zero exit — the same entry

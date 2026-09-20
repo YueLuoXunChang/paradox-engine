@@ -609,9 +609,12 @@ try:
     check("可直接用的键来自原文（A/B 都在材料里）",
           cl['ready'].get('A') in TXT_CONFLICT
           and cl['ready'].get('B') in TXT_CONFLICT, str(cl.get('ready')))
-    check("还欠人给的键记下了（wA/wNotA）",
-          set(cl.get('need_human') or []) == {'wA', 'wNotA'},
-          str(cl.get('need_human')))
+    # 口径：这张清单会随**接线**增长（接进来的构件要什么就列什么），
+    # 所以断言"必须包含 / 必须不包含"，不写等值——等值断言会被正常的功能扩展打红。
+    _need = set(cl.get('need_human') or [])
+    check("还欠人给的键记下了（wA/wNotA 在列；能从原文拿的 A/B 不在列）",
+          {'wA', 'wNotA'} <= _need and not ({'A', 'B'} & _need),
+          str(sorted(_need)))
     check("线索条目写明「要人确认 + 不自动应用」",
           '要人确认' in cl.get('note', '')
           and '不自动应用' in cl.get('note', ''), cl.get('note'))
@@ -626,8 +629,10 @@ try:
     check("汇总按键统计「可直接用」与「还欠人给」",
           ov_cl['ready_keys'].get('A') == 1
           and ov_cl['need_human_keys'].get('wA') == 1, str(ov_cl))
+    # 口径同上：轮次清单会随接线增长——断言"第 1 轮在列 + 只统计不判断"
     check("汇总列出仍欠线索的轮次（只统计）",
-          ov_cl['turns_pending_clues'] == [1], str(ov_cl['turns_pending_clues']))
+          1 in ov_cl['turns_pending_clues'],
+          str(ov_cl['turns_pending_clues']))
     check("汇总写明落账不等于落库",
           '落账不等于落库' in ov_cl['note'], ov_cl['note'])
     md_cl = session_run({'action': 'report', 'path': pcl})['markdown']

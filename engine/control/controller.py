@@ -187,6 +187,28 @@ ADAPTER_SPECS = {
     'truth_revision': ('cold.truth_revision', [],
                        '真值修正演示（无需输入，用内置句系统）',
                        {'mode': 'demo'}, None),
+    # 2026-09-20 接线：四件外部机制（兼容性判定过才接——都要"人给的形式化输入"，
+    # 缺参照实报 missing_input，不硬凑）
+    'interval_algebra': ('cold.interval_algebra',
+                         ['events', 'relations'],
+                         'T4 需 events + relations（人给的形式化时序关系，'
+                         '如 {"events": ["A","B"], "relations": [["A","b","B"]]}）',
+                         {'mode': 'solve'}, None),
+    'description_logic.subsumption': ('cold.description_logic',
+                                      ['sub', 'super'],
+                                      'T10 需 sub/super（两端概念式，'
+                                      '如 "Woman" ⊑ "Person"）；tbox 可选',
+                                      {}, None),
+    'description_logic.classify': ('cold.description_logic', ['tbox'],
+                                   'T3 需 tbox（本体公理列表，人给的形式化式）',
+                                   {'mode': 'classify'}, None),
+    'mu_calculus': ('cold.mu_calculus', ['formula', 'states'],
+                    'T4/T6 需 formula + states（迁移系统；'
+                    'transitions/labels 可选，mu_mode 可换模式）',
+                    {}, None),
+    'asp': ('cold.asp', ['program'],
+            'T2 需 program（规则文本，如 "p :- not q. q :- not p."）；'
+            'query 可选（问某原子）', {}, None),
     # 第 0 层骨架
     'skeleton': ('skeleton.mtmp', ['mode'],
                  '骨架需 mode（point/thread/topology/op）', {}, None),
@@ -203,6 +225,37 @@ def _hook_annotate(struct, d):
                         'pos': '总控执行层', 'src': 'runtime',
                         'effect': '下游决策', 'note': '总控 T2 自动注解'},
             'source': 'runtime', 'impact': 'global', 'eliminable': True}, None
+
+
+def _hook_dl_subsumption(struct, d):
+    """描述逻辑 ALC 包含判定：sub/super 必填；tbox（本体公理）可选，
+    有就带过去（公理是人给的形式化文本——引擎不抽公式）。"""
+    args = {'mode': 'subsumption', 'sub': d['sub'], 'super': d['super']}
+    if d.get('tbox'):
+        args['tbox'] = d['tbox']
+    return args, None
+
+
+def _hook_mu(struct, d):
+    """模态 μ 演算：formula/states 必填；transitions/labels/init 可选；
+    mu_mode 可换模式（evaluate/check/ctl/compare，默认 evaluate）。"""
+    args = {'mode': d.get('mu_mode') or 'evaluate',
+            'formula': d['formula'], 'states': d['states']}
+    for k in ('transitions', 'labels', 'init'):
+        if d.get(k) is not None:
+            args[k] = d[k]
+    return args, None
+
+
+def _hook_asp(struct, d):
+    """答案集程序：program 必填；给了 query 就走 query 模式（问某原子在不在）。"""
+    args = {'program': d['program']}
+    if d.get('query'):
+        args['mode'] = 'query'
+        args['query'] = d['query']
+    else:
+        args['mode'] = 'solve'
+    return args, None
 
 
 def _hook_belnap(struct, d):
@@ -243,6 +296,9 @@ def _hook_relevance(struct, d):
 
 
 _ADAPTER_HOOKS = {
+    'description_logic.subsumption': _hook_dl_subsumption,
+    'mu_calculus': _hook_mu,
+    'asp': _hook_asp,
     'propositional.validity': _hook_prop_validity,
     'selfref_fixpoint': _hook_selfref,
     'paradox_annotate': _hook_annotate,
@@ -359,6 +415,63 @@ def _output_check(classification, execution, text_len):
     return checks
 
 
+# ══════════════════════════════════════════════════════════════
+# 线索驱动的补跑表（2026-09-20 接线时加）
+# ──────────────────────────────────────────────────────────────
+# 这些构件"要不要跑"取决于**人有没有给形式化线索**，而不是文本复杂度档
+# （判类只按文本判档；档位决定默认管线，"人主动给的线索"决定还能跑哪些）。
+# 实测依据：场景库 28 条真实材料里 18 条判到 L1，只按 L2/L3 接线只有 4/28 够得着。
+# 口径：**题型对得上 + 该构件要的线索给全了**才补跑；没给线索就安静跳过
+# （不刷一屏 missing_input——那些构件本来就"要人给式子"，没给是正常状态）。
+CLUE_SUPPLEMENT = (
+    ('interval_algebra', ('T4',), '定性时序自洽性（events + relations）'),
+    ('mu_calculus', ('T4', 'T6'), '不动点性质（formula + states）'),
+    ('description_logic.subsumption', ('T10', 'T3'),
+     'ALC 包含判定（sub + super）'),
+    ('description_logic.classify', ('T3', 'T10'), '概念层级（tbox）'),
+    ('asp', ('T2', 'T5'), '答案集自洽性（program）'),
+    ('belnap_four', ('T2', 'T8'), '四值求值（formula）'),
+    ('dung', ('T2', 'T3'), '立场集（arguments + attacks）'),
+    ('intuitionistic_logic', ('T1', 'T6'), '构造性立场反模型（formula）'),
+)
+
+
+def _exec_one(comp, builders, get, structured, step, extra_note=''):
+    """跑一个构件，返回 execution 条目（不抛异常，问题都在条目里说清）。"""
+    if comp not in builders:
+        return {'step': step, 'component': comp, 'status': 'not_built',
+                'note': f'{comp} 未实现层/未映射——诚实跳过'}
+    mod_name, builder = builders[comp]
+    try:
+        mod = get(mod_name)
+        run_fn = mod.run
+    except Exception as e:  # noqa: BLE001
+        return {'step': step, 'component': comp, 'status': 'not_built',
+                'note': f'模块导入失败：{e}'}
+    args, hint = builder(structured)
+    if args is None:
+        return {'step': step, 'component': comp, 'status': 'missing_input',
+                'note': hint}
+    # 参数类型闸（与挂载层共用同一把 engine/_validate.arg_type_error）
+    try:
+        from engine._validate import arg_type_error
+    except ImportError:
+        sys.path.insert(0, os.path.dirname(os.path.dirname(
+            os.path.abspath(__file__))))
+        from engine._validate import arg_type_error
+    why = arg_type_error(getattr(mod, 'PORTS', {}).get('in'), args)
+    if why:
+        return {'step': step, 'component': comp, 'status': 'missing_input',
+                'note': f'{why}（构件未执行）'}
+    try:
+        out = run_fn(args)
+    except Exception as e:  # noqa: BLE001
+        return {'step': step, 'component': comp, 'status': 'error',
+                'note': f'执行异常：{e}'}
+    return {'step': step, 'component': comp, 'status': 'run', 'output': out,
+            'note': ('OK' if not extra_note else extra_note)}
+
+
 def run(inputs):
     """
     做什么：跑总控五步流水线。
@@ -387,51 +500,18 @@ def run(inputs):
     pipeline = cl['route']['pipeline']
     execution = []
     for comp in pipeline:
-        if comp not in builders:
-            execution.append({'step': len(execution) + 1,
-                              'component': comp,
-                              'status': 'not_built',
-                              'note': f'{comp} 未实现层/未映射——诚实跳过'})
+        execution.append(_exec_one(comp, builders, get, structured,
+                                   len(execution) + 1))
+    # ── 步 4b：线索驱动的补跑（题型对得上 + 线索给全了 → 补跑，并注明为什么跑）
+    _ran = {e['component'] for e in execution}
+    for comp, types, why in CLUE_SUPPLEMENT:
+        if comp in _ran or cl['main_type'] not in types:
             continue
-        mod_name, builder = builders[comp]
-        try:
-            mod = get(mod_name)
-            run_fn = mod.run
-        except Exception as e:
-            execution.append({'step': len(execution) + 1,
-                              'component': comp, 'status': 'not_built',
-                              'note': f'模块导入失败：{e}'})
-            continue
-        args, hint = builder(structured)
-        if args is None:
-            execution.append({'step': len(execution) + 1,
-                              'component': comp, 'status': 'missing_input',
-                              'note': hint})
-            continue
-        # 参数类型闸（与挂载层共用同一把：engine/_validate.arg_type_error）——
-        # 错类型不直接砸给构件（fuzz 曾撞出 conclusion=True → len() 崩）
-        try:
-            from engine._validate import arg_type_error
-        except ImportError:
-            sys.path.insert(0, os.path.dirname(os.path.dirname(
-                os.path.abspath(__file__))))
-            from engine._validate import arg_type_error
-        _why = arg_type_error(getattr(mod, 'PORTS', {}).get('in'), args)
-        if _why:
-            execution.append({'step': len(execution) + 1,
-                              'component': comp, 'status': 'missing_input',
-                              'note': f'{_why}（构件未执行）'})
-            continue
-        try:
-            out = run_fn(args)
-        except Exception as e:
-            execution.append({'step': len(execution) + 1,
-                              'component': comp, 'status': 'error',
-                              'note': f'执行异常：{e}'})
-            continue
-        execution.append({'step': len(execution) + 1, 'component': comp,
-                          'status': 'run', 'output': out,
-                          'note': 'OK'})
+        entry = _exec_one(comp, builders, get, structured,
+                          len(execution) + 1,
+                          extra_note=f'线索触发补跑：{why}')
+        if entry['status'] != 'missing_input':      # 没给线索就安静跳过
+            execution.append(entry)
 
     # ── 步 5：五查
     checks = _output_check(classification, execution, len(text))

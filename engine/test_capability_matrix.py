@@ -81,7 +81,9 @@ def _wired(name):
     return any(modpath.startswith(rn + '.') for rn in routed)
 
 
-want = {n for n in tools if not _wired(n)}
+from engine.control.controller import CLUE_SUPPLEMENT  # noqa: E402
+_sup_names = {c for c, _t, _w in CLUE_SUPPLEMENT}
+want = {n for n in tools if not _wired(n) and n not in _sup_names}
 from engine.ai.tools import _TOOL_REGISTRY  # noqa: E402
 from engine.ai.tools import _TOOL_REGISTRY as _reg  # noqa: E402
 # 引擎自身（control 层）不列进第三节，按层剔掉
@@ -97,25 +99,45 @@ check("★未接线清单 == 机器重算（不漏不多）", listed == want_pub
                                  sorted(want_public - listed)[:4]))
 
 # ⑤ 小结数字
-m2 = re.search(r'没接线的机制件 (\d+) 件', doc)
+m2 = re.search(r'未接线（只 --call）(\d+) 件', doc)
+m_sup = re.search(r'线索触发补跑 (\d+) 件', doc)
 m3 = re.search(r'另有 \*\*(\d+)\*\* 件属于引擎自身', doc)
 m4 = re.search(r'路由表条目：\*\*(\d+)\*\* 条', doc)
 check("小结的未接线件数一致", m2 and int(m2.group(1)) == len(want_public),
       (m2.group(1) if m2 else None, len(want_public)))
+check("★小结的「线索触发补跑」件数 == CLUE_SUPPLEMENT（接线口径不漂）",
+      m_sup and int(m_sup.group(1)) == len(_sup_names),
+      (m_sup.group(1) if m_sup else None, len(_sup_names)))
+_missing_sup = [c for c in _sup_names if ('`%s`' % c) not in doc]
+check("★补跑表里每件都在矩阵里有行（接了就要看得见）", not _missing_sup,
+      sorted(_missing_sup))
 check("小结的引擎自身件数一致", m3 and int(m3.group(1)) == len(self_names),
       (m3.group(1) if m3 else None, len(self_names)))
 check("小结的路由条目数一致", m4 and int(m4.group(1)) == len(route),
       (m4.group(1) if m4 else None, len(route)))
 
-# ⑥ 路由名都能落地（真构件文件或真层）
-bad = []
+# ⑥ 路由名都能落地：权威映射是 ADAPTER_SPECS（路由名允许是别名，如
+#    `dung` ↔ 模块 `cold.dung_framework`、`skeleton` ↔ 层 skeleton）；
+#    没有适配器的名字则退回"是不是真构件文件/真层"。
+import importlib.util  # noqa: E402
+from engine.control.controller import ADAPTER_SPECS  # noqa: E402
+
+bad, bad_mod = [], []
 for rn in routed:
-    ok = bool(sums.get(rn)) or any(l == rn for l in sums) or \
-        any(str(v[0]).startswith('engine/%s/' % rn) for v in sums.values())
+    spec = ADAPTER_SPECS.get(rn)
+    if spec is not None:
+        if importlib.util.find_spec('engine.' + spec[0]) is None:
+            bad_mod.append((rn, spec[0]))
+        continue
+    ok = (bool(sums.get(rn)) or any(l == rn for l in sums)
+          or any(str(v[0]).startswith('engine/%s/' % rn)
+                 for v in sums.values()))
     if not ok:
         bad.append(rn)
 check("路由表里每个构件名都能落到真实构件上", not bad, bad)
+check("★适配器指向的模块都真实存在（spec 里模块路径写错会被抓）", not bad_mod,
+      bad_mod)
 
 print("=" * 60)
-print(f"结果: {PASS}/9 通过")
-raise SystemExit(0 if PASS == 9 else 1)
+print(f"结果: {PASS}/12 通过")
+raise SystemExit(0 if PASS == 12 else 1)

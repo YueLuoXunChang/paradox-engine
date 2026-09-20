@@ -127,6 +127,23 @@ check("debug 输出带全型得分", '全型得分' in r['boundary'], r['boundar
 check("边界声明启发式非完备",
       '启发' in run({'text': '随便写'})['boundary'])
 
+
+# ── 用例N：接线批次（2026-09-20）——这些构件**不进默认管线**，走"线索触发补跑"
+#    （它们都要"人写的正式式子"；放进管线会让本来线索齐了的材料显示"还欠"，
+#     也破坏 L1/L2/L3 的档位语义）。这里查补跑表本身的自洽性。
+from controller import ADAPTER_SPECS, CLUE_SUPPLEMENT  # noqa: E402
+
+_sup = {c for c, _t, _w in CLUE_SUPPLEMENT}
+check("★补跑表里的构件都有适配器（映射得动）",
+      all(c in ADAPTER_SPECS for c in _sup),
+      sorted(n for n in _sup if n not in ADAPTER_SPECS))
+check("★补跑件不与默认管线重叠（避免同一件既自动跑又补跑）",
+      not (_sup & {n for _pl, _w in ROUTE.values() for n in _pl[0]}),
+      sorted(_sup & {n for _pl, _w in ROUTE.values() for n in _pl[0]}))
+check("★补跑表的题型都是真题型（T1–T12）",
+      all(t in TYPE_DEFS for _c, ts, _w in CLUE_SUPPLEMENT for t in ts),
+      sorted({t for _c, ts, _w in CLUE_SUPPLEMENT for t in ts if t not in TYPE_DEFS}))
+
 print("=" * 60)
-print(f"结果: {PASS}/72 通过")
-raise SystemExit(0 if PASS == 72 else 1)
+print(f"结果: {PASS}/75 通过")
+raise SystemExit(0 if PASS == 75 else 1)

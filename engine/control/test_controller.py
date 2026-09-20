@@ -172,6 +172,102 @@ r = run({'text': '这句话是假的'})
 check("T6 无结构化 → 至少诚实执行或缺输入",
       r['verdict'] in ('done', 'classified_only'), str(r))
 
+
+# ══════════════════════════════════════════════════════════════
+# 用例N：接线批次（2026-09-20）——四件外部机制 + 四件老冷门件
+#   口径：判类只看文本判档；**人给的形式化线索**决定还能跑哪些（线索驱动补跑）。
+# ══════════════════════════════════════════════════════════════
+from scenarios.scenarios import SCENES  # noqa: E402
+
+_by_type = {}
+for _s in SCENES:
+    _by_type.setdefault(_s['expect_type'], _s['text'])
+
+NEW_CASES = [
+    ('T4', 'interval_algebra',
+     {'events': ['A', 'B'], 'relations': [['A', 'b', 'B']]}),
+    ('T4', 'mu_calculus',
+     {'formula': 'μX.(p | <>X)', 'states': ['s0', 's1'],
+      'transitions': [['s0', 's1']], 'labels': {'s1': ['p']}}),
+    ('T6', 'mu_calculus',
+     {'formula': 'νX.(p & <>X)', 'states': ['a'], 'transitions': [['a', 'a']],
+      'labels': {'a': ['p']}}),
+    ('T10', 'description_logic.subsumption',
+     {'sub': 'Woman', 'super': 'Person',
+      'tbox': ['Woman ≡ Person ⊓ Female']}),
+    ('T3', 'description_logic.classify',
+     {'tbox': ['Woman ≡ Person ⊓ Female', 'Man ≡ Person ⊓ ¬Woman']}),
+    ('T2', 'asp', {'program': 'p :- not q. q :- not p.'}),
+    ('T2', 'belnap_four', {'formula': 'P ∨ ¬P', 'assign': {'P': 'B'}}),
+    ('T2', 'dung', {'arguments': ['a', 'b'], 'attacks': [['a', 'b']]}),
+    ('T1', 'intuitionistic_logic', {'formula': 'P∨¬P'}),
+]
+_runs, _miss, _notes = [], [], []
+for _typ, _comp, _clues in NEW_CASES:
+    _r = run({'text': _by_type[_typ], 'structured': _clues})
+    _e = [x for x in _r['execution'] if x['component'] == _comp]
+    if not _e:
+        _miss.append((_comp, _typ, '不在执行里'))
+        continue
+    if _e[0]['status'] != 'run':
+        _miss.append((_comp, _typ, _e[0]['status'], _e[0].get('note')))
+    else:
+        _runs.append(_comp)
+        _notes.append(_e[0].get('note') or '')
+
+check("★接线后新构件给线索就真跑（9 条用例 / 8 件构件，含四件外部机制）",
+      not _miss and len(_runs) == len(NEW_CASES)
+      and len(set(_runs)) == 8, (_miss, _runs))
+check("★补跑的在 note 里注明「线索触发补跑：…」（白箱：为什么跑要看得见）",
+      all('线索触发补跑' in n or 'OK' == n for n in _notes),
+      [n[:40] for n in _notes])
+
+# 结果抽查：真跑了而且结论对
+_r = run({'text': _by_type['T2'],
+          'structured': {'program': 'p :- not q. q :- not p.'}})
+_asp = [x for x in _r['execution'] if x['component'] == 'asp'][0]['output']
+check("★答案集抽查：p :- not q. q :- not p. → 两个答案集 {p}/{q}",
+      _asp['verdict'] == 'solved' and _asp['count'] == 2,
+      _asp.get('answer_sets'))
+_r = run({'text': _by_type['T10'],
+          'structured': {'sub': 'Woman', 'super': 'Person',
+                         'tbox': ['Woman ≡ Person ⊓ Female']}})
+_dl = [x for x in _r['execution']
+       if x['component'] == 'description_logic.subsumption'][0]['output']
+check("★ALC 抽查：本体下 Woman ⊑ Person → subsumed", _dl['verdict'] == 'subsumed',
+      _dl['verdict'])
+_r = run({'text': _by_type['T4'],
+          'structured': {'events': ['A', 'B'], 'relations': [['A', 'b', 'B']]}})
+_ia = [x for x in _r['execution'] if x['component'] == 'interval_algebra'][0]
+check("★区间代数抽查：A 先于 B 自洽，并给可复核的整数区间见证",
+      _ia['output']['verdict'] in ('model_found', 'consistent')
+      and _ia['output'].get('model'), _ia['output'].get('verdict'))
+
+# 口径：没给线索 → 补跑的构件**安静跳过**（不刷一屏 missing_input）
+_r = run({'text': _by_type['T4']})
+_names_no_clue = [x['component'] for x in _r['execution']]
+check("★没给线索时，补跑表里的构件安静跳过（不刷 missing_input）",
+      'interval_algebra' not in _names_no_clue, _names_no_clue)
+
+# 口径：题型对不上就不补跑（asp 的线索给到 T4 材料上也不跑）
+_r = run({'text': _by_type['T4'], 'structured': {'program': 'p.'}})
+check("★题型对不上不补跑（线索只在该题型生效）",
+      'asp' not in [x['component'] for x in _r['execution']])
+
+# 口径：既在路由里又在补跑表里的构件只跑一次
+_r = run({'text': _by_type['T2'],
+          'structured': {'program': 'p :- not q.'}})
+_names = [x['component'] for x in _r['execution']]
+check("★同一个构件在一次运行里只出现一次（路由 + 补跑不重复）",
+      len(_names) == len(set(_names)), _names)
+
+# 口径：管线里就有、但人没给线索 → 诚实报 missing_input（不许假装跑过）
+_r = run({'text': _by_type['T6']})
+_mu = [x for x in _r['execution'] if x['component'] == 'mu_calculus']
+check("管线内的新构件缺线索 → missing_input（诚实报缺，不硬凑）",
+      not _mu or _mu[0]['status'] == 'missing_input',
+      _mu[0] if _mu else '不在管线（该档没有它）')
+
 print("=" * 60)
-print(f"结果: {PASS}/43 通过")
-raise SystemExit(0 if PASS == 43 else 1)
+print(f"结果: {PASS}/52 通过")
+raise SystemExit(0 if PASS == 52 else 1)

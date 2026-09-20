@@ -38,17 +38,6 @@ _LEVELS = ('L1', 'L2', 'L3')
 
 # 这一节是**提案**（人工写的，不在生成口径里）：来源见 ROADMAP 的候选清单与本仓 CHANGELOG 里各件的「为什么做」段，
 # 只列"这件没接线，接线大概能补哪个题型"——**待作者定**，别当事实读。
-_PROPOSALS = (
-    ('interval_algebra', 'T4 演化过程',
-     '"这两件事谁先谁后/谁重叠"现在只能靠人读；LTL 答不了'),
-    ('description_logic', 'T3 关系结构 · T10 定义辨析',
-     '"是不是所有 A 都是 B"这类概念层级，有限论域一阶答不了'),
-    ('mu_calculus', 'T4 演化过程 · T6 自指/深层',
-     '"反复/最终/从此以后"这类循环性质，CTL 的固定量子写不出来'),
-    ('asp', 'T2 论证矛盾 · T5 知识更新',
-     '"规则 + 否定即失败"的程序化非单调推理，默认逻辑/AGM 不爱管这种写法'),
-)
-
 
 def _router():
     """拿路由表与题型名（import 活代码）。"""
@@ -56,6 +45,15 @@ def _router():
         sys.path.insert(0, _HERE)
     from control.classifier import ROUTE, _TYPE_NAME
     return ROUTE, _TYPE_NAME
+
+
+def _supplement():
+    """线索触发补跑表（总控里的 CLUE_SUPPLEMENT）：这些构件**不进默认管线**，
+    题型对得上 + 人给足线索就跑（哪一档都跑得到）。"""
+    if _HERE not in sys.path:
+        sys.path.insert(0, _HERE)
+    from control.controller import CLUE_SUPPLEMENT
+    return CLUE_SUPPLEMENT
 
 
 def _tools():
@@ -95,6 +93,11 @@ def render():
     tools = _tools()
     sums = _summaries()
     routed = _routed_modules(route)
+    supplement = _supplement()
+    sup_names = {c for c, _t, _w in supplement}
+    if _HERE not in sys.path:
+        sys.path.insert(0, _HERE)
+    from control.controller import ADAPTER_SPECS
     L = []
     L.append('# 能力矩阵（题型 × 构件 × 接线状态）')
     L.append('')
@@ -102,9 +105,14 @@ def render():
              '（`control/classifier.py` 的 ROUTE 表 + `ai/tools.py` 的注册表 + 各构件 '
              'docstring），请勿手改；漂移检查见 `engine/test_capability_matrix.py`。')
     L.append('>')
-    L.append('> 口径：**"已接线"＝判类器会把材料送到它**。没接线的构件'
-             '**照样能单独调用**（命令行 `paradox-engine --call 工具`、AI 工具 '
-             '`call_tool`），只是判类器不会自动送材料过来。')
+    L.append('> 口径（**三态**）：')
+    L.append('> 1. **默认管线**——判类器按"题型 × 复杂度档"自动把材料送过去；')
+    L.append('> 2. **线索触发补跑**——题型对得上 + 人给足该构件的线索就跑。'
+             '这些构件都要"人写的正式式子"（formula / program / relations / '
+             'tbox / states / arguments），**不进默认管线**：放进管线会让本来线索'
+             '齐了的材料显示"还欠"，也破坏 L1/L2/L3 的档位语义；')
+    L.append('> 3. **未接线**——只能单独调用（命令行 `paradox-engine --call 工具`、'
+             'AI 工具 `call_tool`）。')
     L.append('')
     L.append('## 一、每个题型现在接了什么（逐字来自 ROUTE 表）')
     L.append('')
@@ -150,7 +158,17 @@ def render():
                     len(mods)))
     L.append('')
 
-    L.append('## 三、能单独调、但判类器不会自动送材料的构件')
+    L.append('## 三、线索触发补跑（题型对得上 + 线索给全就跑；不进默认管线）')
+    L.append('')
+    L.append('| 构件 | 适用题型 | 需要的线索（键） | 补跑能补什么 |')
+    L.append('|---|---|---|---|')
+    for comp, types, why in supplement:
+        spec = ADAPTER_SPECS.get(comp)
+        keys = '、'.join(spec[1]) if spec else '?'
+        L.append('| `%s` | %s | %s | %s |'
+                 % (comp, ' · '.join(types), keys, why))
+    L.append('')
+    L.append('## 四、未接线（只能单独调用）的构件')
     L.append('')
     L.append('（工具名 → 一句话；这些正是"要不要接线"这件事的对象）')
     L.append('')
@@ -166,7 +184,8 @@ def render():
             return True
         return any(modpath.startswith(rn + '.') for rn in routed)   # 层前缀
 
-    all_unwired = [n for n in sorted(tools) if not _wired(n)]
+    all_unwired = [n for n in sorted(tools)
+                   if not _wired(n) and n not in sup_names]
     unwired, self_ones = [], []
     for name in all_unwired:
         modpath, leaf, desc = tools[name]
@@ -181,29 +200,25 @@ def render():
              % (len(self_ones), '、'.join('`%s`' % r[0] for r in self_ones)))
     L.append('')
 
-    L.append('## 四、小结（机器算）')
+    L.append('## 五、小结（机器算）')
     L.append('')
     have = [t for t in sorted(type_name) if any((t, lv) in route
                                                for lv in _LEVELS)]
     L.append('- 有路由的题型：**%d/%d**（%s）'
              % (len(have), len(type_name), '、'.join(have)))
     L.append('- 路由表条目：**%d** 条（题型 × 档）' % len(route))
-    L.append('- 路由里的构件名：**%d** 个（%s）'
-             % (len(routed), '、'.join(sorted(routed))))
-    L.append('- 工具总数：**%d** 件；其中**没接线的机制件 %d 件**（另有 %d 件是引擎自身，'
-             '见上一节）' % (len(tools), len(unwired), len(self_ones)))
+    L.append('- 路由里的构件名：**%d** 个（%s）——其中 **%d 个有对应工具**，'
+             '其余是入口/层名，不占工具位'
+             % (len(routed), '、'.join(sorted(routed)),
+                len(tools) - len(unwired) - len(self_ones) - len(sup_names)))
+    L.append('- 工具总数：**%d** 件，分三态：**默认管线 %d 件** · '
+             '**线索触发补跑 %d 件** · **未接线（只 --call）%d 件**'
+             '（另有 %d 件是引擎自身，见上一节）'
+             % (len(tools),
+                len(tools) - len(unwired) - len(self_ones) - len(sup_names),
+                len(sup_names), len(unwired), len(self_ones)))
     L.append('')
 
-    L.append('## 五、提案：这几件如果接线，大概补哪个题型（**人工维护 · 待作者定**）')
-    L.append('')
-    L.append('> 这一节**不是**生成口径的一部分——它是提案（来源：`docs/ROADMAP.md` 的候选'
-             '清单与本仓 CHANGELOG 里各件的「为什么做」段），写在这里是为了让"要不要接线"这个决定有据可看。')
-    L.append('')
-    L.append('| 构件 | 候选题型 | 接线能买到什么 |')
-    L.append('|---|---|---|')
-    for leaf, types, why in _PROPOSALS:
-        L.append('| `%s` | %s | %s |' % (leaf, types, why))
-    L.append('')
     return '\n'.join(L)
 
 
