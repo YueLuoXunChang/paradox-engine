@@ -56,6 +56,7 @@ PORTS = {
 }
 
 import io
+import json
 import os
 import sys
 
@@ -86,6 +87,9 @@ _HELP = [
     '  /export 文件        导出 Markdown 台账（加 redact 走隐私导出：/export 文件 redact）',
     '  /revise [轮次] 命题式  新信息触发 AGM 信念修正（命题式由人给，引擎不抽公式）',
     '  /scene 场景号       跑单个场景（期望 vs 实际）  ·  /scenes 场景清单  ·  /stats 统计',
+    '  /file 材料.md [para|line] [chunk N] [from N]  整篇材料逐段诊断并记账（分段/分块/续跑）',
+    '  /clues on|off       材料记账时是否顺手记下线索建议（默认关）',
+    '  /struct {...}       给下一段材料挂结构化线索（JSON），好让构件真跑；/struct clear 清掉',
     '  /json on|off        命令输出是否走 JSON（默认 off，人读）',
     '  /help               本帮助          ·  /quit 退出',
     '说明：命令不完整或未知 → 只报错并提示，不猜你的意思；'
@@ -95,7 +99,8 @@ _HELP = [
 
 def new_state(session=None):
     """新开一台（session 可省——省了就只诊断不记账）。"""
-    return {'session': session, 'turns': 0, 'json': False, 'last_rc': 0}
+    return {'session': session, 'turns': 0, 'json': False, 'last_rc': 0,
+            'clues': False, 'structured': None}
 
 
 def _cli():
@@ -163,6 +168,32 @@ def to_argv(line, state):
         return ['--stats'] + jf, None, None
     if cmd == '/scenes':
         return ['--scenarios'] + jf, None, None
+    if cmd == '/file':
+        miss = _need_session(state)
+        if miss:
+            return None, miss, None
+        if not rest:
+            return None, ('用法：/file 材料.md [para|line] [chunk N] [from N] ——'
+                          '整篇材料逐段诊断并记账（分段/分块/可续跑）'), None
+        bits = rest.split()
+        argv = ['--session', S, '--add-file', bits[0]]
+        i = 1
+        while i < len(bits):
+            b = bits[i]
+            if b in ('para', 'line'):
+                argv += ['--split', b]
+            elif b in ('chunk', 'from'):
+                if i + 1 >= len(bits):
+                    return None, ('%s 后面要跟一个数字（如 /file 材料.md chunk 20）' % b), None
+                argv += ['--chunk' if b == 'chunk' else '--from-seg', bits[i + 1]]
+                i += 1
+            else:
+                return None, ('看不懂的选项：%s —— 用法：/file 材料.md [para|line] '
+                              '[chunk N] [from N]' % b), None
+            i += 1
+        if state.get('clues'):
+            argv.append('--clues')
+        return argv + jf, None, None
     if cmd == '/scene':
         if not rest:
             return None, '用法：/scene S01（场景号见 /scenes）', None
@@ -266,6 +297,33 @@ def handle(line, state=None):
             return out('error', ['用法：/json on|off'])
         st['json'] = (rest == 'on')
         return out('handled', ['命令输出走 JSON：%s' % ('开' if st['json'] else '关')])
+    if text.startswith('/clues'):
+        rest = text[len('/clues'):].strip()
+        if rest in ('on', 'off'):
+            st['clues'] = (rest == 'on')
+            return out('handled', ['材料记账时顺手记线索建议：%s'
+                                   % ('开' if st['clues'] else '关')])
+        if rest == '':
+            return out('help', ['线索建议当前：%s（用法 /clues on|off）'
+                                % ('开' if st.get('clues') else '关')])
+        return out('error', ['用法：/clues on|off'])
+    if text.startswith('/struct'):
+        rest = text[len('/struct'):].strip()
+        if rest in ('clear', 'off', 'none'):
+            st['structured'] = None
+            return out('handled', ['已清掉结构化线索：之后每段材料都按"没有线索"诊断'])
+        if not rest:
+            cur = st.get('structured')
+            return out('help', ['当前结构化线索：%s' % (cur or '（没挂）'),
+                                '用法：/struct {"A":"…","B":"…","wA":5,"wNotA":5} '
+                                '（挂给下一段材料，好让构件真跑）；/struct clear 清掉'])
+        try:
+            json.loads(rest)
+        except ValueError as e:
+            return out('error', ['结构化线索不是合法 JSON（%s）——不挂，也不猜' % e])
+        st['structured'] = rest
+        return out('handled', ['结构化线索已挂上（下一段材料会带上它真跑构件）；'
+                               '/struct clear 可清掉'])
 
     # ── 斜杠命令 → 翻成 CLI 参数
     if text.startswith('/'):
@@ -284,14 +342,20 @@ def handle(line, state=None):
         return res
 
     # ── 普通文字＝材料：开着会话就顺手记账（走 CLI 的 --add），否则只诊断
+    extra = []
+    if st.get('clues'):
+        extra.append('--clues')
+    if st.get('structured'):
+        extra += ['--structured-json', st['structured']]
     if st.get('session'):
-        rc, lines = _capture(['--session', st['session'], '--add', text] +
+        rc, lines = _capture(['--session', st['session'], '--add', text] + extra +
                              (['--json'] if st['json'] else []))
         st['turns'] += 1
         st['last_rc'] = rc
         return {'verdict': 'material_diagnosed', 'lines': lines, 'state': st,
                 'quit': False, 'boundary': BOUNDARY}
-    rc, lines = _capture(['--text', text] + (['--json'] if st['json'] else []))
+    rc, lines = _capture(['--text', text] + extra +
+                         (['--json'] if st['json'] else []))
     st['last_rc'] = rc
     lines = lines + ['（没有会话文件：这次只诊断、不记账——'
                      '想逐条记账先 `/session 文件.json`）']

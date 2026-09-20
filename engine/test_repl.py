@@ -152,6 +152,53 @@ check("边界声明写明：薄前端 / 不代签 / 不偷偷落文件",
 check("状态结构带会话路径与轮次计数",
       set(('session', 'turns', 'json')) <= set(new_state('x.json').keys()))
 
+# ── 八、整篇材料导入与开关（/file /clues /struct）
+_mf = os.path.join(_tmp, '材料.md')
+io.open(_mf, 'w', encoding='utf-8').write(
+    '需求既要三周上线又要十二周合规\n\n这句话是假的\n\n样本只有一百人靠不靠谱\n')
+_s2 = os.path.join(_tmp, 's2.json')
+st8 = handle('/session ' + _s2)['state']
+st8 = handle('/clues on', st8)['state']
+check("/clues on → 记下开关", st8['clues'] is True)
+r = handle('/file ' + _mf, st8)
+st8 = r['state']
+check("/file 整篇材料 → 逐段诊断并记账（3 段）",
+      r['verdict'] == 'handled' and '材料导入' in _joined(r)
+      and '3 段' in _joined(r), _joined(r)[:150])
+try:
+    _s = json.load(io.open(_s2, encoding='utf-8'))
+    _ok = len(_s.get('turns') or []) == 3
+except Exception:  # noqa: BLE001
+    _ok = False
+check("/file 之后会话里真有 3 条轮次", _ok)
+check("/file 缺文件名校 → 报用法（不猜）",
+      handle('/file', st8)['verdict'] == 'error'
+      and '用法' in _joined(handle('/file', st8)))
+check("/file 坏选项 → 报错并给用法",
+      handle('/file ' + _mf + ' 瞎写', st8)['verdict'] == 'error'
+      and '看不懂的选项' in _joined(handle('/file ' + _mf + ' 瞎写', st8)))
+r = handle('/file ' + _mf + ' line chunk 2', st8)
+check("/file 分段+分块 → 走分块导入（有进度、可续跑）",
+      r['verdict'] == 'handled', _joined(r)[:150])
+st8 = r['state']
+r = handle('/struct {"A":"快","B":"稳","wA":5,"wNotA":5}', st8)
+st8 = r['state']
+check("/struct 挂结构化线索（合法 JSON）→ 记下",
+      r['verdict'] == 'handled' and st8['structured'], _joined(r))
+_before_struct = st8['structured']
+r = handle('/struct 不是json', st8)
+check("/struct 坏 JSON → 报错且不挂（状态不变、不猜）",
+      r['verdict'] == 'error' and st8['structured'] == _before_struct,
+      _joined(r))
+check("/struct 空参 → 显示当前挂的是什么",
+      '当前结构化线索' in _joined(handle('/struct', st8)))
+r = handle('产品既要快又要稳', st8)
+check("挂了线索后材料真跑构件（执行里出现真跑）",
+      '【执行】' in _joined(r) or '真跑' in _joined(r), _joined(r)[:150])
+r = handle('/struct clear', st8)
+check("/struct clear → 清掉线索", r['verdict'] == 'handled'
+      and r['state']['structured'] is None, _joined(r))
+
 # ── 六、端到端：子进程 + 管道跑真循环
 _ep = os.path.join(_tmp, 'e2e.json')
 _lines = '\n'.join(['/session ' + _ep, '需求既要三周上线又要十二周合规',
@@ -174,5 +221,5 @@ check("没往仓库里落文件（会话/台账都在临时目录）",
           for p in (sp, _out, _ep)))
 
 print("=" * 60)
-print(f"结果: {PASS}/32 通过")
-raise SystemExit(0 if PASS == 32 else 1)
+print(f"结果: {PASS}/43 通过")
+raise SystemExit(0 if PASS == 43 else 1)
