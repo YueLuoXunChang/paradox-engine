@@ -167,6 +167,40 @@
         "type": "string"
       }
     },
+    "description_logic": {
+      "c1": {
+        "required": false,
+        "type": "string"
+      },
+      "c2": {
+        "required": false,
+        "type": "string"
+      },
+      "concept": {
+        "required": false,
+        "type": "string"
+      },
+      "max_nodes": {
+        "required": false,
+        "type": "integer"
+      },
+      "mode": {
+        "required": false,
+        "type": "string"
+      },
+      "sub": {
+        "required": false,
+        "type": "string"
+      },
+      "super": {
+        "required": false,
+        "type": "string"
+      },
+      "tbox": {
+        "required": false,
+        "type": "array"
+      }
+    },
     "dung_framework": {
       "arguments": {
         "required": false,
@@ -668,5 +702,5 @@
       }
     }
   },
-  "tool_count": 35
+  "tool_count": 36
 }

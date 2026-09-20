@@ -2,7 +2,7 @@
 
 > 由 `python engine/_components_doc.py --write` 从各模块 docstring 与 `PORTS` 生成；`--check` 可在改动后比对漂移。手改这份文件会在检查里报不一致。
 
-- 构件数：**45** 个（不含下划线内部件与测试）
+- 构件数：**46** 个（不含下划线内部件与测试）
 
 ## 第 0 层 · 总控（判类/复杂度/路由/五步流水线/工作台）
 
@@ -229,6 +229,13 @@
 - 做什么：给一套默认规则（前提 : 辩护 / 结论）+ 一组事实 → 算出**所有站得住的扩展**
 - 输入端口：`facts: list?`、`defaults: list?`、`query: str?`、`max_defaults: int?`
 - 输出端口：`verdict: str`、`extensions: list`、`in_all: list`、`in_some: list`、`in_none: list`、`default_status: list`、`ambiguous_defaults: list`、`query_status: str?`、`boundary: str`
+- 可独立运行：是（自带自测）
+
+### `engine/cold/description_logic.py`
+
+- 做什么：拿一个**概念描述**（A ⊓ ∃R.B 这种）与一套**本体公理**（A ⊑ B 这类包含关系），
+- 输入端口：`mode: str?`、`concept: str?`、`sub: str?`、`super: str?`、`c1: str?`、`c2: str?`、`tbox: list?`、`max_nodes: int?`
+- 输出端口：`verdict: str`、`model: dict?`、`clash: dict?`、`classify: dict?`、`boundary: str`
 - 可独立运行：是（自带自测）
 
 ### `engine/cold/dung_framework.py`

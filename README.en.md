@@ -104,7 +104,7 @@ print(r['report'])
 ```bash
 # After cloning, from the repository root
 python demo.py          # twenty-step tour
-python run_tests.py     # full regression (58 test files / 1623 assertions)
+python run_tests.py     # full regression (59 test files / 1680 assertions)
 ```
 
 `demo.py` demonstrates twenty things (①②③ the paradox trio → ④-⑩ the
@@ -190,6 +190,7 @@ paradox-engine/
 │   │   ├── belnap_four.py        Belnap four-valued logic (contradiction = "both", no explosion)
 │   │   ├── many_valued.py        many-valued logic (3-valued K3 / Ł3: unknown propagation, tautologies, three-way comparison)
 │   │   ├── interval_algebra.py   interval algebra (qualitative time: before / meets / overlaps / during …)
+│   │   ├── description_logic.py  description logic ALC (concept subsumption / ontology classification)
 │   │   ├── dung_framework.py     Dung argumentation framework (grounded / preferred / stable)
 │   │   ├── agm_revision.py       AGM belief revision + non-monotonic defaults (retractable conclusions)
 │   │   ├── default_logic.py      default logic, full fixpoints (all extensions / shared conclusions / competing defaults)
@@ -221,9 +222,9 @@ paradox-engine/
 ├── pyproject.toml           ← pip packaging (provides the `paradox-engine` command)
 ├── .github/workflows/       ← CI (full suite + demo + CLI smoke)
 ├── docs/
-│   ├── components.md             component reference (45 components: purpose / ports / self-run, generated)
+│   ├── components.md             component reference (46 components: purpose / ports / self-run, generated)
 │   ├── mechanisms.md             layered capability index (self-test N + formal M per component)
-│   ├── tool_schema.md            tool protocol (35 tool contracts, generated)
+│   ├── tool_schema.md            tool protocol (36 tool contracts, generated)
 │   ├── glossary.md               glossary (the engine's own terms, zh/en)
 │   ├── ROADMAP.md                layered roadmap
 │   └── formulas/                 concept cards (×15 for the classical layer)
@@ -383,7 +384,7 @@ when a real pain point appears).
 
 ### Test status
 
-- **1623 formal assertions pass** (58 test files), covering every mechanism
+- **1680 formal assertions pass** (59 test files), covering every mechanism
   component plus the controller/scenario/AI-tool layers;
 - **One command runs the whole suite**: `python run_tests.py` (discover + run +
   summarize; a single failing file yields a non-zero exit — the same entry

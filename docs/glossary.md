@@ -16,7 +16,7 @@
 | 第 1 层 · 经典逻辑层 | L1 classical | 命题 → 谓词 → 时序 → 模态（地基，经典共识） | `engine/classical/` |
 | 第 2 层 · 悖论/创生层 | L2 paradox | 悖论测度·注解·递归修正 + 对位创生（引擎主场） | `engine/mechanisms/` |
 | 第 3 层 · 冷门逻辑层 | L3 cold | 次协调 / Dung / 非单调 / 相干 / 直觉主义…（按痛点选） | `engine/cold/` |
-| AI 挂载层 | AI mounting | 构件函数 = AI 可调用工具（**35 件**，契约冻结） | `engine/ai/tools.py` |
+| AI 挂载层 | AI mounting | 构件函数 = AI 可调用工具（**36 件**，契约冻结） | `engine/ai/tools.py` |
 | 总控 | controller | 判类 → 复杂度 → 切路 → 真跑 → 判输出（五步） | `engine/control/controller.py` |
 | 工作台 | workshop | 一批材料 → 会话台账 → 简报/看板/对账 | `engine/control/session.py` |
 
@@ -80,6 +80,10 @@
 | 修正序列 | revision sequence | 真值在序列里如何收敛（稳定 / 周期振荡——共振带的学界锚点） |
 | 构造性立场 | constructive stance | 直觉主义：Kripke 反模型；排中律、双重否定消去、Peirce 律都不成立 |
 | 区间代数（Allen） | interval algebra | 事件之间的**定性时序**：13 个基本关系（先于／相接／重叠／开始于／包含于／结束于／同时 + 逆）+ 复合 + 路径一致性；报"没发现冲突"不等于有解 |
+| 描述逻辑 ALC | description logic ALC | 概念描述语言（⊓ ⊔ ¬ ∃R.C ∀R.C）+ 本体公理（`C ⊑ D` / `C ≡ D`）：判概念可不可满足、甲包不包含乙、相不相交、整张本体的概念层级 |
+| 表列法 / 撞车 | tableau / clash | 把"这个概念能不能成立"化成"展开处处撞车吗"：交拆开、并分两支、∃ 造后继、∀ 发给后继；同现 A 与 ¬A（或 ⊥）就叫撞车，该支关闭 |
+| 子集阻塞 | subset blocking | 某节点的标号被**祖先**标号装下就不再为它造后继（祖先顶上这个节点）——循环本体（`A ≡ ∃R.A`）靠这个收口；方向反了就是假阻塞 |
+| TBox / ABox | TBox / ABox | 本构件只做**概念层 TBox**（公理是概念之间的包含）；**不做 ABox**（"张三属于某概念"这类个体断言） |
 
 ## 五、可计算性与判定（decidability）
 
@@ -136,6 +140,7 @@
 | counterpoint generation | 对位创生 | 对立交汇出第三态候选 |
 | decidability | 可判定 | 有算法给是/否 |
 | default logic extension | 默认逻辑扩展 | Γ 不动点 |
+| description logic ALC | 描述逻辑 ALC | 概念包含 / 本体分类（表列 + 子集阻塞） |
 | defeasible | 可废止 | 有反例即阻断 |
 | diagnose, do not decide | 只诊断不决策 | 引擎不替人下结论 |
 | drift | 漂移 | 文档与实际不符 |

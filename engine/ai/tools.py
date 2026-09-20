@@ -85,6 +85,9 @@ _TOOL_REGISTRY = [
     ('interval_algebra', 'cold.interval_algebra',
      '区间代数：事件之间的定性时序关系自不自治（先于/相接/重叠/包含…），矛盾给冲突对，'
      '不矛盾给可复核的整数区间见证'),
+    ('description_logic', 'cold.description_logic',
+     '描述逻辑 ALC：概念可不可满足、甲包不包含乙、两个概念相不相交、'
+     '整张本体的概念层级（谁是谁的子类），可满足给规范模型'),
     ('dung_framework', 'cold.dung_framework',
      'Dung 论证框架：哪些立场站得住（grounded/preferred/stable）'),
     ('truth_revision', 'cold.truth_revision',

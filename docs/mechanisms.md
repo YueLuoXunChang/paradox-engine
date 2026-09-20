@@ -1,7 +1,7 @@
 # paradox-engine · 能力目录
 
 > 分层：总控（神经系统）· 第 0 层骨架（✅）· 第 1 层经典逻辑（✅）·
-> 第 2 层悖论（✅ 核心）· 第 3 层冷门（✅ 九件齐）· AI 挂载（✅）。
+> 第 2 层悖论（✅ 核心）· 第 3 层冷门（✅ 十件齐）· AI 挂载（✅）。
 > 见 docs/ROADMAP.md。每个文件自包含：`python <文件>` 直接跑自测。
 
 ## AI 挂载 · 引擎 = 可调用工具集（阶段 6）
@@ -32,6 +32,7 @@
 | engine/cold/belnap_four.py | Belnap 四值（T/F/两者/皆非）：矛盾取"两者"不爆炸——次协调语义地基（借鉴 Belnap 1977） | ✅ 自测7+正式30 |
 | engine/cold/many_valued.py | 多值逻辑（三值）：K3 的"未知"传播与 Ł3 的"中间真值"——重言式/推理判定 + 经典/K3/Ł3 三套对照（K3 无重言式；Ł3 有但无排中律）（借鉴 Kleene 1952 / Łukasiewicz 1920） | ✅ 自测6组+正式27 |
 | engine/cold/interval_algebra.py | 区间代数（Allen 定性时序推理）：13 个基本区间关系 + 复合 + 路径一致性——事件之间"谁先谁后/谁包含谁"自不自治；不一致给冲突对、没发现冲突给可复核的整数区间见证（借鉴 Allen 1983 / Vilain & Kautz 1986） | ✅ 自测10项+正式28 |
+| engine/cold/description_logic.py | 描述逻辑 ALC（表列 + 子集阻塞）：概念可不可满足、甲包不包含乙、两概念相不相交、整张本体的概念层级——判"是不是所有 A 都是 B"，可满足给规范模型、不包含给反例模型；循环本体靠子集阻塞收口（借鉴 Schmidt-Schauß & Smolka 1991 / Baader & Sattler 2000） | ✅ 自测8项+正式57 |
 | engine/cold/dung_framework.py | Dung 论证框架：冲突场哪些立场站得住（grounded/preferred/**stable**/争议集；stable 可能一个都没有——奇环就是）（借鉴 Dung 1995） | ✅ 自测6组+正式27 |
 | engine/cold/truth_revision.py | Gupta-Belnap 真值修正：多句系统修正序列（稳定/周期振荡——共振带学界锚点，借鉴 Gupta-Belnap 1993） | ✅ 自测6组+正式19 |
 | engine/cold/agm_revision.py | AGM 信念修正 + 非单调默认：新信息来了旧结论还成立吗（最小放弃 + 可废止默认，借鉴 AGM 1985/Reiter） | ✅ 自测8组+正式48 |
