@@ -101,7 +101,7 @@ print(r['report'])
 ```bash
 # After cloning, from the repository root
 python demo.py          # twenty-step tour
-python run_tests.py     # full regression (55 test files / 1531 assertions)
+python run_tests.py     # full regression (55 test files / 1536 assertions)
 ```
 
 `demo.py` demonstrates twenty things (①②③ the paradox trio → ④-⑩ the
@@ -227,6 +227,8 @@ paradox-engine/
 ├── CODE_OF_CONDUCT.md       ← code of conduct (Contributor Covenant 2.1)
 ├── SECURITY.md              ← security policy (private reporting + honest scope)
 ├── .editorconfig            ← editor conventions (LF / UTF-8 / 4 spaces)
+├── .gitignore               ← ignores build artifacts and the local private-name list
+├── bench.py                 ← smoke-level benchmark (order-of-magnitude guard, not for external reporting)
 ├── CHANGELOG.md             ← changelog (by date — no versions until release)
 ├── NOTICE                   ← copyright / authorship / AI-collaboration notes
 └── (will grow as the author selects more parts to make public)
@@ -376,7 +378,7 @@ when a real pain point appears).
 
 ### Test status
 
-- **1531 formal assertions pass** (55 test files), covering every mechanism
+- **1536 formal assertions pass** (55 test files), covering every mechanism
   component plus the controller/scenario/AI-tool layers;
 - **One command runs the whole suite**: `python run_tests.py` (discover + run +
   summarize; a single failing file yields a non-zero exit — the same entry

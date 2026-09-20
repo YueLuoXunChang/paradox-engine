@@ -236,6 +236,37 @@ _zh_claims = [int(m.group(1)) for m in
 check("README 断言声明不多不少（= 实测）",
       all(c == _total_asserts for c in _zh_claims), str(_zh_claims))
 
+# ── ⑧ 英文 README 的数字也守（此前只有中文那份有守卫，英文漂了没人管）
+#    构件数：实测取生成器同一来源（磁盘扫描），与中国那份的口径一致
+from engine._components_doc import scan as _comp_scan  # noqa: E402
+_n_components = sum(len(v) for v in _comp_scan().values())
+_zh_comp = [int(m.group(1)) for m in re.finditer(r'(\d+) 个构件', _zh)]
+_en_comp = [int(m.group(1)) for m in re.finditer(r'(\d+) components', _en)]
+check("中文 README 的构件数与实测一致",
+      bool(_zh_comp) and all(c == _n_components for c in _zh_comp),
+      f"实测 {_n_components}，中文 README 写 {_zh_comp}")
+check("英文 README 的构件数与实测一致（英文那份也守）",
+      bool(_en_comp) and all(c == _n_components for c in _en_comp),
+      f"实测 {_n_components}，英文 README 写 {_en_comp}")
+_en_tools = [int(m.group(1)) for m in re.finditer(r'(\d+) tool contracts?', _en)]
+check("英文 README 的工具数与实测一致",
+      bool(_en_tools) and all(c == _n_tools for c in _en_tools),
+      f"实测 {_n_tools}，英文 README 写 {_en_tools}")
+_en_scenes = [int(m.group(1)) for m in re.finditer(r'(\d+) scenes', _en)]
+check("英文 README 的场景数与实测一致",
+      bool(_en_scenes) and all(c == _n_scenes for c in _en_scenes),
+      f"实测 {_n_scenes}，英文 README 写 {_en_scenes}")
+
+# ── ⑨ 根目录白名单：被跟踪的根文件都得在两份 README 里被提到
+#    （没有这条时，仓库根多出一个文件不会被任何东西报出来——真踩过）
+_root_files = [f for f in _sp.run(['git', 'ls-files'], cwd=_REPO,
+                                  capture_output=True, text=True,
+                                  encoding='utf-8').stdout.split()
+               if '/' not in f]
+_unlisted = [f for f in _root_files if f not in _zh or f not in _en]
+check("根目录每个被跟踪的文件都在中英 README 里有交代",
+      not _unlisted, f"没交代：{_unlisted}")
+
 print("=" * 60)
-print(f"结果: {PASS}/21 通过")
-raise SystemExit(0 if PASS == 21 else 1)
+print(f"结果: {PASS}/26 通过")
+raise SystemExit(0 if PASS == 26 else 1)
