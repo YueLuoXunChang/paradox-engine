@@ -36,7 +36,10 @@
         x_min: float——实际用的下界
         alpha_ccdf: float?——回归路（CCDF 斜率）指数
         alpha_mle: float?——Hill 路指数
-        alpha_pdf: float?——换算成"概率密度指数"（= CCDF 指数 + 1，防口径误读）
+        alpha_pdf: float?——**回归路**换算成"概率密度指数"（= alpha_ccdf + 1，防口径误读）。
+                   **注意是哪条路**：Hill 路的密度口径是 `alpha_mle + 1`，两条路会差一个估计差
+                   （抽样下常见 0.0x）——拿这个字段去和别人的 MLE 密度指数直接比，会误判成
+                   "两份实现不一致"（本仓真的被这样比过一次，2026-09-22 外部对拍时）。
         r2: float?——CCDF 直线拟合优度
         scale_free: bool——是否通过无标度门槛
         regime: 'supercritical'|'critical'|'subcritical'|None
@@ -83,7 +86,10 @@ def _hill(sizes, x_min):
     **口径**：这里估的是**互补累积分布**的指数 α（CCDF ∝ s^(-α)）——
     Pareto 下 E[ln(S/x_min)] = 1/α，故 α̂ = n / Σ ln(s_i / x_min)。
     （写成 `1 + n/Σln` 是**密度指数**口径，两者差 1，别混；
-    本构件对外一律用 CCDF 口径，并在输出里给 alpha_pdf = α + 1 防误读。）
+    本构件对外一律用 CCDF 口径，并在输出里给 alpha_pdf 防误读——
+    **那个 alpha_pdf 是回归路换算的（alpha_ccdf + 1）**，不是这条 Hill 路；
+    Hill 路的密度口径应为 `alpha_mle + 1`。两条路各有一个换算，别混用，
+    也别拿其中一个去和别人的 MLE 密度指数直接比（会差一个估计差）。）
     """
     tail = [s for s in sizes if s >= x_min]
     n = len(tail)
