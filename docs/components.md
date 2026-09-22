@@ -2,7 +2,7 @@
 
 > 由 `python engine/_components_doc.py --write` 从各模块 docstring 与 `PORTS` 生成；`--check` 可在改动后比对漂移。手改这份文件会在检查里报不一致。
 
-- 构件数：**49** 个（不含下划线内部件与测试）
+- 构件数：**50** 个（不含下划线内部件与测试）
 
 ## 第 0 层 · 总控（判类/复杂度/路由/五步流水线/工作台）
 
@@ -178,6 +178,13 @@
 - 做什么：给一串「事件规模」（悖论密度、绞杀事件规模、级联长度……），判它**是否落在无标度区间**，
 - 输入端口：`mode: str?`、`sizes: list`、`sizes_b: list?`、`alpha_critical: float?`、`tol: float?`、`x_min: float?`、`n_boot: int?`、`seed: int?`
 - 输出端口：`verdict: str`、`n: int`、`x_min: float?`、`alpha_ccdf: float?`、`alpha_mle: float?`、`alpha_pdf: float?`、`r2: float?`、`scale_free: bool`、`regime: str?`、`distance_to_threshold: float?`、`criticality_percentile: float?`、`boundary: str`、`detail: dict`、`compare: dict?`
+- 可独立运行：是（自带自测）
+
+### `engine/mechanisms/growth_guard.py`
+
+- 做什么：给一串「每轮产物规模」的**实测值**与一个预算上限，算三件事：
+- 输入端口：`sizes: list?`、`n0: int?`、`rate: float?`、`budget: int?`、`steps: int?`、`mode: str?`、`gain_min: float?`、`high_ratio: float?`、`low_ratio: float?`
+- 输出端口：`verdict: str`、`n_points: int`、`growth: dict?`、`budget: int?`、`policies: dict?`、`chatter: dict?`、`recommendation: dict?`、`detail: dict`、`boundary: str`
 - 可独立运行：是（自带自测）
 
 ### `engine/mechanisms/observer_bypass.py`

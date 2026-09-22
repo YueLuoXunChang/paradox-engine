@@ -147,6 +147,7 @@
 | `description_logic` | cold | `engine/cold/description_logic.py` | 描述逻辑 ALC：概念可不可满足、甲包不包含乙、两个概念相不相交、整张本体的概念层级（谁是谁的子类），可满足给规范模型 |
 | `dung_framework` | cold | `engine/cold/dung_framework.py` | Dung 论证框架：哪些立场站得住（grounded/preferred/stable） |
 | `equality_tableau` | classical | `engine/classical/equality_tableau.py` | 等词+表列法：等词替换 + tableau 反例模型 |
+| `growth_guard` | mechanisms | `engine/mechanisms/growth_guard.py` | 增长护栏：迭代产物会不会指数爆炸 + 限幅/增益调度/滞后补偿的压制效果与代价 |
 | `lambda_calculus` | classical | `engine/classical/lambda_calculus.py` | λ 演算：β 归约/Y 不动点/邱奇编码/Ω 诚实发散 |
 | `many_valued` | cold | `engine/cold/many_valued.py` | 多值逻辑：K3 未知传播 / Ł3 中间真值（重言式与推理判定，三套对照） |
 | `modal` | classical | `engine/classical/modal.py` | 模态逻辑：□/◇ Kripke 语义（K/T/S4/S5） |
@@ -167,4 +168,4 @@
 - 有路由的题型：**12/12**（T1、T10、T11、T12、T2、T3、T4、T5、T6、T7、T8、T9）
 - 路由表条目：**36** 条（题型 × 档）
 - 路由里的构件名：**14** 个（agm_revision、boundary_paradox、converge_check、counterpoint_gen、first_order、ltl、nd_propositional、paradox_annotate、paradox_measure、propositional、relevance_logic、selfref_fixpoint、skeleton、wall_pipeline）——其中 **11 个有对应工具**，其余是入口/层名，不占工具位
-- 工具总数：**39** 件，分三态：**默认管线 11 件** · **线索触发补跑 8 件** · **未接线（只 --call）18 件**（另有 2 件是引擎自身，见上一节）
+- 工具总数：**40** 件，分三态：**默认管线 11 件** · **线索触发补跑 8 件** · **未接线（只 --call）19 件**（另有 2 件是引擎自身，见上一节）

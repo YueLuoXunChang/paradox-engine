@@ -299,6 +299,44 @@
         "type": "array"
       }
     },
+    "growth_guard": {
+      "budget": {
+        "required": false,
+        "type": "integer"
+      },
+      "gain_min": {
+        "required": false,
+        "type": "number"
+      },
+      "high_ratio": {
+        "required": false,
+        "type": "number"
+      },
+      "low_ratio": {
+        "required": false,
+        "type": "number"
+      },
+      "mode": {
+        "required": false,
+        "type": "string"
+      },
+      "n0": {
+        "required": false,
+        "type": "integer"
+      },
+      "rate": {
+        "required": false,
+        "type": "number"
+      },
+      "sizes": {
+        "required": false,
+        "type": "array"
+      },
+      "steps": {
+        "required": false,
+        "type": "integer"
+      }
+    },
     "interval_algebra": {
       "events": {
         "required": false,
@@ -788,5 +826,5 @@
       }
     }
   },
-  "tool_count": 39
+  "tool_count": 40
 }

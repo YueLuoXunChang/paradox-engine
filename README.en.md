@@ -104,9 +104,9 @@ print(r['report'])
 ```bash
 # After cloning, from the repository root
 python demo.py          # twenty-step tour
-python -m engine.cli --tools          # list all 39 tools
+python -m engine.cli --tools          # list all 40 tools
 python -m engine.cli --call asp --args '{"program": "p :- not q. q :- not p."}'
-python run_tests.py     # full regression (65 test files / 1852 assertions)
+python run_tests.py     # full regression (66 test files / 1891 assertions)
 ```
 
 `demo.py` demonstrates twenty things (①②③ the paradox trio → ④-⑩ the
@@ -182,7 +182,8 @@ paradox-engine/
 │   │   ├── observer_bypass.py    full self-reflexive bypass (main chain never blocks)
 │   │   ├── counterpoint_gen.py   counterpoint generation (opposites → third state candidate)
 │   │   ├── wall_pipeline.py      wall pipeline A (measure→annotate→drill→view→bypass→create → 5-way verdict)
-│   │   └── criticality.py        criticality diagnosis (event sizes → scale-free? + regime + threshold distance)
+│   │   ├── criticality.py        criticality diagnosis (event sizes → scale-free? + regime + threshold distance)
+│   │   └── growth_guard.py        growth guard (clamp / gain scheduling / hysteresis + cut cost and chatter)
 │   ├── scenarios/             ← Scenario library (real input + expected diagnosis + review — corpus feedback)
 │   │   ├── scenarios.py          28-scenario registry + run_all comparison (expected vs actual)
 │   │   ├── corpus_stats.py       corpus statistics (agreement / confusion matrix / coverage gap / review progress)
@@ -227,11 +228,11 @@ paradox-engine/
 ├── pyproject.toml           ← pip packaging (provides the `paradox-engine` command)
 ├── .github/workflows/       ← CI (full suite + demo + CLI smoke)
 ├── docs/
-│   ├── components.md             component reference (49 components: purpose / ports / self-run, generated)
+│   ├── components.md             component reference (50 components: purpose / ports / self-run, generated)
 │   ├── mechanisms.md             layered capability index (self-test N + formal M per component)
 │   ├── capability_matrix.md      capability matrix (problem type × component × wiring; generated)
 │   ├── trigger_audit.md          trigger audit (candidate set × fired set: wired but never fired)
-│   ├── tool_schema.md            tool protocol (39 tool contracts, generated)
+│   ├── tool_schema.md            tool protocol (40 tool contracts, generated)
 │   ├── glossary.md               glossary (the engine's own terms, zh/en)
 │   ├── ROADMAP.md                layered roadmap
 │   └── formulas/                 concept cards (×15 for the classical layer)
@@ -334,7 +335,8 @@ can be discussed, compared, and traced.
   annotation (8-field card + grade) + convergence check + **recursive
   revision × self-reference detection** (three states: fixed point /
   resonance band / divergence) + **boundary-paradox diagnosis** + **full
-  self-reflexive bypass** + **counterpoint third-state generation** — when the
+  self-reflexive bypass** + **counterpoint third-state generation** + **growth
+  guard** (clamp / gain scheduling / hysteresis) — when the
   classical layer hits something undecidable it escalates here and returns a
   **five-way diagnosis** (decidable / benign self-reference /
   resonance-band self-reference / divergent wall / creatable). "Contradiction
@@ -391,7 +393,7 @@ when a real pain point appears).
 
 ### Test status
 
-- **1852 formal assertions pass** (65 test files), covering every mechanism
+- **1891 formal assertions pass** (66 test files), covering every mechanism
   component plus the controller/scenario/AI-tool layers;
 - **One command runs the whole suite**: `python run_tests.py` (discover + run +
   summarize; a single failing file yields a non-zero exit — the same entry

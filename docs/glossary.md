@@ -16,7 +16,7 @@
 | 第 1 层 · 经典逻辑层 | L1 classical | 命题 → 谓词 → 时序 → 模态（地基，经典共识） | `engine/classical/` |
 | 第 2 层 · 悖论/创生层 | L2 paradox | 悖论测度·注解·递归修正 + 对位创生（引擎主场） | `engine/mechanisms/` |
 | 第 3 层 · 冷门逻辑层 | L3 cold | 次协调 / Dung / 非单调 / 相干 / 直觉主义…（按痛点选） | `engine/cold/` |
-| AI 挂载层 | AI mounting | 构件函数 = AI 可调用工具（**39 件**，契约冻结） | `engine/ai/tools.py` |
+| AI 挂载层 | AI mounting | 构件函数 = AI 可调用工具（**40 件**，契约冻结） | `engine/ai/tools.py` |
 | 总控 | controller | 判类 → 复杂度 → 切路 → 真跑 → 判输出（五步） | `engine/control/controller.py` |
 | 工作台 | workshop | 一批材料 → 会话台账 → 简报/看板/对账 | `engine/control/session.py` |
 
@@ -63,6 +63,9 @@
 | 对位创生 | counterpoint generation | 对立交汇出**第三态候选 + 依据**（不是二选一） |
 | 全程自反旁路 | observer bypass | 主链不停，旁路观察 + 注解 + 注入（架构级免疫） |
 | 撞墙管线（A） | wall pipeline | 测墙 → 注解 → 钻墙 → 看墙 → 旁路 → 创生，输出**五选一诊断**：可判 / 良性自指 / 共振带自指 / 发散真墙 / 可创生 |
+| 增长护栏 | growth guard | 迭代产物会不会指数爆炸；三件套＝**限幅**（每轮硬顶预算，代价是整块截断）· **增益调度**（只在真要撞预算时收窄，逐步逼近）· **滞后补偿**（双阈值迟滞，压住阈值附近的开关抖动） |
+| 累计截断量 | cut total | 口径 = Σ(这一轮**想长的** − **实际放行的**)，逐轮跟当前**实际状态**比（不是跟"不上护栏的原始轨迹"比） |
+| 滞后带 | hysteresis band | 上阈与下阈之间那一段：落在带内不改变介入状态，阈值附近不再来回开关 |
 
 ## 四、冷门逻辑（第 3 层，外部共识归借鉴区）
 
@@ -145,6 +148,7 @@
 | complexity level | 复杂度档 | L1 / L2 / L3 |
 | conflict pairs | 争议集 | 互相攻击的对 |
 | counterpoint generation | 对位创生 | 对立交汇出第三态候选 |
+| cut total | 累计截断量 | Σ(想长的 − 实际放行的) |
 | decidability | 可判定 | 有算法给是/否 |
 | default logic extension | 默认逻辑扩展 | Γ 不动点 |
 | mu-calculus | μ 演算 | 最小/最大不动点 + 模态，留痕可复核 |
@@ -155,7 +159,9 @@
 | drift | 漂移 | 文档与实际不符 |
 | four-valued (Belnap) | Belnap 四值 | 矛盾取"两者" |
 | grounded / preferred / stable | Dung 三语义 | 立场集的三种口径 |
+| growth guard | 增长护栏 | 限幅 + 增益调度 + 滞后补偿 |
 | honest interception | 诚实拦截 | 不假装有结论 |
+| hysteresis band | 滞后带 | 双阈值之间不改变介入状态 |
 | invariant | 不变式 | 声明变成会失败的断言 |
 | model checking | 模型检查 | 给定结构上跑 CTL |
 | paradox measure μ | 悖论测度 | 矛盾强度四分支 |

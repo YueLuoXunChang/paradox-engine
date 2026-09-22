@@ -63,6 +63,8 @@ _TOOL_REGISTRY = [
      '撞墙管线 A：测墙→注解→钻墙→看墙→旁路→创生 → 五选一诊断'),
     ('criticality', 'mechanisms.criticality',
      '临界诊断：事件规模是否无标度 + 三态（次临界/临界/超临界）+ 距阈值多远'),
+    ('growth_guard', 'mechanisms.growth_guard',
+     '增长护栏：迭代产物会不会指数爆炸 + 限幅/增益调度/滞后补偿的压制效果与代价'),
     ('propositional', 'classical.propositional',
      '命题逻辑：有效性/反例/可满足/重言式（经典二值）'),
     ('first_order', 'classical.first_order',

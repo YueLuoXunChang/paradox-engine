@@ -93,10 +93,10 @@ print(r['report'])
 ```bash
 # 克隆后，在仓库根目录
 python demo.py          # 二十步演示
-python -m engine.cli --tools          # 看 39 件工具清单
+python -m engine.cli --tools          # 看 40 件工具清单
 python -m engine.cli --call asp --args '{"program": "p :- not q. q :- not p."}'   # 直接调一个工具（不经判类路由）
 python -m engine.cli --call presburger --args '{"formula": "∀x x + 1 > x"}' --json
-python run_tests.py     # 全量回归（一条命令：65 个测试文件 / 1852 项断言）
+python run_tests.py     # 全量回归（一条命令：66 个测试文件 / 1891 项断言）
 ```
 
 `demo.py` 演示二十件事（①②③ 悖论三件套 → ④-⑩ 经典逻辑地基 → ⑪ 撞墙管线 → ⑫ 总控五步 → ⑬ MT-MP-TL 骨架 → ⑭ 冷门逻辑 → ⑮ AI 挂载 → ⑯ 数学底座 → ⑰ 冷门补完 → ⑱ 构造性立场 → ⑲ 墙的精确地图 → ⑳ 工作台）：
@@ -168,7 +168,8 @@ paradox-engine/
 │   │   ├── observer_bypass.py   悖论全程自反旁路（主链不停，观察+注解+注入）
 │   │   ├── counterpoint_gen.py  对位创生第三态（对立交汇 → 候选+依据）
 │   │   ├── wall_pipeline.py     撞墙管线 A（测→注→钻→看→旁→创 → 五选一诊断）
-│   │   └── criticality.py       临界诊断（事件规模 → 是否无标度 + 三态 + 距阈值多远）
+│   │   ├── criticality.py       临界诊断（事件规模 → 是否无标度 + 三态 + 距阈值多远）
+│   │   └── growth_guard.py       增长护栏（限幅/增益调度/滞后补偿 + 截断代价与开关抖动）
 │   ├── scenarios/             ← 场景库（真实输入+期望诊断+复核——语料回馈判类器）
 │   │   ├── scenarios.py          28 场景注册表 + run_all 对照（期望 vs 实际）
 │   │   ├── corpus_stats.py       语料统计（一致率/混淆矩阵/覆盖缺口/复核进度）
@@ -213,7 +214,7 @@ paradox-engine/
 ├── pyproject.toml           ← pip 打包（paradox-engine console 命令）
 ├── .github/workflows/       ← CI（跑全量回归 + 演示 + CLI 冒烟）
 ├── docs/
-│   ├── components.md            构件参考（49 个构件：做什么/端口/能否自跑，自动生成）
+│   ├── components.md            构件参考（50 个构件：做什么/端口/能否自跑，自动生成）
 │   ├── mechanisms.md            分层能力总表（每构件：自测N+正式M）
 │   ├── capability_matrix.md     能力矩阵（题型×构件×**接线状态**，自动生成）
 │   ├── trigger_audit.md         触发实测（**候选集×触发集**：谁排进了管线却没真跑，自动生成）
@@ -306,7 +307,7 @@ run(inputs: dict) -> dict
   spawn）——只做结构表达，不掺判定；
 - **第 2 层 · 悖论（撞墙管线五件套）**：悖论测度（μ）+ 注解（8 字段卡 +
   分级）+ 收敛判定 + **递归修正×自指检测**（共振带三态）+ **边界悖论判定**
-  + **悖论全程自反旁路** + **对位创生第三态**——经典层撞到不可判定
+  + **悖论全程自反旁路** + **对位创生第三态** + **增长护栏**（限幅/增益调度/滞后补偿）——经典层撞到不可判定
   → 上卷 → **五选一诊断**（可判/良性自指/共振带自指/发散真墙/可创生），
   "矛盾当第一公民"从主张变成可跑管线；
 - **第 3 层 · 冷门逻辑（按痛点接入，十二件齐）**：Belnap 四值（矛盾取"两者"
@@ -345,7 +346,7 @@ run(inputs: dict) -> dict
 - **AI 挂载层**：全部构件封装为 function-calling 工具（schema 从 PORTS
   自动生成，零手工漂移）+ call_tool 统一分派——AI 拿到工具清单即可调用
   整个引擎；命令行也开了一个口子（`--call 工具 --args {JSON}`，`--tools` 看清单，
-  `--json` 给结构化结果；交互台里对应 `/call`）——**39 件工具一个都不再"只能写
+  `--json` 给结构化结果；交互台里对应 `/call`）——**40 件工具一个都不再"只能写
   Python 才调得到"**；两真实场景端到端（论证矛盾检查 / 学科建模）；
 - **工作台（多轮会话台账）**：`--session 文件.json` 逐条材料累积诊断（跨命令
   记住前文）· `--add-file 材料.md` 整篇材料逐段诊断（超限与空白段照实报，
@@ -360,7 +361,7 @@ run(inputs: dict) -> dict
 
 ### 测试状态
 
-- **1852 项正式断言全过**（65 个测试文件），覆盖全部
+- **1891 项正式断言全过**（66 个测试文件），覆盖全部
   机制构件与总控/场景/AI 工具层；
 - **一条命令跑全量回归**：`python run_tests.py`（发现 + 运行 + 汇总；
   任一文件失败即非零退出——CI 与本地同一入口）；
