@@ -106,7 +106,7 @@ print(r['report'])
 python demo.py          # twenty-step tour
 python -m engine.cli --tools          # list all 39 tools
 python -m engine.cli --call asp --args '{"program": "p :- not q. q :- not p."}'
-python run_tests.py     # full regression (64 test files / 1836 assertions)
+python run_tests.py     # full regression (65 test files / 1852 assertions)
 ```
 
 `demo.py` demonstrates twenty things (①②③ the paradox trio → ④-⑩ the
@@ -181,7 +181,8 @@ paradox-engine/
 │   │   ├── boundary_paradox.py   boundary-paradox diagnosis (wall = boundary: tension/undermining/rebirth)
 │   │   ├── observer_bypass.py    full self-reflexive bypass (main chain never blocks)
 │   │   ├── counterpoint_gen.py   counterpoint generation (opposites → third state candidate)
-│   │   └── wall_pipeline.py      wall pipeline A (measure→annotate→drill→view→bypass→create → 5-way verdict)
+│   │   ├── wall_pipeline.py      wall pipeline A (measure→annotate→drill→view→bypass→create → 5-way verdict)
+│   │   └── criticality.py        criticality diagnosis (event sizes → scale-free? + regime + threshold distance)
 │   ├── scenarios/             ← Scenario library (real input + expected diagnosis + review — corpus feedback)
 │   │   ├── scenarios.py          28-scenario registry + run_all comparison (expected vs actual)
 │   │   ├── corpus_stats.py       corpus statistics (agreement / confusion matrix / coverage gap / review progress)
@@ -229,6 +230,7 @@ paradox-engine/
 │   ├── components.md             component reference (49 components: purpose / ports / self-run, generated)
 │   ├── mechanisms.md             layered capability index (self-test N + formal M per component)
 │   ├── capability_matrix.md      capability matrix (problem type × component × wiring; generated)
+│   ├── trigger_audit.md          trigger audit (candidate set × fired set: wired but never fired)
 │   ├── tool_schema.md            tool protocol (39 tool contracts, generated)
 │   ├── glossary.md               glossary (the engine's own terms, zh/en)
 │   ├── ROADMAP.md                layered roadmap
@@ -389,7 +391,7 @@ when a real pain point appears).
 
 ### Test status
 
-- **1836 formal assertions pass** (64 test files), covering every mechanism
+- **1852 formal assertions pass** (65 test files), covering every mechanism
   component plus the controller/scenario/AI-tool layers;
 - **One command runs the whole suite**: `python run_tests.py` (discover + run +
   summarize; a single failing file yields a non-zero exit — the same entry

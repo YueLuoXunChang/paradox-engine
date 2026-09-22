@@ -185,14 +185,19 @@ def _tree_names(doc):
     return names
 
 
-import subprocess as _sp  # noqa: E402
-_tracked = _sp.run(['git', 'ls-files'], cwd=_REPO, capture_output=True,
-                   text=True, encoding='utf-8').stdout.split()
-_mods = [f for f in _tracked
-         if f.startswith('engine/') and f.endswith('.py')
-         and '/test_' not in f
-         and not os.path.basename(f).startswith(('test_', '_'))
-         and not f.endswith('__init__.py')]
+# 口径：**扫盘**，不数 `git ls-files`——后者看不见未提交的新文件，会出现
+# "提交前全绿、提交后才红"的假通过（2026-09-22 真踩过：新构件提交前这门是绿的）。
+import subprocess as _sp  # noqa: E402  （后面根白名单判据还要用）
+_mods = []
+for _dp, _dn, _fn in os.walk(os.path.join(_REPO, 'engine')):
+    _dn[:] = [d for d in _dn if d not in ('__pycache__', 'build')]
+    for _f in _fn:
+        if (not _f.endswith('.py')) or _f.startswith(('test_', '_')) or \
+                _f == '__init__.py':
+            continue
+        _mods.append(os.path.relpath(os.path.join(_dp, _f), _REPO)
+                     .replace('\\', '/'))
+_mods.sort()
 _miss_zh = [f for f in _mods
             if os.path.basename(f) not in _tree_names('README.md')]
 _miss_en = [f for f in _mods
