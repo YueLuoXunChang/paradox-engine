@@ -149,6 +149,40 @@
         "type": "string"
       }
     },
+    "criticality": {
+      "alpha_critical": {
+        "required": false,
+        "type": "number"
+      },
+      "mode": {
+        "required": false,
+        "type": "string"
+      },
+      "n_boot": {
+        "required": false,
+        "type": "integer"
+      },
+      "seed": {
+        "required": false,
+        "type": "integer"
+      },
+      "sizes": {
+        "required": true,
+        "type": "array"
+      },
+      "sizes_b": {
+        "required": false,
+        "type": "array"
+      },
+      "tol": {
+        "required": false,
+        "type": "number"
+      },
+      "x_min": {
+        "required": false,
+        "type": "number"
+      }
+    },
     "decidability_map": {
       "level": {
         "required": false,
@@ -754,5 +788,5 @@
       }
     }
   },
-  "tool_count": 38
+  "tool_count": 39
 }

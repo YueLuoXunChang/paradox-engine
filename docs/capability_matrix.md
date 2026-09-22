@@ -141,6 +141,7 @@
 
 | 工具 | 层 | 构件文件 | 一句话 |
 |---|---|---|---|
+| `criticality` | mechanisms | `engine/mechanisms/criticality.py` | 临界诊断：事件规模是否无标度 + 三态（次临界/临界/超临界）+ 距阈值多远 |
 | `decidability_map` | classical | `engine/classical/decidability_map.py` | 可判定片段地图：这个问题能不能算（判定性结论/算术层级/墙的精确地图） |
 | `default_logic` | cold | `engine/cold/default_logic.py` | 默认逻辑（Reiter 完整不动点）：默认规则下所有扩展、共同结论与立场之争 |
 | `description_logic` | cold | `engine/cold/description_logic.py` | 描述逻辑 ALC：概念可不可满足、甲包不包含乙、两个概念相不相交、整张本体的概念层级（谁是谁的子类），可满足给规范模型 |
@@ -166,4 +167,4 @@
 - 有路由的题型：**12/12**（T1、T10、T11、T12、T2、T3、T4、T5、T6、T7、T8、T9）
 - 路由表条目：**36** 条（题型 × 档）
 - 路由里的构件名：**14** 个（agm_revision、boundary_paradox、converge_check、counterpoint_gen、first_order、ltl、nd_propositional、paradox_annotate、paradox_measure、propositional、relevance_logic、selfref_fixpoint、skeleton、wall_pipeline）——其中 **11 个有对应工具**，其余是入口/层名，不占工具位
-- 工具总数：**38** 件，分三态：**默认管线 11 件** · **线索触发补跑 8 件** · **未接线（只 --call）17 件**（另有 2 件是引擎自身，见上一节）
+- 工具总数：**39** 件，分三态：**默认管线 11 件** · **线索触发补跑 8 件** · **未接线（只 --call）18 件**（另有 2 件是引擎自身，见上一节）

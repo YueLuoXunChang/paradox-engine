@@ -2,7 +2,7 @@
 
 > 由 `python engine/_components_doc.py --write` 从各模块 docstring 与 `PORTS` 生成；`--check` 可在改动后比对漂移。手改这份文件会在检查里报不一致。
 
-- 构件数：**48** 个（不含下划线内部件与测试）
+- 构件数：**49** 个（不含下划线内部件与测试）
 
 ## 第 0 层 · 总控（判类/复杂度/路由/五步流水线/工作台）
 
@@ -171,6 +171,13 @@
 - 做什么：对立对 (A, ¬A) 交汇——不判谁对、不消除——产生第三态 C：
 - 输入端口：`thesis: str?`、`antithesis: str?`、`coupling: str?`、`dimensions: list?`
 - 输出端口：`verdict: str`、`coupling: str`、`third_state: dict`、`derivation: list`、`boundary: str`
+- 可独立运行：是（自带自测）
+
+### `engine/mechanisms/criticality.py`
+
+- 做什么：给一串「事件规模」（悖论密度、绞杀事件规模、级联长度……），判它**是否落在无标度区间**，
+- 输入端口：`mode: str?`、`sizes: list`、`sizes_b: list?`、`alpha_critical: float?`、`tol: float?`、`x_min: float?`、`n_boot: int?`、`seed: int?`
+- 输出端口：`verdict: str`、`n: int`、`x_min: float?`、`alpha_ccdf: float?`、`alpha_mle: float?`、`alpha_pdf: float?`、`r2: float?`、`scale_free: bool`、`regime: str?`、`distance_to_threshold: float?`、`criticality_percentile: float?`、`boundary: str`、`detail: dict`、`compare: dict?`
 - 可独立运行：是（自带自测）
 
 ### `engine/mechanisms/observer_bypass.py`

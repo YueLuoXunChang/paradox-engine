@@ -16,7 +16,7 @@
 | 第 1 层 · 经典逻辑层 | L1 classical | 命题 → 谓词 → 时序 → 模态（地基，经典共识） | `engine/classical/` |
 | 第 2 层 · 悖论/创生层 | L2 paradox | 悖论测度·注解·递归修正 + 对位创生（引擎主场） | `engine/mechanisms/` |
 | 第 3 层 · 冷门逻辑层 | L3 cold | 次协调 / Dung / 非单调 / 相干 / 直觉主义…（按痛点选） | `engine/cold/` |
-| AI 挂载层 | AI mounting | 构件函数 = AI 可调用工具（**38 件**，契约冻结） | `engine/ai/tools.py` |
+| AI 挂载层 | AI mounting | 构件函数 = AI 可调用工具（**39 件**，契约冻结） | `engine/ai/tools.py` |
 | 总控 | controller | 判类 → 复杂度 → 切路 → 真跑 → 判输出（五步） | `engine/control/controller.py` |
 | 工作台 | workshop | 一批材料 → 会话台账 → 简报/看板/对账 | `engine/control/session.py` |
 

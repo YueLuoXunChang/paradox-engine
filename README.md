@@ -93,10 +93,10 @@ print(r['report'])
 ```bash
 # 克隆后，在仓库根目录
 python demo.py          # 二十步演示
-python -m engine.cli --tools          # 看 38 件工具清单
+python -m engine.cli --tools          # 看 39 件工具清单
 python -m engine.cli --call asp --args '{"program": "p :- not q. q :- not p."}'   # 直接调一个工具（不经判类路由）
 python -m engine.cli --call presburger --args '{"formula": "∀x x + 1 > x"}' --json
-python run_tests.py     # 全量回归（一条命令：63 个测试文件 / 1796 项断言）
+python run_tests.py     # 全量回归（一条命令：64 个测试文件 / 1836 项断言）
 ```
 
 `demo.py` 演示二十件事（①②③ 悖论三件套 → ④-⑩ 经典逻辑地基 → ⑪ 撞墙管线 → ⑫ 总控五步 → ⑬ MT-MP-TL 骨架 → ⑭ 冷门逻辑 → ⑮ AI 挂载 → ⑯ 数学底座 → ⑰ 冷门补完 → ⑱ 构造性立场 → ⑲ 墙的精确地图 → ⑳ 工作台）：
@@ -212,10 +212,10 @@ paradox-engine/
 ├── pyproject.toml           ← pip 打包（paradox-engine console 命令）
 ├── .github/workflows/       ← CI（跑全量回归 + 演示 + CLI 冒烟）
 ├── docs/
-│   ├── components.md            构件参考（48 个构件：做什么/端口/能否自跑，自动生成）
+│   ├── components.md            构件参考（49 个构件：做什么/端口/能否自跑，自动生成）
 │   ├── mechanisms.md            分层能力总表（每构件：自测N+正式M）
 │   ├── capability_matrix.md     能力矩阵（题型×构件×**接线状态**，自动生成）
-│   ├── tool_schema.md           工具协议（38 工具契约表，自动生成，供调用方）
+│   ├── tool_schema.md           工具协议（39 工具契约表，自动生成，供调用方）
 │   ├── glossary.md              术语表（引擎自己的术语定死；中英对照）
 │   ├── ROADMAP.md               分层路线（7 阶段）
 │   └── formulas/                公式卡 ×15（第 1 层每构件一张概念说明）
@@ -343,7 +343,7 @@ run(inputs: dict) -> dict
 - **AI 挂载层**：全部构件封装为 function-calling 工具（schema 从 PORTS
   自动生成，零手工漂移）+ call_tool 统一分派——AI 拿到工具清单即可调用
   整个引擎；命令行也开了一个口子（`--call 工具 --args {JSON}`，`--tools` 看清单，
-  `--json` 给结构化结果；交互台里对应 `/call`）——**38 件工具一个都不再"只能写
+  `--json` 给结构化结果；交互台里对应 `/call`）——**39 件工具一个都不再"只能写
   Python 才调得到"**；两真实场景端到端（论证矛盾检查 / 学科建模）；
 - **工作台（多轮会话台账）**：`--session 文件.json` 逐条材料累积诊断（跨命令
   记住前文）· `--add-file 材料.md` 整篇材料逐段诊断（超限与空白段照实报，
@@ -358,7 +358,7 @@ run(inputs: dict) -> dict
 
 ### 测试状态
 
-- **1796 项正式断言全过**（63 个测试文件），覆盖全部
+- **1836 项正式断言全过**（64 个测试文件），覆盖全部
   机制构件与总控/场景/AI 工具层；
 - **一条命令跑全量回归**：`python run_tests.py`（发现 + 运行 + 汇总；
   任一文件失败即非零退出——CI 与本地同一入口）；

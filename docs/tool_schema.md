@@ -3,7 +3,7 @@
 > 本文件由 `python engine/ai/freeze_tool_schema.py` 从 `engine/ai/tools.py` 的注册表**自动生成**，请勿手改。
 > 工具名与参数名是对外契约（轨 C1）：有意变更须重新生成本文件与 `engine/ai/tool_schema_frozen.json`，并在 CHANGELOG 与变更记账。
 
-共 **38** 件工具。调用方式：
+共 **39** 件工具。调用方式：
 
 ```python
 from engine.ai.tools import tools, call_tool
@@ -32,6 +32,7 @@ paradox-engine --call presburger --args '{"formula": "2*x = 4"}' --json
 | `observer_bypass` | `detect`:object `main_events`:array `use_advice`:boolean | 悖论全程自反旁路：主链不停，旁路观察+注解+注入 |
 | `counterpoint_gen` | `antithesis`:string `coupling`:string `dimensions`:array `thesis`:string | 对位创生第三态：对立交汇 → 候选+依据（同向/反向/交叉） |
 | `wall_pipeline` | `antithesis`:string `events`:array `thesis`:string `wall`:string | 撞墙管线 A：测墙→注解→钻墙→看墙→旁路→创生 → 五选一诊断 |
+| `criticality` | `alpha_critical`:number `mode`:string `n_boot`:integer `seed`:integer `sizes*`:array `sizes_b`:array `tol`:number `x_min`:number | 临界诊断：事件规模是否无标度 + 三态（次临界/临界/超临界）+ 距阈值多远 |
 | `propositional` | `conclusion`:string `formula*`:string `mode`:string `premises`:array | 命题逻辑：有效性/反例/可满足/重言式（经典二值） |
 | `first_order` | `facts`:array `query*`:string `rules`:array `universe`:array | 一阶谓词：量词推理（有限论域展开判定） |
 | `ltl` | `formula*`:string `path`:array | 时序 LTL：G/F/X/U 沿路径判定（含违约定位） |

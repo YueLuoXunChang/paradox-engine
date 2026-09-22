@@ -61,6 +61,8 @@ _TOOL_REGISTRY = [
      '对位创生第三态：对立交汇 → 候选+依据（同向/反向/交叉）'),
     ('wall_pipeline', 'mechanisms.wall_pipeline',
      '撞墙管线 A：测墙→注解→钻墙→看墙→旁路→创生 → 五选一诊断'),
+    ('criticality', 'mechanisms.criticality',
+     '临界诊断：事件规模是否无标度 + 三态（次临界/临界/超临界）+ 距阈值多远'),
     ('propositional', 'classical.propositional',
      '命题逻辑：有效性/反例/可满足/重言式（经典二值）'),
     ('first_order', 'classical.first_order',

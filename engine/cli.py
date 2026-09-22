@@ -1062,7 +1062,7 @@ def suggest_block(json_out, text):
 
 def call_tool_cmd(args):
     """
-    直接调一个工具（不经判类路由）——把 38 件工具的**全部**从命令行打开。
+    直接调一个工具（不经判类路由）——把 39 件工具的**全部**从命令行打开。
 
     口径：
       · 参数是 JSON 对象（--args '{"mode":"query","program":"p :- not q."}'）；
