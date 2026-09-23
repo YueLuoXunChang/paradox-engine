@@ -138,6 +138,9 @@
 | 发布面红线 | public-face red lines | 公开仓不许出现的东西（本机路径 / 身份信息 / 私有档案名与章节号 / 密钥 / 专业建议题材 / 版本号） |
 | 私有引用清点 | private-reference audit | 只列不改地扫一遍私有档案引用（目标：0 处） |
 | 工具契约冻结 | frozen tool contract | 工具名与参数名是对外契约：改了要重新冻结快照并在 CHANGELOG 记账 |
+| 验证方 | verifier | 给一件产物做**独立检验**的那一方：外部实现 / 同仓另一个构件 / 另一条算法；**只有自己的测试不算**（那是自证） |
+| 未验状态 | unverified state | **没有独立检验方**时产物所处的状态——不是"暂时没验"，而是**不得当定论用**（口径来自"工具不可自证"） |
+| 验证方登记 | verifier registry | `docs/verifier_audit.md`（自动生成）：逐件点名验证方，五态＝外部 / 跨构件 / 独立复算（初筛）/ 只有性质 / 无测试；**只自证的件必须逐个登记签字** |
 | 诚实拦截 | honest interception | 缺参/超限/算不动 → 明确报为什么，**不假装有结论** |
 | 冒烟级基准 | smoke-level benchmark | 只看数量级变化，不对外报数 |
 
@@ -174,6 +177,8 @@
 | semi-decidable | 半可判定 | 只一侧可枚举 |
 | skeptical / credulous | 怀疑论 / 轻信论 | 每个扩展都成立 / 只在部分成立 |
 | three-valued (K3 / Ł3) | 三值 | 未知 vs 中间真值 |
+| unverified state | 未验状态 | 没有独立检验方，不得当定论用 |
+| verifier | 验证方 | 外部实现 / 另一个构件 / 另一条算法 |
 | wall pipeline | 撞墙管线 | 五选一诊断 |
 | workshop ledger | 工作台账 | 逐条材料 + 诊断 |
 

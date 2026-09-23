@@ -96,7 +96,7 @@ python demo.py          # 二十步演示
 python -m engine.cli --tools          # 看 41 件工具清单
 python -m engine.cli --call asp --args '{"program": "p :- not q. q :- not p."}'   # 直接调一个工具（不经判类路由）
 python -m engine.cli --call presburger --args '{"formula": "∀x x + 1 > x"}' --json
-python run_tests.py     # 全量回归（一条命令：67 个测试文件 / 1939 项断言）
+python run_tests.py     # 全量回归（一条命令：68 个测试文件 / 1964 项断言）
 ```
 
 `demo.py` 演示二十件事（①②③ 悖论三件套 → ④-⑩ 经典逻辑地基 → ⑪ 撞墙管线 → ⑫ 总控五步 → ⑬ MT-MP-TL 骨架 → ⑭ 冷门逻辑 → ⑮ AI 挂载 → ⑯ 数学底座 → ⑰ 冷门补完 → ⑱ 构造性立场 → ⑲ 墙的精确地图 → ⑳ 工作台）：
@@ -219,6 +219,7 @@ paradox-engine/
 │   ├── mechanisms.md            分层能力总表（每构件：自测N+正式M）
 │   ├── capability_matrix.md     能力矩阵（题型×构件×**接线状态**，自动生成）
 │   ├── trigger_audit.md         触发实测（**候选集×触发集**：谁排进了管线却没真跑，自动生成）
+│   ├── verifier_audit.md        验证方登记（**每件产物点名验证方**：外部/跨构件/独立复算/只有性质，自动生成）
 │   ├── tool_schema.md           工具协议（39 工具契约表，自动生成，供调用方）
 │   ├── glossary.md              术语表（引擎自己的术语定死；中英对照）
 │   ├── ROADMAP.md               分层路线（7 阶段）
@@ -362,7 +363,7 @@ run(inputs: dict) -> dict
 
 ### 测试状态
 
-- **1939 项正式断言全过**（67 个测试文件），覆盖全部
+- **1964 项正式断言全过**（68 个测试文件），覆盖全部
   机制构件与总控/场景/AI 工具层；
 - **一条命令跑全量回归**：`python run_tests.py`（发现 + 运行 + 汇总；
   任一文件失败即非零退出——CI 与本地同一入口）；

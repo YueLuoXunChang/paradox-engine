@@ -106,7 +106,7 @@ print(r['report'])
 python demo.py          # twenty-step tour
 python -m engine.cli --tools          # list all 41 tools
 python -m engine.cli --call asp --args '{"program": "p :- not q. q :- not p."}'
-python run_tests.py     # full regression (67 test files / 1939 assertions)
+python run_tests.py     # full regression (68 test files / 1964 assertions)
 ```
 
 `demo.py` demonstrates twenty things (①②③ the paradox trio → ④-⑩ the
@@ -233,6 +233,7 @@ paradox-engine/
 │   ├── mechanisms.md             layered capability index (self-test N + formal M per component)
 │   ├── capability_matrix.md      capability matrix (problem type × component × wiring; generated)
 │   ├── trigger_audit.md          trigger audit (candidate set × fired set: wired but never fired)
+│   ├── verifier_audit.md         verifier registry (each artefact names its verifier: external / cross-component / independent recompute / property-only)
 │   ├── tool_schema.md            tool protocol (41 tool contracts, generated)
 │   ├── glossary.md               glossary (the engine's own terms, zh/en)
 │   ├── ROADMAP.md                layered roadmap
@@ -396,7 +397,7 @@ when a real pain point appears).
 
 ### Test status
 
-- **1939 formal assertions pass** (67 test files), covering every mechanism
+- **1964 formal assertions pass** (68 test files), covering every mechanism
   component plus the controller/scenario/AI-tool layers;
 - **One command runs the whole suite**: `python run_tests.py` (discover + run +
   summarize; a single failing file yields a non-zero exit — the same entry
