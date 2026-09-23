@@ -3,7 +3,7 @@
 > 本文件由 `python engine/ai/freeze_tool_schema.py` 从 `engine/ai/tools.py` 的注册表**自动生成**，请勿手改。
 > 工具名与参数名是对外契约（轨 C1）：有意变更须重新生成本文件与 `engine/ai/tool_schema_frozen.json`，并在 CHANGELOG 与变更记账。
 
-共 **40** 件工具。调用方式：
+共 **41** 件工具。调用方式：
 
 ```python
 from engine.ai.tools import tools, call_tool
@@ -50,6 +50,7 @@ paradox-engine --call presburger --args '{"formula": "2*x = 4"}' --json
 | `interval_algebra` | `events`:array `mode`:string `relation`:string `relations`:array | 区间代数：事件之间的定性时序关系自不自治（先于/相接/重叠/包含…），矛盾给冲突对，不矛盾给可复核的整数区间见证 |
 | `description_logic` | `c1`:string `c2`:string `concept`:string `max_nodes`:integer `mode`:string `sub`:string `super`:string `tbox`:array | 描述逻辑 ALC：概念可不可满足、甲包不包含乙、两个概念相不相交、整张本体的概念层级（谁是谁的子类），可满足给规范模型 |
 | `mu_calculus` | `c1`:string `c2`:string `ctl`:string `formula`:string `init`:array `labels`:object `mode`:string `states`:array `transitions`:array | 模态 μ 演算：在给定迁移系统上求不动点式子（μ 最小/ν 最大）成立的状态，每轮迭代留痕；CTL 公式可翻成 μ 式子再求值 |
+| `bisimulation` | `lts*`:object `mode`:string `relation`:array `s1`:string `s2`:string | 双模拟检查：两个状态是不是"行为上分不开"（最大双模拟分划 + 不等价的见证（轮次/标号/区分序列）+ 商系统）；与 μ 演算互验 |
 | `asp` | `mode`:string `program`:string `query`:string | 答案集程序：规则 + 否定即失败 + 约束 → 自洽的结论集合（答案集，可能一个都没有），每个原子给出它的推导依据 |
 | `dung_framework` | `arguments`:array `attacks`:array `max_arguments`:integer | Dung 论证框架：哪些立场站得住（grounded/preferred/stable） |
 | `truth_revision` | `max_steps`:integer `mode`:string `sentences`:object `start`:object | Gupta-Belnap 真值修正：多句系统修正序列分类（稳定/振荡——共振带锚点） |

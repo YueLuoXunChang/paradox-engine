@@ -2,7 +2,7 @@
 
 > 由 `python engine/_components_doc.py --write` 从各模块 docstring 与 `PORTS` 生成；`--check` 可在改动后比对漂移。手改这份文件会在检查里报不一致。
 
-- 构件数：**50** 个（不含下划线内部件与测试）
+- 构件数：**51** 个（不含下划线内部件与测试）
 
 ## 第 0 层 · 总控（判类/复杂度/路由/五步流水线/工作台）
 
@@ -243,6 +243,13 @@
 - 做什么：给"矛盾该共存"一个可判定的语义——四值真值表：A 与 ¬A 都有证据
 - 输入端口：`formula: str?`、`assign: dict?`、`demo: bool?`
 - 输出端口：`verdict: str`、`value: str`、`truth_set: list`、`rows: list`、`note: str`、`boundary: str`
+- 可独立运行：是（自带自测）
+
+### `engine/cold/bisimulation.py`
+
+- 做什么：给一个**有限显式迁移系统**（状态 + 动作标号的迁移），算**最大双模拟**（最粗的那个分划，
+- 输入端口：`lts: dict`、`mode: str?`、`s1: any?`、`s2: any?`、`relation: list?`
+- 输出端口：`verdict: str`、`n_states: int`、`n_transitions: int`、`n_actions: int`、`n_blocks: int?`、`blocks: dict?`、`block_members: list?`、`rounds: list?`、`equivalent: bool?`、`witness: dict?`、`quotient: dict?`、`detail: dict`、`boundary: str`
 - 可独立运行：是（自带自测）
 
 ### `engine/cold/default_logic.py`

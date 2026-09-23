@@ -63,6 +63,28 @@
         "type": "string"
       }
     },
+    "bisimulation": {
+      "lts": {
+        "required": true,
+        "type": "object"
+      },
+      "mode": {
+        "required": false,
+        "type": "string"
+      },
+      "relation": {
+        "required": false,
+        "type": "array"
+      },
+      "s1": {
+        "required": false,
+        "type": "string"
+      },
+      "s2": {
+        "required": false,
+        "type": "string"
+      }
+    },
     "boundary_paradox": {
       "domain": {
         "required": false,
@@ -826,5 +848,5 @@
       }
     }
   },
-  "tool_count": 40
+  "tool_count": 41
 }

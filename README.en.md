@@ -104,9 +104,9 @@ print(r['report'])
 ```bash
 # After cloning, from the repository root
 python demo.py          # twenty-step tour
-python -m engine.cli --tools          # list all 40 tools
+python -m engine.cli --tools          # list all 41 tools
 python -m engine.cli --call asp --args '{"program": "p :- not q. q :- not p."}'
-python run_tests.py     # full regression (66 test files / 1891 assertions)
+python run_tests.py     # full regression (67 test files / 1939 assertions)
 ```
 
 `demo.py` demonstrates twenty things (①②③ the paradox trio → ④-⑩ the
@@ -202,7 +202,8 @@ paradox-engine/
 │   │   ├── default_logic.py      default logic, full fixpoints (all extensions / shared conclusions / competing defaults)
 │   │   ├── relevance_logic.py    relevance logic (real conflict vs empty rhetoric)
 │   │   ├── truth_revision.py     Gupta-Belnap truth revision (revision-sequence oscillation)
-│   │   └── intuitionistic_logic.py intuitionistic logic (Kripke evaluation / countermodel search / comparison)
+│   │   ├── intuitionistic_logic.py intuitionistic logic (Kripke evaluation / countermodel search / comparison)
+│   │   └── bisimulation.py        bisimulation check (behavioural equivalence: largest bisimulation partition + witness + quotient)
 │   └── classical/             ← Classical-logic foundation (L1: decision/proof/computation/types)
 │       ├── propositional.py       propositional logic (validity/counterexample/satisfiable/tautology)
 │       ├── nd_propositional.py    natural deduction ND (proof trees, classical/intuitionistic)
@@ -228,11 +229,11 @@ paradox-engine/
 ├── pyproject.toml           ← pip packaging (provides the `paradox-engine` command)
 ├── .github/workflows/       ← CI (full suite + demo + CLI smoke)
 ├── docs/
-│   ├── components.md             component reference (50 components: purpose / ports / self-run, generated)
+│   ├── components.md             component reference (51 components: purpose / ports / self-run, generated)
 │   ├── mechanisms.md             layered capability index (self-test N + formal M per component)
 │   ├── capability_matrix.md      capability matrix (problem type × component × wiring; generated)
 │   ├── trigger_audit.md          trigger audit (candidate set × fired set: wired but never fired)
-│   ├── tool_schema.md            tool protocol (40 tool contracts, generated)
+│   ├── tool_schema.md            tool protocol (41 tool contracts, generated)
 │   ├── glossary.md               glossary (the engine's own terms, zh/en)
 │   ├── ROADMAP.md                layered roadmap
 │   └── formulas/                 concept cards (×15 for the classical layer)
@@ -357,7 +358,9 @@ can be discussed, compared, and traced.
   (oscillating revision sequences) + **intuitionistic logic** (constructive
   stance: Kripke countermodels + a classical-vs-intuitionistic comparison —
   excluded middle, double-negation elimination and Peirce's law all fail
-  constructively) — external consensus is labeled and kept in the "borrowed"
+  constructively) + **bisimulation check** (when are two states the same behaviour: the
+    largest bisimulation partition + a witness when they differ + the quotient system;
+    cross-checked against the mu-calculus) — external consensus is labeled and kept in the "borrowed"
   section, never mixed into the original-work section; AGM is wired into the T5
   route and the relevance check into the T2-L2 route (they really run once
   structured clues are supplied);
@@ -393,7 +396,7 @@ when a real pain point appears).
 
 ### Test status
 
-- **1891 formal assertions pass** (66 test files), covering every mechanism
+- **1939 formal assertions pass** (67 test files), covering every mechanism
   component plus the controller/scenario/AI-tool layers;
 - **One command runs the whole suite**: `python run_tests.py` (discover + run +
   summarize; a single failing file yields a non-zero exit — the same entry
