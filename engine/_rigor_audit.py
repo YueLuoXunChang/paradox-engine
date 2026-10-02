@@ -2,9 +2,10 @@
 """硬核度体检：把"判据够不够硬"变成可跑的检查。
 
 第一条硬规矩（① 判据轴）：
-    每个数值阈值常数，**要么被测试钉住边界，要么声明它是参数**。
+    每个数值阈值常数，**要么被测试钉住边界，要么声明它不是判据**。
     - 钉住＝该常数的名字在对应测试文件里出现（说明有人真的动过这个值去看行为）；
-    - 声明＝定义行附近写着"参数 / 约定 / 默认 / 不是体系结论 / 启发式"之一。
+    - 声明＝定义行附近写着"参数 / 约定 / 默认 / 不是体系结论 / 启发式 / 护栏"之一
+      （参数＝可调默认值；护栏＝内部兜底，不作判据阈值）。
     两者都没有 → 硬错。理由：阈值没被钉过的构件，判据其实只是"我写了一个数"，
     换个数会不会变结论，没人知道——那正是"启发式冒充判据"。
 
@@ -43,8 +44,8 @@ BOUNDARY = (
 # 阈值型常数：全大写名 + 数字（含小数）
 THRESHOLD_RE = re.compile(
     r'^(\s*)([A-Z][A-Z0-9_]{2,})\s*=\s*(-?\d+(?:\.\d+)?)\b', re.M)
-# 允许的"这是参数"声明词
-PARAM_WORDS = ('参数', '约定', '默认', '不是体系结论', '启发式', '近似')
+# 允许的"这个数不是判据"声明词：参数（可调默认值）· 护栏（内部兜底，不作判据阈值）
+PARAM_WORDS = ('参数', '约定', '默认', '不是体系结论', '启发式', '近似', '护栏')
 # 上限/复杂度声明的迹象
 BOUND_WORDS = ('O(', '复杂度', '上限', '不硬跑', 'MAX', 'LIMIT', 'CAP', '步数')
 RAND_WORDS = ('random', 'shuffle', 'seed', 'Random')
@@ -92,6 +93,21 @@ def test_file_of(name):
     return None
 
 
+def classify_threshold(cname, ctx, test_src):
+    """一个阈值算不算"钉住了"——三态，是本件唯一的判据，单独拎出来可测。
+
+    - 'pinned'：测试文件里**按词边界**点到这个常量名（说明有人真的动过它看行为）；
+      用词边界而不是子串：`MAX_A` 不该被 `MAX_ABC` 蒙过去。
+    - 'declared'：定义行附近写明它不是判据（参数 / 护栏 / 约定 / 默认 …）。
+    - 'loose'：两者都没有——硬错。
+    """
+    if re.search(r'\b%s\b' % re.escape(cname), test_src or ''):
+        return 'pinned'
+    if any(w in ctx for w in PARAM_WORDS):
+        return 'declared'
+    return 'loose'
+
+
 def thresholds_of(src):
     """返回 [(常数名, 行号, 该行附近的原文)]。"""
     out = []
@@ -124,14 +140,15 @@ def audit():
             'has_test': bool(tf),
         }
         for cname, line_no, ctx in thresholds_of(src):
-            if cname in tsrc:
+            verdict = classify_threshold(cname, ctx, tsrc)
+            if verdict == 'pinned':
                 row['thr_pinned'].append(cname)
-            elif any(w in ctx for w in PARAM_WORDS):
+            elif verdict == 'declared':
                 row['thr_declared'].append(cname)
             else:
                 row['thr_loose'].append(cname)
                 problems.append(
-                    '%s：阈值 %s（第 %d 行）既没被测试钉住，也没声明是参数'
+                    '%s：阈值 %s（第 %d 行）既没被测试钉住，也没声明不是判据'
                     % (name, cname, line_no))
         if not row['has_ports']:
             row['ports_gap'] = True

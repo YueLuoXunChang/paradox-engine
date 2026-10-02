@@ -196,5 +196,15 @@ rc_in = C.run({'mode': 'compare', 'sizes': pareto(2.0, 600, 4),
                'sizes_b': pareto(2.5, 600, 5), 'n_boot': 0})
 check('compare 模式下 compare 键必须在', 'compare' in rc_in and isinstance(rc_in['compare'], dict))
 
-print(f'结果: {PASS}/40 通过')
-raise SystemExit(0 if PASS == 40 else 1)
+print('十、口径锚：判据阈值成对钉住边界（硬核度① 判据轴）')
+# 成对＝边界之内算得出、边界之外拦得住。输入用常量构造，不写字面量。
+check('样本数边界之内（= MIN_N 且取值够散）判得出',
+      C.run({'sizes': [1.0, 2.0, 4.0, 8.0, 16.0, 32.0, 64.0, 128.0]})['verdict']
+      == 'diagnosed')
+check('样本数边界之外（少于 MIN_N）→ input_pending（样本不足不硬判）',
+      C.run({'sizes': [1.0, 2.0, 3.0] * 2})['verdict'] == 'input_pending')
+check('取值种类边界之外（少于 MIN_DISTINCT）→ not_scale_free',
+      C.run({'sizes': [1.0] * C.MIN_N})['verdict'] == 'not_scale_free')
+
+print(f'结果: {PASS}/43 通过')
+raise SystemExit(0 if PASS == 43 else 1)

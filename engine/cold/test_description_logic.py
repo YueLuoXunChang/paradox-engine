@@ -483,6 +483,15 @@ check('★普通模型不虚标 truncated（没截就不说截了）',
       _norm['model'].get('truncated') is False
       and 'truncated' not in _norm['boundary'])
 
+print('九、口径锚：表列节点上限（硬核度① 判据轴）')
+# 这一条钉的是"默认值就是那个常量"＋"参数本身有下限"，而不是靠硬造 400 层展开：
+# 造不出超限输入时，硬凑一个假输入比不写更糟。显式给常量与缺省必须**行为一致**。
+check('显式给 MAX_NODES 与缺省行为一致（默认值＝常量本身）',
+      dl.run({'concept': 'C', 'max_nodes': dl.MAX_NODES})['verdict']
+      == dl.run({'concept': 'C'})['verdict'])
+check('上限低到参数下限（10）以下 → input_pending（拦参数本身，不硬跑）',
+      dl.run({'concept': 'C', 'max_nodes': 2})['verdict'] == 'input_pending')
+
 print('=' * 70)
-print(f"结果: {PASS}/57 通过")
-raise SystemExit(0 if PASS == 57 else 1)
+print(f"结果: {PASS}/59 通过")
+raise SystemExit(0 if PASS == 59 else 1)

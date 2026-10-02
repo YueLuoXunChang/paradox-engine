@@ -373,5 +373,37 @@ check('不截断预算 == 参照系最大值（对得上，不是另算一套）
       == G.run({'sizes': [100, 200, 400], 'budget': 1000,
                 'steps': 6})['policies']['raw']['max_size'])
 
-print(f'结果: {PASS}/39 通过')
-raise SystemExit(0 if PASS == 39 else 1)
+print('十、口径锚：判据阈值必须成对钉住边界（硬核度① 判据轴）')
+# 成对＝边界之内算得出、边界之外拦得住。只钉一边等于不知道边界在哪：
+# "拦得住"证明不了"该拦的才拦"。输入一律用常量构造，不写字面量。
+check('点数边界之内（= MIN_POINTS 个点）判得出增长率',
+      G.run({'sizes': [1.0, 2.0, 4.0], 'budget': 10 ** 6})['verdict']
+      == 'guard_engaged')
+check('点数不足（少于 MIN_POINTS）→ insufficient_data（不硬判增长率）',
+      G.run({'sizes': [1.0, 2.0], 'budget': 10 ** 6})['verdict']
+      == 'insufficient_data'
+      and G.run({'sizes': [1.0, 2.0], 'budget': 10 ** 6})['growth'] is None)
+_r_over = G.run({'sizes': [float(i) for i in range(1, G.MAX_POINTS + 3)],
+                 'budget': 10 ** 9})
+check('点数边界之外（超 MAX_POINTS）→ size_limit，且报出实际点数',
+      _r_over['verdict'] == 'size_limit'
+      and _r_over['detail'].get('max_points') == G.MAX_POINTS)
+# 容差两侧：实测比值恰好落在 |r−1| ≤ GROWTH_TOL 内算"平稳"，
+# 超出即判"增长"。注意本件的比值算了 **+1 平滑**（防除零），
+# 所以构造 1.02 会报成 1.019804——断言判的是**三态**，不是那个小数。
+def _series(r, n=3):
+    xs = [100.0]
+    for _ in range(n - 1):
+        xs.append(xs[-1] * r)
+    return xs
+
+
+check('容差界内（比值 = 1 + GROWTH_TOL）算平稳',
+      G.run({'sizes': _series(1 + G.GROWTH_TOL), 'budget': 10 ** 6,
+             'mode': 'watch'})['growth']['kind'] == 'flat')
+check('容差界外（比值 = 1 + 1.5×GROWTH_TOL）算增长',
+      G.run({'sizes': _series(1 + G.GROWTH_TOL * 1.5), 'budget': 10 ** 6,
+             'mode': 'watch'})['verdict'] == 'guard_engaged')
+
+print(f'结果: {PASS}/44 通过')
+raise SystemExit(0 if PASS == 44 else 1)

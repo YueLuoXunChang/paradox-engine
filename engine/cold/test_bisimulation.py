@@ -365,6 +365,22 @@ check('重复迁移去重（同一 [动作,目标] 写两遍不影响分划）',
       B.run({'lts': {'x': [['a', 'y'], ['a', 'y']], 'y': []}})['n_transitions'] == 1)
 check('动作数统计正确', B.run({'lts': u_extra})['n_actions'] == 2)
 
+print('九、口径锚：迁移条数上限（硬核度① 判据轴）')
+
+
+def _lts_n(n_states, per_state):
+    """造一张 n_states 个状态、每状态 per_state 条去重迁移的 LTS。"""
+    return {'s%d' % i: [['a%d' % k, 's%d' % ((i + k + 1) % n_states)]
+                        for k in range(per_state)] for i in range(n_states)}
+
+
+_NS = 200
+_PER = B.MAX_TRANS // _NS        # 200 × 20 = 4000 = MAX_TRANS，恰好落在边界上
+check('迁移条数边界之内（恰 = MAX_TRANS 条）算得出，不是拦了了事',
+      B.run({'lts': _lts_n(_NS, _PER)})['verdict'] == 'partitioned')
+check('迁移条数边界之外（MAX_TRANS 之上）→ size_limit',
+      B.run({'lts': _lts_n(_NS, _PER + 1)})['verdict'] == 'size_limit')
+
 print('=' * 70)
-print(f'结果: {PASS}/48 通过')
-raise SystemExit(0 if PASS == 48 else 1)
+print(f'结果: {PASS}/50 通过')
+raise SystemExit(0 if PASS == 50 else 1)

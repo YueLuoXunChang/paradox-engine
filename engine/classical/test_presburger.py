@@ -12,7 +12,8 @@ _HERE = os.path.dirname(os.path.abspath(__file__))
 _REPO = os.path.dirname(os.path.dirname(_HERE))
 sys.path.insert(0, _REPO)
 
-from engine.classical.presburger import run  # noqa: E402
+from engine.classical.presburger import (MAX_B, MAX_COEF, MAX_INPUT,  # noqa: E402
+                                         MAX_MOD, MAX_QE, run)
 
 PASS = 0
 
@@ -103,8 +104,34 @@ check("变量乘变量 → parse_error（那是 PA，不可判定，划出去）
       v('∃x (x * x = 4)')['verdict'] == 'parse_error')
 check("整除号左边写变量 → parse_error（不是 Presburger 的写法）",
       v('∃x (x | 3)')['verdict'] == 'parse_error')
-check("模数超上限 → size_limit（诚实说不算，不当成结论）",
-      v('∃x (300 | x)')['verdict'] == 'size_limit')
+# ── 五·补、口径锚：每条上限都**成对**钉住（硬核度① 判据轴）
+#    成对＝边界之内算得出、边界之外拦得住。只钉一边等于不知道边界在哪：
+#    "拦得住"不能证明"该拦的才拦"。输入一律用常量构造，不写字面量——
+#    改了常量测试跟着动，测试守的边界就是这个数本身。
+check("模数边界之内（= MAX_MOD）算得出",
+      v('∃x (%d | x)' % MAX_MOD)['verdict'] == 'true')
+check("模数边界之外（MAX_MOD + 1）→ size_limit（诚实说不算，不当成结论）",
+      v('∃x (%d | x)' % (MAX_MOD + 1))['verdict'] == 'size_limit')
+check("系数边界之内（= MAX_COEF）算得出",
+      v('∃x (%d*x = 1)' % MAX_COEF)['verdict'] == 'false')
+check("系数边界之外（MAX_COEF + 1）→ size_limit",
+      v('∃x (%d*x = 1)' % (MAX_COEF + 1))['verdict'] == 'size_limit')
+check("周期边界之内（两个小模数，lcm 很小）算得出",
+      v('∃x (3 | x ∧ 5 | x)')['verdict'] == 'true')
+r_bigB = v('∃x (199 | x ∧ 197 | x)')
+check("周期边界之外 → size_limit，且说明里点的是候选周期上限",
+      r_bigB['verdict'] == 'size_limit'
+      and '候选周期' in (r_bigB.get('explanation') or ''))
+check("口径锚：那条输入的周期乘积确实超 MAX_B（互素，lcm＝乘积）",
+      199 * 197 > MAX_B > 0)
+ql_in = ' '.join('∃x%d' % i for i in range(MAX_QE)) + ' (x0 = x0)'
+ql_out = ' '.join('∃x%d' % i for i in range(MAX_QE + 1)) + ' (x0 = x0)'
+check("量词层数边界之内（= MAX_QE 层）算得出", v(ql_in)['verdict'] == 'true')
+check("量词层数边界之外（MAX_QE + 1 层）→ size_limit",
+      v(ql_out)['verdict'] == 'size_limit')
+f_long = ' ∧ '.join(['x = 1'] * (MAX_INPUT // 5 + 50))
+check("公式串边界之外 → size_limit（串长确实超过 MAX_INPUT）",
+      len(f_long) > MAX_INPUT and v(f_long)['verdict'] == 'size_limit')
 check("会爆分支的式子 → 老实报 size_limit（先前这里会卡死不返回）",
       v('(((5 | x) ↔ (2*x + y ≠ -2*x)) → ((x ≤ y) ∧ (3*x + y ≤ y)))')['verdict']
       == 'size_limit')
@@ -119,5 +146,5 @@ check("地图条目已翻正：presburger 指向本构件且是真跑",
       str(FRAGMENTS['presburger']['engine_component']))
 
 print("=" * 60)
-print(f"结果: {PASS}/26 通过")
-raise SystemExit(0 if PASS == 26 else 1)
+print(f"结果: {PASS}/35 通过")
+raise SystemExit(0 if PASS == 35 else 1)

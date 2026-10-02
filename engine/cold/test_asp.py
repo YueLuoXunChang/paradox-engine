@@ -338,6 +338,20 @@ check('★答案集超过列出上限时：个数照报、只列前 MAX_LISTED �
       and len(r['answer_sets']) == asp.MAX_LISTED
       and '只列出前' in r['boundary'], (r['count'], len(r['answer_sets'])))
 
+print('九、口径锚：规则条数上限（硬核度① 判据轴）')
+# 成对＝界外拦得住、界内照常算。界外那条要**点出是哪条护栏拦的**，
+# 否则"报了 size_limit"证明不了拦它的是规则数（可能撞的是别的上限）。
+_p_many = '\n'.join('p%d :- p0.' % i for i in range(asp.MAX_RULES + 1))
+_r_many = asp.run({'program': _p_many, 'query': 'p0'})
+check('规则条数边界之外（MAX_RULES + 1 条）→ size_limit，且说明点的是规则条数',
+      _r_many['verdict'] == 'size_limit'
+      and '规则条数' in (_r_many.get('boundary') or ''),
+      (_r_many['verdict'], (_r_many.get('boundary') or '')[:60]))
+_p_few = '\n'.join(['p0 :- q0.'] * 20)
+_r_few = asp.run({'program': _p_few, 'query': 'p0'})
+check('规则数在界内、原子很少时照常判（上面拦的确实是规则数，不是规模一刀切）',
+      _r_few['verdict'] != 'size_limit', _r_few['verdict'])
+
 print('=' * 70)
-print(f"结果: {PASS}/29 通过")
-raise SystemExit(0 if PASS == 29 else 1)
+print(f"结果: {PASS}/31 通过")
+raise SystemExit(0 if PASS == 31 else 1)

@@ -89,7 +89,7 @@ BOUNDARY = ('描述逻辑 ALC（外部共识：表列算法与判定性见 Baade
 
 MAX_NODES = 400
 MAX_ATOMS_CLASSIFY = 8
-MAX_LABEL_SHOWN = 40    # 模型里每个节点最多列几个概念（截了会在 model 里标 truncated）
+MAX_LABEL_SHOWN = 40    # 参数：模型里每个节点最多列几个概念（展示截断，截了会在 model 里标 truncated）
 _KEYWORDS = ('exists', 'all', 'and', 'or', 'not', 'some', 'every')
 
 # 记号：⊓ ⊔ ¬ ∃ ∀ ⊤ ⊥ 与 ASCII 写法都认

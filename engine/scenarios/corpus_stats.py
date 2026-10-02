@@ -65,7 +65,7 @@ for _p in (_HERE, _REPO):
         sys.path.insert(0, _p)
 
 TYPES = ['T%d' % i for i in range(1, 13)]      # 判类器的 12 个题型（矩阵轴）
-DEFAULT_TARGET = 5                             # 每型目标场景数（路线图里"语料每型补到 5 个"那一项）
+DEFAULT_TARGET = 5                             # 参数：每型目标场景数（路线图里"语料每型补到 5 个"那一项，不是判据阈值）
 _MODES = ('summary', 'matrix', 'coverage', 'review')
 
 
