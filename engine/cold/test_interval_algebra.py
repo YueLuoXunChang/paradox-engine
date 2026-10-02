@@ -24,7 +24,7 @@ _HERE = os.path.dirname(os.path.abspath(__file__))
 _REPO = os.path.dirname(os.path.dirname(_HERE))
 sys.path.insert(0, _REPO)
 
-from engine.cold.interval_algebra import (BASE, run, tables)  # noqa: E402
+from engine.cold.interval_algebra import (BASE, MAX_EVENTS, run, tables)  # noqa: E402
 
 PASS = 0
 
@@ -244,7 +244,9 @@ check("事件重名 / 缺参 / 坏 mode → 诚实拦截",
       and run({})['verdict'] == 'input_pending'
       and run({'mode': 'xxx'})['verdict'] == 'input_pending')
 check("事件数超上限 → size_limit（不硬跑）",
-      run({'events': [f'E{i}' for i in range(9)],
+      # 口径锚：边界就是 MAX_EVENTS 这个常量。不写死字面量——
+      # 免得改了上限常量之后，测试还在守旧数（两边各说各话）
+      run({'events': [f'E{i}' for i in range(MAX_EVENTS + 1)],
            'relations': [['E0', 'b', 'E1']]})['verdict'] == 'size_limit')
 
 print("=" * 60)

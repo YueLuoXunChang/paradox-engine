@@ -14,7 +14,7 @@ _HERE = os.path.dirname(os.path.abspath(__file__))
 _REPO = os.path.dirname(os.path.dirname(_HERE))
 sys.path.insert(0, _REPO)
 
-from engine.cold.many_valued import run  # noqa: E402
+from engine.cold.many_valued import MAX_ATOMS, run  # noqa: E402
 
 PASS = 0
 
@@ -137,7 +137,9 @@ check("缺 formula / 缺参 → input_pending",
       and run({'mode': 'validity', 'premises': ['P']})['verdict']
       == 'input_pending')
 check("原子数超上限 → size_limit（3^n 不硬枚举）",
-      v(' ∧ '.join('P%d' % i for i in range(9)))['verdict'] == 'size_limit')
+      # 口径锚：边界＝MAX_ATOMS，用常量构造"刚好超一个"的输入
+      v(' ∧ '.join('P%d' % i for i in range(MAX_ATOMS + 1)))['verdict']
+      == 'size_limit')
 
 # ── 九、输出契约与出处交代
 r = v('P ∨ ¬P', logic='l3')

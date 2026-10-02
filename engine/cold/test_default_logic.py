@@ -12,7 +12,7 @@ _HERE = os.path.dirname(os.path.abspath(__file__))
 _REPO = os.path.dirname(os.path.dirname(_HERE))
 sys.path.insert(0, _REPO)
 
-from engine.cold.default_logic import run  # noqa: E402
+from engine.cold.default_logic import MAX_ATOMS, run  # noqa: E402
 
 PASS = 0
 
@@ -135,7 +135,8 @@ check("默认条数超上限 → size_limit；把上限调上去就能跑",
       and r(defaults=[('P', 'Q')] * 13,
             max_defaults=13)['verdict'] == 'evaluated')
 check("原子数超真值表上限 → undecided（算不动 ≠ 没有扩展）",
-      r(facts=['P%d' % i for i in range(11)],
+      # 口径锚：边界＝MAX_ATOMS，用常量构造刚好超限的输入
+      r(facts=['P%d' % i for i in range(MAX_ATOMS + 1)],
         defaults=[('P0', 'P1')])['verdict'] == 'undecided')
 
 # ── 七、与 agm_revision 那个"简化版"的对照（两边各说自己算的是什么）
