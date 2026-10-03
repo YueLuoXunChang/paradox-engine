@@ -724,7 +724,7 @@ def run(inputs):
                                                '——诚实：不硬判'}
     premises = inputs.get('premises') or []
     facts = inputs.get('facts') or []
-    max_res = inputs.get('max_resolvents') or _MAX_RESOLVENTS
+    max_res = _MAX_RESOLVENTS if inputs.get('max_resolvents') is None else inputs.get('max_resolvents')
 
     try:
         # 目标公式集合：premises + facts + ¬conclusion

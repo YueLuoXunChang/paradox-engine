@@ -185,7 +185,7 @@ def _match(node, pattern):
 def search_proof(premises, goal, system='classical', max_steps=None):
     """反向证明搜索。返回 (proved: bool, steps: list, closed: bool)。
     closed=False 表示达到步数上限或**搜索节点预算耗尽**（诚实：未找到≠不可证）。"""
-    max_steps = max_steps or _MAX_DEFAULT
+    max_steps = _MAX_DEFAULT if max_steps is None else max_steps
     prem_atoms = {p if isinstance(p, tuple) else p
                   for p in premises}  # premises 已解析
     # 反向搜索：从 goal 出发，用引入规则反向、消去规则前向（受限）
@@ -436,7 +436,7 @@ def run(inputs):
                 'system': system,
                 'boundary': f'公式解析失败：{e}（诚实拦截，不硬算）'}
 
-    max_steps = inputs.get('max_steps') or _MAX_DEFAULT
+    max_steps = _MAX_DEFAULT if inputs.get('max_steps') is None else inputs.get('max_steps')
     proved, steps, closed = search_proof(set(premises), goal, system,
                                          max_steps)
     if proved:

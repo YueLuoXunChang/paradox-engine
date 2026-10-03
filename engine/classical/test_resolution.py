@@ -97,6 +97,12 @@ check("子句里不会再混进伪字面量（显示层拿到非字面量会报�
       'TypeError' not in str(run({'premises': ['((Q ↔ Q) → P)'],
                                   'conclusion': 'P'})))
 
+# ── 零值陷阱（全仓 5 个构件 10 处 `x or 默认`）：
+# 这条要 3 步归结才得空子句，给 0 步就该报 not_proved（曾经 0 → 默认 500 → proved）
+check("max_resolvents 给 0 就是 0 步：该报 not_proved，不偷换默认 500",
+      run({'premises': ['P ∨ Q', '¬P'], 'conclusion': 'Q',
+           'max_resolvents': 0})['verdict'] == 'not_proved')
+
 print("=" * 60)
-print(f"结果: {PASS}/15 通过")
-raise SystemExit(0 if PASS == 15 else 1)
+print(f"结果: {PASS}/16 通过")
+raise SystemExit(0 if PASS == 16 else 1)

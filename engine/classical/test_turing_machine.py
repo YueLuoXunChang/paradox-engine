@@ -81,6 +81,17 @@ check("起始态不在状态集 → parse_error",
                        'accept': 'q0', 'reject': 'q0',
                        'delta': {}}})['verdict'] == 'parse_error')
 
+# ── 零值陷阱（对拍查出来的类：全仓 5 个构件 10 处 `x or 默认`）
+# `steps_limit=0` 曾被静默换成默认 10000 步 → 报 accept（调用方要的是"0 步"）。
+check("步数上限给 0 就是 0 步：如实报 steps_exceeded，不偷换默认",
+      run({'program': parity_machine(), 'input': '0',
+           'steps_limit': 0})['verdict'] == 'steps_exceeded')
+check("初始态就在终态 → 立刻 accept（曾经报成 steps_exceeded：break 落到循环外）",
+      run({'program': {'states': ['q0', 'q_acc', 'q_rej'], 'start': 'q_acc',
+                       'accept': 'q_acc', 'reject': 'q_rej', 'blank': '_',
+                       'delta': {}}, 'input': '0',
+           'steps_limit': 5})['verdict'] == 'accept')
+
 print("=" * 60)
-print(f"结果: {PASS}/14 通过")
-raise SystemExit(0 if PASS == 14 else 1)
+print(f"结果: {PASS}/16 通过")
+raise SystemExit(0 if PASS == 16 else 1)

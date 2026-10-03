@@ -75,7 +75,7 @@ def _validate_program(program):
 def simulate(program, tape_input, steps_limit=None):
     """模拟 TM 在输入上运行。
     返回: (verdict, trace)。trace 每步 = (状态, 读写头位置, 纸带)。"""
-    steps_limit = steps_limit or _DEFAULT_STEPS
+    steps_limit = _DEFAULT_STEPS if steps_limit is None else steps_limit
     blank = program.get('blank', '_')
     # 纸带：用 dict {位置: 符号}，默认 blank
     tape = {}
@@ -89,7 +89,10 @@ def simulate(program, tape_input, steps_limit=None):
     for step in range(steps_limit):
         sym = tape.get(head, blank)
         if state in (program['accept'], program['reject']):
-            break
+            # 进入终态就是**停机**：直接返回对应判词。
+            # 旧写法在这里 `break`，然后落到循环外的 `return 'steps_exceeded'`——
+            # 于是"初始态就在终态"的退化机会被报成"步数用尽"（对拍查出来的）。
+            return ('accept' if state == program['accept'] else 'reject'), trace
         trans = delta.get(state, {}).get(sym)
         if trans is None:
             # 未定义转移 → 卡住（honest：无转移 = 拒绝/停机语义按定义）
@@ -196,7 +199,7 @@ def run(inputs):
         dict
     """
     mode = inputs.get('mode') or 'simulate'
-    steps_limit = inputs.get('steps_limit') or _DEFAULT_STEPS
+    steps_limit = _DEFAULT_STEPS if inputs.get('steps_limit') is None else inputs.get('steps_limit')
 
     # ── halting_demo：停机不可判定（不需要 program）──
     if mode == 'halting_demo':

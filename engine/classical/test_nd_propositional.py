@@ -101,6 +101,11 @@ check("可靠但不必完备：↔ 参与的前提可能证不出（((Q↔Q)→P
            'system': 'classical'})['verdict'] in ('not_proved',
                                                   'search_limit', 'proved'))
 
+# ── 零值陷阱（全仓 5 个构件 10 处 `x or 默认`）：0 是合法的"不用一步"
+check("max_steps 给 0 就是 0 步：报 not_proved/search_limit，不偷换默认 60",
+      run({'premises': ['P ∧ Q'], 'conclusion': 'P',
+           'max_steps': 0})['verdict'] in ('not_proved', 'search_limit'))
+
 print("=" * 60)
-print(f"结果: {PASS}/20 通过")
-raise SystemExit(0 if PASS == 20 else 1)
+print(f"结果: {PASS}/21 通过")
+raise SystemExit(0 if PASS == 21 else 1)

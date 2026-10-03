@@ -120,6 +120,27 @@
 - 连带：改了构件代码要重算落盘产物——`docs/components.md`、`docs/verifier_audit.md`
   已用 `--write` 重生成（否则漂移检查会红）。
 
+### 可计算族互验（③ 验证轴 · 第四批之一）：图灵机 ↔ 自写模拟器 —— 又撞出两类真问题
+
+- 新测试 `engine/classical/test_computability_crosscheck.py`（12 条）：照
+  `δ: Q×Γ → Q×Γ×{L,R}` 的**形式定义另写一份**图灵机模拟器（不 import 构件的 `simulate`），
+  用随机 2 符号 3 状态机器 × 随机输入对拍：**判词 + 终止配置（纸带渲染）**精确一致
+  （60 例，accept / reject / 步数用尽 / 未定义转移四种结果都覆盖到）。
+- **真问题一：初始态就在终态时报 `steps_exceeded`**——机器已经在接受态，却报"步数用尽"。
+  根因：循环里 `if state in (accept, reject): break`，`break` 之后落到循环外的
+  `return 'steps_exceeded'`。改成**直接返回对应判词**（两半都修：accept 与 reject）。
+- **真问题二：零值陷阱，全仓 5 个构件 10 处**。`x or 默认值` 会把**合法的 0** 悄悄换成默认：
+  `steps_limit=0` → 照跑 10000 步 · `max_steps=0` → 照跑 60 步 ·
+  `max_resolvents=0` → 照跑 500 步 · `max_expand=0` → 照跑 30 次。
+  调用方说"最多 0 步"，构件却照跑——统一改成 `默认 if x is None else x`，
+  五个构件（`turing_machine`·`lambda_calculus`·`nd_propositional`·`resolution`·`equality_tableau`）
+  各加一条**零值回归**。
+- 顺带记两条**留痕约定**（不是 bug，写进测试防误判）：① 未定义转移时构件会把"卡住那一格"
+  也写进轨迹（多一行）；② `run()` 只回传**末尾 5 行**轨迹，所以比对"步数"要改成比
+  **终止配置**（末行纸带字符串）——本文件第一版拿行数当步数，是我的断言写错。
+- 验证方登记：`turing_machine` 升到"独立复算"档 → **未验状态 16 → 15**；
+  断言 **2100 → 2117**、测试文件 **72 → 73**。
+
 ## 2026-09-23
 
 ### 新增：验证方登记（每件产物点名验证方）——把"只有自证"这件事摆到明面上

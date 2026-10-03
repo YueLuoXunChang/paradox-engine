@@ -303,7 +303,7 @@ def _normal_step(node, depth=0):
 def normalize(expr, steps_limit=None):
     """正规序归约到范式或步数超限。
     返回: (verdict, final_node, steps_desc)"""
-    steps_limit = steps_limit or _DEFAULT_STEPS
+    steps_limit = _DEFAULT_STEPS if steps_limit is None else steps_limit
     node = expr
     steps = []
     for i in range(steps_limit):
@@ -406,7 +406,7 @@ def factorial_bounded(n, steps_limit=None):
     succ/mult 的邱奇项做有限步，输出数值。真正 Y 无界展开会发散，
     故演示采用有界语义（输出标注）。
     """
-    steps_limit = steps_limit or _DEFAULT_STEPS
+    steps_limit = _DEFAULT_STEPS if steps_limit is None else steps_limit
     result = 1
     for k in range(2, n + 1):
         result *= k
@@ -429,7 +429,7 @@ def run(inputs):
     """
     mode = inputs.get('mode') or 'beta_normal'
     expr_s = inputs.get('expr')
-    steps_limit = inputs.get('steps_limit') or _DEFAULT_STEPS
+    steps_limit = _DEFAULT_STEPS if inputs.get('steps_limit') is None else inputs.get('steps_limit')
 
     # ── mode=church：邱奇编码演示（succ/加法/乘法）──
     if mode == 'church':

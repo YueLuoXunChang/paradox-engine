@@ -19,8 +19,8 @@
 |:--|--:|:--|
 | 外部验证方 | **3** | 有**外部/第三方**实现当验证方（人工登记，命中词须在测试里出现） |
 | 跨构件互验 | **13** | 同仓**另一个构件**参与互验（AST 扫 import 判出来的） |
-| 独立复算（初筛） | **19** | 测试里有**独立复算**的痕迹（关键词初筛） |
-| 只有性质/接口测试 | **14** | 只有性质/接口断言（PORTS · boundary · 单调/恒等 · 拒绝路径）——**待人工确认** |
+| 独立复算（初筛） | **20** | 测试里有**独立复算**的痕迹（关键词初筛） |
+| 只有性质/接口测试 | **13** | 只有性质/接口断言（PORTS · boundary · 单调/恒等 · 拒绝路径）——**待人工确认** |
 | 无测试引用 | **2** | 没有测试文件引用它——**待人工确认** |
 | 合计 | **51** | 构件总数（扫盘口径，与 `docs/components.md` 同源） |
 
@@ -77,7 +77,7 @@
 | `stlc` | classical | 只有性质/接口测试 | 用例集：期望值直接写死 2 条（能挡回归，**不构成独立验证方**） | `test_stlc.py` | ✅ |
 | `tools` | ai | 只有性质/接口测试 | 用例集：期望值直接写死 57 条（能挡回归，**不构成独立验证方**） | `test_tools.py`、`test_tool_contract.py`、`test_capability_matrix.py`、`test_cli.py`、`test_docs_consistency.py`、`test_fuzz.py`、`test_glossary.py`、`test_robustness.py` | ✅ |
 | `truth_revision` | cold | 只有性质/接口测试 | 用例集：期望值直接写死 6 条（能挡回归，**不构成独立验证方**） | `test_truth_revision.py` | ✅ |
-| `turing_machine` | classical | 只有性质/接口测试 | 用例集：期望值直接写死 6 条（能挡回归，**不构成独立验证方**） | `test_turing_machine.py` | ✅ |
+| `turing_machine` | classical | 独立复算（初筛） | 疑似独立复算：命中 oracle、互验、另写、对拍 | `test_turing_machine.py`、`test_computability_crosscheck.py` | ✅ |
 | `wall_pipeline` | mechanisms | 只有性质/接口测试 | 用例集：期望值直接写死 114 条（能挡回归，**不构成独立验证方**） | `test_wall_pipeline.py`、`test_session.py` | ✅ |
 
 > "自带自测"指模块自己的 `__main__` 里跑的那套——**那是自证，不算独立验证方**，
@@ -106,7 +106,6 @@
 | `stlc` | classical | 只有性质/接口测试 | 用例集：期望值直接写死 2 条（能挡回归，**不构成独立验证方**） |
 | `tools` | ai | 只有性质/接口测试 | 用例集：期望值直接写死 57 条（能挡回归，**不构成独立验证方**） |
 | `truth_revision` | cold | 只有性质/接口测试 | 用例集：期望值直接写死 6 条（能挡回归，**不构成独立验证方**） |
-| `turing_machine` | classical | 只有性质/接口测试 | 用例集：期望值直接写死 6 条（能挡回归，**不构成独立验证方**） |
 | `wall_pipeline` | mechanisms | 只有性质/接口测试 | 用例集：期望值直接写死 114 条（能挡回归，**不构成独立验证方**） |
 
 > **口径提醒**：`只有性质/接口测试` 是"关键词初筛 ＋ 结构判据"的结果，**不是终判**——

@@ -86,6 +86,10 @@ check("church 超范围 → parse_error",
 check("factorial 超范围 → parse_error",
       run({'mode': 'factorial', 'fact_n': 50})['verdict'] == 'parse_error')
 
+# ── 零值陷阱（全仓 5 个构件 10 处 `x or 默认`）：0 步不许被换成默认 200 步
+check("steps_limit 给 0 就是 0 步：报 step_limit，不偷换默认",
+      run({'expr': '(\\x.x) y', 'steps_limit': 0})['verdict'] == 'step_limit')
+
 print("=" * 60)
-print(f"结果: {PASS}/16 通过")
-raise SystemExit(0 if PASS == 16 else 1)
+print(f"结果: {PASS}/17 通过")
+raise SystemExit(0 if PASS == 17 else 1)

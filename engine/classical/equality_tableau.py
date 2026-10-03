@@ -283,7 +283,7 @@ def tableau_prop(formula_set, max_expand=None):
     """命题公式集 tableau——判定可满足性。
     返回 (satisfiable, open_branch, closed_branches, exhausted)。
     公式集不可满足（全支闭）→ satisfiable=False。"""
-    max_expand = max_expand or _MAX_EXPAND
+    max_expand = _MAX_EXPAND if max_expand is None else max_expand
     closed = 0
     open_branch = None
     exhausted = False
@@ -394,7 +394,7 @@ def run(inputs):
                 'boundary': '需先提供结论（conclusion）——诚实：不硬判'}
     premises = inputs.get('premises') or []
     equality = inputs.get('equality') or []
-    max_expand = inputs.get('max_expand') or _MAX_EXPAND
+    max_expand = _MAX_EXPAND if inputs.get('max_expand') is None else inputs.get('max_expand')
 
     try:
         # 1) 解析
