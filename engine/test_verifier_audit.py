@@ -49,15 +49,17 @@ def check(label, cond, detail=''):
 
 
 # ── 登记表：**没有独立验证方**的件，逐个签字（新增一件就得改这里）
-# 2026-10-02 更新（两次都在这天）：
+# 2026-10-02 更新（三次都在这天）：
 #   ① `test_classical_crosscheck.py`（三条判定路随机对拍 + 自写 oracle）落地后，
 #      `nd_propositional`、`resolution` 升到"独立复算"档 → 23 件变 21 件；
 #   ② `test_fol_crosscheck.py`（三个 oracle 分别夹 monadic_fol / first_order /
-#      equality_tableau）落地后，这三件也升档 → **21 件变 18 件**。
+#      equality_tableau）落地后，这三件也升档 → 21 件变 18 件；
+#   ③ `test_modal_family_crosscheck.py`（模态求值 / 有限路径 LTL / CTL 定点三个独立求值器）
+#      落地后，`ltl`、`modal` 升档（`model_check` 原本已在"独立复算"）→ **18 件变 16 件**。
 KNOWN_NO_INDEPENDENT = {
     'ai_scenarios', 'converge_check',                     # 无测试引用
     'boundary_paradox', 'freeze_tool_schema',
-    'lambda_calculus', 'ltl', 'modal',
+    'lambda_calculus',
     'observer_bypass', 'paradox_annotate', 'paradox_measure', 'recursion_theorem',
     'repl', 'selfref_fixpoint', 'stlc', 'tools', 'truth_revision',
     'turing_machine', 'wall_pipeline',                    # 只有用例集/性质断言

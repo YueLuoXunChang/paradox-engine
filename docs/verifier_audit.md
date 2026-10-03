@@ -19,8 +19,8 @@
 |:--|--:|:--|
 | 外部验证方 | **3** | 有**外部/第三方**实现当验证方（人工登记，命中词须在测试里出现） |
 | 跨构件互验 | **13** | 同仓**另一个构件**参与互验（AST 扫 import 判出来的） |
-| 独立复算（初筛） | **17** | 测试里有**独立复算**的痕迹（关键词初筛） |
-| 只有性质/接口测试 | **16** | 只有性质/接口断言（PORTS · boundary · 单调/恒等 · 拒绝路径）——**待人工确认** |
+| 独立复算（初筛） | **19** | 测试里有**独立复算**的痕迹（关键词初筛） |
+| 只有性质/接口测试 | **14** | 只有性质/接口断言（PORTS · boundary · 单调/恒等 · 拒绝路径）——**待人工确认** |
 | 无测试引用 | **2** | 没有测试文件引用它——**待人工确认** |
 | 合计 | **51** | 构件总数（扫盘口径，与 `docs/components.md` 同源） |
 
@@ -53,10 +53,10 @@
 | `interval_algebra` | cold | 独立复算（初筛） | 疑似独立复算：命中 手推、穷举 | `test_interval_algebra.py` | ✅ |
 | `intuitionistic_logic` | cold | 独立复算（初筛） | 疑似独立复算：命中 交叉 | `test_intuitionistic_logic.py` | ✅ |
 | `lambda_calculus` | classical | 只有性质/接口测试 | 用例集：期望值直接写死 5 条（能挡回归，**不构成独立验证方**） | `test_lambda_calculus.py` | ✅ |
-| `ltl` | classical | 只有性质/接口测试 | 用例集：期望值直接写死 4 条（能挡回归，**不构成独立验证方**） | `test_ltl.py` | ✅ |
+| `ltl` | classical | 独立复算（初筛） | 疑似独立复算：命中 oracle、互验、对拍、已知答案 | `test_ltl.py`、`test_modal_family_crosscheck.py` | ✅ |
 | `many_valued` | cold | 独立复算（初筛） | 疑似独立复算：命中 真值表 | `test_many_valued.py` | ✅ |
-| `modal` | classical | 只有性质/接口测试 | 用例集：期望值直接写死 12 条（能挡回归，**不构成独立验证方**） | `test_modal.py` | ✅ |
-| `model_check` | classical | 独立复算（初筛） | 疑似独立复算：命中 oracle、反向 BFS、另一条路、另写 | `test_model_check.py`、`test_mu_calculus.py` | ✅ |
+| `modal` | classical | 独立复算（初筛） | 疑似独立复算：命中 oracle、互验、对拍、已知答案 | `test_modal.py`、`test_modal_family_crosscheck.py` | ✅ |
+| `model_check` | classical | 独立复算（初筛） | 疑似独立复算：命中 oracle、互验、反向 BFS、另一条路 | `test_model_check.py`、`test_modal_family_crosscheck.py`、`test_mu_calculus.py` | ✅ |
 | `monadic_fol` | classical | 独立复算（初筛） | 疑似独立复算：命中 oracle、对拍、已知答案、穷举 | `test_monadic_fol.py`、`test_fol_crosscheck.py` | ✅ |
 | `mtmp` | skeleton | 独立复算（初筛） | 疑似独立复算：命中 交叉 | `test_mtmp.py` | ✅ |
 | `mu_calculus` | cold | 跨构件互验 | 引用了同仓构件 model_check；疑似独立复算：命中 oracle、互验、参考实现、反向 BFS | `test_mu_calculus.py`、`test_bisimulation.py` | ✅ |
@@ -97,8 +97,6 @@
 | `converge_check` | mechanisms | 无测试引用 | 没有任何测试文件引用它 |
 | `freeze_tool_schema` | ai | 只有性质/接口测试 | 只有接口/性质断言（无独立验证方） |
 | `lambda_calculus` | classical | 只有性质/接口测试 | 用例集：期望值直接写死 5 条（能挡回归，**不构成独立验证方**） |
-| `ltl` | classical | 只有性质/接口测试 | 用例集：期望值直接写死 4 条（能挡回归，**不构成独立验证方**） |
-| `modal` | classical | 只有性质/接口测试 | 用例集：期望值直接写死 12 条（能挡回归，**不构成独立验证方**） |
 | `observer_bypass` | mechanisms | 只有性质/接口测试 | 用例集：期望值直接写死 3 条（能挡回归，**不构成独立验证方**） |
 | `paradox_annotate` | mechanisms | 只有性质/接口测试 | 用例集：期望值直接写死 5 条（能挡回归，**不构成独立验证方**） |
 | `paradox_measure` | mechanisms | 只有性质/接口测试 | 用例集：期望值直接写死 21 条（能挡回归，**不构成独立验证方**） |
