@@ -238,6 +238,81 @@ check('没判的（既非 proved 也非 not_proved）单独记账，不混进"�
 check('对拍总数 = 有效 + 无效', n_valid + (PAIRS - n_valid) == PAIRS)
 
 # ══════════════════════════════════════════════════════════════
+# 三·补、语义穷举：2 变量命题逻辑的蕴含问题**全部**只有 256 种
+# ══════════════════════════════════════════════════════════════
+# 为什么这比"随机 120 例"强：
+#   2 变量命题公式的语义就是它的真值表（4 行），所以任何公式都落在 **16 个真值函数**里；
+#   蕴含 f ⊨ g 只由这两个函数决定——把 16×16 = 256 对全跑一遍，等于覆盖了
+#   **所有** 2 变量命题蕴含问题（**穷举，不是抽样**）。
+#   多前提也不增加种类：前提集就是它们的合取，而 16 个函数在 ∧ 下封闭，
+#   所以"两个前提"的情形早已包含在这 256 对里（合取后仍是一个函数）。
+#   Oracle 也更独立：直接按真值表比大小（f ⊨ g ⟺ 使 f 真的每一行 g 也真），
+#   **连公式求值都不需要**。
+ROWS = [(p, q) for p in (False, True) for q in (False, True)]
+
+
+def funcs16():
+    out = []
+    for bits in range(16):
+        out.append((bits, {r: bool((bits >> i) & 1)
+                           for i, r in enumerate(ROWS)}))
+    return out
+
+
+def canon(table):
+    """真值函数 → 公式：取使之真的行的极小项析取；全假写 (P ∧ ¬P)，全真写 (P ∨ ¬P)。"""
+    terms = []
+    for (p, q) in ROWS:
+        if table[(p, q)]:
+            terms.append('(%s ∧ %s)' % ('P' if p else '¬P',
+                                        'Q' if q else '¬Q'))
+    if not terms:
+        return '(P ∧ ¬P)'
+    if len(terms) == 4:
+        return '(P ∨ ¬P)'
+    return ' ∨ '.join(terms)
+
+
+def entails_tables(f, g):
+    """真值表层面的蕴含：使 f 真的每一行，g 也必须真。"""
+    return all((not f[r]) or g[r] for r in ROWS)
+
+
+print()
+print('=' * 70)
+print('三、语义穷举：2 变量命题逻辑的**全部**蕴含问题（16×16 = 256 对）')
+F16 = funcs16()
+mis_tt2, mis_nd2, mis_res2 = [], [], []
+n_valid2, nd_proved2, res_proved2 = 0, 0, 0
+for _b1, f in F16:
+    for _b2, g in F16:
+        truth = entails_tables(f, g)
+        n_valid2 += 1 if truth else 0
+        p_str, c_str = [canon(f)], canon(g)
+        r_tt = prop.run({'premises': p_str, 'conclusion': c_str})
+        if (r_tt['verdict'] == 'valid') != truth:
+            mis_tt2.append((p_str, c_str, r_tt['verdict'], truth))
+        r_nd2 = nd.run({'premises': p_str, 'conclusion': c_str,
+                        'system': 'classical'})
+        if r_nd2['verdict'] == 'proved':
+            nd_proved2 += 1
+            if not truth:
+                mis_nd2.append((p_str, c_str, truth))
+        r_res2 = res.run({'premises': p_str, 'conclusion': c_str})
+        if r_res2['verdict'] == 'proved':
+            res_proved2 += 1
+            if not truth:
+                mis_res2.append((p_str, c_str, truth))
+check('真值表枚举在这 256 对上**全部**一致（穷举，不是抽样）',
+      mis_tt2 == [], mis_tt2[:2])
+check('有效对数恰好 81（Σ_k C(4,k)·2^(4−k) = 3^4）——连"数"都对得上',
+      n_valid2 == 81, n_valid2)
+check('自然演绎在这 256 对上没出过错证（证出 %d 对）' % nd_proved2,
+      mis_nd2 == [], mis_nd2[:2])
+check('归结在这 256 对上没出过错证（证出 %d 对）' % res_proved2,
+      mis_res2 == [], mis_res2[:2])
+
+# ══════════════════════════════════════════════════════════════
 # 四、变异接受：把 oracle 改坏，对拍必须抓住
 # ══════════════════════════════════════════════════════════════
 print()
@@ -295,5 +370,5 @@ check('本文件的 oracle 是自己写的（不借引擎、不借第三方求�
 
 print()
 print('=' * 70)
-print(f'结果: {PASS}/23 通过')
-raise SystemExit(0 if PASS == 23 else 1)
+print(f'结果: {PASS}/27 通过')
+raise SystemExit(0 if PASS == 27 else 1)

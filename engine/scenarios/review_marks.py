@@ -44,10 +44,27 @@ SCENES_PATH = os.path.join(_HERE, 'scenarios.py')
 _CHECKED_RE = re.compile(r"(\n[ \t]*)'checked':[ \t]*(True|False),[ \t]*(#[^\n]*)?")
 _REVIEW_RE = re.compile(r"\n[ \t]*'review':[^\n]*")
 
+PORTS = {
+    'in': {'scene_id': 'str（场景 id，如 S05）', 'verdict': "str（'ok'|'wrong'|'edge'）",
+           'note': 'str?', 'path': 'str?（缺省改 engine/scenarios/scenarios.py）',
+           'when': 'str?（复核时间戳文本）'},
+    'out': {'ok': 'bool', 'changed': 'bool', 'scene': 'str?', 'verdict': 'str?',
+            'checked': 'bool?', 'error': 'str?', 'review': 'str?',
+            'boundary': 'str（只有写入路径带；只读视图只返回数据本身）'},
+}
+BOUNDARY = (
+    '本件只改场景表里的**复核标记字段**（`checked` / `review`），不动场景正文与判据；'
+    '写入是**原地改写同一个文件**，改前请确认在干净工作区（或已有备份）；'
+    '替换处数与预期不符时**直接拦下不猜**（`checked 字段替换数异常`）。'
+    '两个只读视图（`marks` / `review_state`）只返回数据本身，不塞 boundary 键——'
+    '硬塞会把标记结构改形，读的人反而要绕一层。'
+)
+
 
 def _error(msg, scene_id=None):
     return {'ok': False, 'changed': False, 'scene': scene_id,
-            'verdict': None, 'checked': None, 'error': msg}
+            'verdict': None, 'checked': None, 'error': msg,
+            'boundary': BOUNDARY}
 
 
 def _block_range(text, scene_id):
@@ -126,7 +143,8 @@ def mark_scene(scene_id, verdict, note='', path=None, when=None):
 
     if new_text == text:
         return {'ok': True, 'changed': False, 'scene': scene_id,
-                'verdict': verdict, 'checked': checked, 'error': None}
+                'verdict': verdict, 'checked': checked, 'error': None,
+                'boundary': BOUNDARY}
 
     try:
         with io.open(path, 'w', encoding='utf-8', newline='') as fh:
@@ -136,7 +154,7 @@ def mark_scene(scene_id, verdict, note='', path=None, when=None):
 
     return {'ok': True, 'changed': True, 'scene': scene_id, 'verdict': verdict,
             'checked': checked, 'error': None, 'review': review_line.strip()
-            or '（清除复核记录）'}
+            or '（清除复核记录）', 'boundary': BOUNDARY}
 
 
 def marks(path=None):

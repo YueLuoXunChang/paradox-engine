@@ -27,6 +27,19 @@ for _p in (_HERE, _REPO):
 from engine._console import ensure_utf8_console  # noqa: E402
 from engine.ai.tools import call_tool, tools  # noqa: E402
 
+PORTS = {
+    'in': {'text': 'str（场景 1/2 的输入是**写死的示例文本**，不接受外部参数）'},
+    'out': {'scenario1_argument_conflict': 'dict（controller 的返回，含 boundary）',
+            'scenario2_discipline_modeling': 'tuple(dict, dict)'
+                                             '（wall_pipeline / dung 的返回，含 boundary）'},
+}
+BOUNDARY = (
+    'AI 挂载层只示范**工具编排**：调哪些工具、按什么顺序，由调用方（AI 或上层）决定；'
+    '本层自己不新增判断，只把各构件的输出汇总展示。'
+    '各构件返回都自带 boundary，本层**原样透传、不覆盖**——'
+    '覆盖了就成二手结论（本层会断言 boundary 确实在，缺了直接报错）。'
+)
+
 
 def banner(t):
     print("\n" + "=" * 62)
@@ -59,6 +72,7 @@ def scenario1_argument_conflict():
     print("→ 输出（给人看）：")
     for line in res['report'].splitlines():
         print(f"   {line}")
+    assert 'boundary' in res, '总控返回应带 boundary——本层不替它造'
     return res
 
 
@@ -93,6 +107,8 @@ def scenario2_discipline_modeling():
     print(f"→ 争议集：{dg['conflict_pairs']}")
     print("\n说明：这些是诊断（立场排序），治理方案取舍由决策者判断"
           "（只诊断不决策）。")
+    for _r in (wp, dg):
+        assert 'boundary' in _r, '构件返回应带 boundary——本层不替它造'
     return wp, dg
 
 

@@ -122,7 +122,10 @@ class _P:
             self.expect(')')
         elif t == '¬':
             self.next()
-            node = ('¬', self.parse_formula(4))
+            # ¬ 的操作数要比任何二元联结词都紧（max(_PREC)=∧ 的 4，所以传 5）。
+            # 原先传 4，`¬P(x) ∧ Q(x)` 会被解析成 `¬(P(x) ∧ Q(x))`——
+            # 与 propositional 里同一处错法（语义穷举对拍一起抓出来的）。
+            node = ('¬', self.parse_formula(5))
         elif t in _QUANT:
             self.next()
             var = self.next()
@@ -474,10 +477,23 @@ def entail(universe, premises, query_ast):
 
     premise_strs = [_ast_to_prop(p, atoms_map) for p in premises]
     query_str = _ast_to_prop(query_ast, atoms_map)
-    r = prop_run({'premises': premise_strs, 'conclusion': query_str,
-                  'mode': 'validity'})
-    if r['verdict'] == 'valid':
+    if premise_strs:
+        r = prop_run({'premises': premise_strs, 'conclusion': query_str,
+                      'mode': 'validity'})
+    else:
+        # **无前提**时不能走 validity 那条路：命题引擎对空前提返回 `premises_pending`，
+        # 而旧代码"不是 valid 就当 not_entailed"，于是 `P(a) → P(a)`、排中律这类
+        # 查询全被判成 not_entailed（假否定）。空前提的问题就是"查询是不是重言式"，
+        # 直接问命题引擎的公式模式。
+        r = prop_run({'formula': query_str})
+    if r['verdict'] == 'valid' or r['verdict'] == 'tautology':
         return 'entailed', None, len(grounds)
+    if not premise_strs and r['verdict'] == 'contradiction':
+        return 'not_entailed', [], len(grounds)
+    if r['verdict'] not in ('invalid', 'contingent'):
+        # 命题层没判出真假（parse_error / size_limit / premises_pending…）——
+        # **如实上报**，不许悄悄折成 not_entailed
+        return r['verdict'], None, len(grounds)
     # 反例指派 → 对象模型（只列前提中真、query 假所涉及的关键原子）
     counter = r.get('counterexample') or {}
     model_lines = []

@@ -37,8 +37,10 @@ PORTS = {
 
 BOUNDARY = (
     '本件只做**静态体检**：数阈值、数覆盖、数验证手段，不执行被测构件、不判对错。'
-    '阈值那条是**硬错**（没被钉住或声明就是没钉住）；其余三条轴只报数，'
-    '因为"该用什么验证手段"要按构件性质定，不由本件替它决定。'
+    '**① 判据轴**与**④ 契约轴**是**硬错**（阈值没钉住/没声明、缺 PORTS、'
+    '返回无 boundary——都是违反全仓自己定的约定）；'
+    '② 算法轴与 ③ 验证轴只报数，因为"该用什么算法、什么验证手段"要按构件性质定，'
+    '不由本件替它决定。'
 )
 
 # 阈值型常数：全大写名 + 数字（含小数）
@@ -121,7 +123,7 @@ def thresholds_of(src):
 
 
 def audit():
-    """返回 (rows, problems)。problems 里只有 ① 轴的硬错。"""
+    """返回 (rows, problems)。problems 装 **① 判据轴**与**④ 契约轴**的硬错。"""
     rows, problems = [], []
     for comp in components():
         name = os.path.basename(comp)[:-3]
@@ -152,8 +154,12 @@ def audit():
                     % (name, cname, line_no))
         if not row['has_ports']:
             row['ports_gap'] = True
+            problems.append('%s：没有 PORTS 契约（全仓约定：每件都声明输入输出）'
+                            % name)
         if row['n_boundary'] == 0:
             row['bnd_gap'] = True
+            problems.append('%s：返回里一处 boundary 都没有（全仓约定：'
+                            '返回值随带诚实边界）' % name)
         rows.append(row)
     return rows, problems
 
@@ -225,8 +231,8 @@ def render(rows, problems, st):
     L.append('# 硬核度体检报告')
     L.append('')
     L.append('> 本文件由 `engine/_rigor_audit.py --write` 生成，**不要手改**。')
-    L.append('> 口径：① 判据＝阈值必须被测试钉住或声明为参数（硬错）；'
-             '②③④ 只报数，不判错。')
+    L.append('> 口径：**① 判据轴**与**④ 契约轴**是硬错；②③ 只报数'
+             '（该用什么算法、什么验证手段按构件性质定）。')
     L.append('')
     L.append('## 一、① 判据轴（阈值钉边界）')
     L.append('')
@@ -263,11 +269,14 @@ def render(rows, problems, st):
              % (len(sup['rand']), len(sup['indep']), len(sup['mut']),
                 len(sup['keyword_weak'])))
     L.append('')
-    L.append('## 四、④ 契约轴（PORTS / boundary 缺口）')
+    L.append('## 四、④ 契约轴（PORTS / boundary 缺口——**硬错**）')
     L.append('')
     L.append('- 没有 PORTS：**%s**' % ('、'.join(st['ports_gap']) or '无'))
     L.append('- 返回里没有 boundary：**%s**' % ('、'.join(st['boundary_gap']) or '无'))
     L.append('- 没有测试文件：**%s**' % ('、'.join(st['no_test']) or '无'))
+    L.append('')
+    L.append('> 前两条是**硬错**（违反全仓约定）；"没有测试文件"只列出来，'
+             '它属于 ③ 验证轴的范围。')
     L.append('')
     L.append('## 五、边界')
     L.append('')
@@ -309,7 +318,7 @@ def main(argv):
             print('   %s' % p)
         return 1
     print('')
-    print('✅ 硬核度体检通过（① 轴无硬错）')
+    print('✅ 硬核度体检通过（① 判据轴、④ 契约轴均无硬错）')
     return 0
 
 

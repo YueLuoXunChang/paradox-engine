@@ -327,7 +327,8 @@
 ### `engine/scenarios/review_marks.py`
 
 - 做什么：review_marks.py — 场景复核落笔（把人的复核判断写回场景表）
-- 端口：未声明 `PORTS`
+- 输入端口：`scene_id: str（场景 id，如 S05）`、`verdict: str（'ok'|'wrong'|'edge'）`、`note: str?`、`path: str?（缺省改 engine/scenarios/scenarios.py）`、`when: str?（复核时间戳文本）`
+- 输出端口：`ok: bool`、`changed: bool`、`scene: str?`、`verdict: str?`、`checked: bool?`、`error: str?`、`review: str?`、`boundary: str（只有写入路径带；只读视图只返回数据本身）`
 - 可独立运行：是（自带自测）
 
 ### `engine/scenarios/scenarios.py`
@@ -342,7 +343,8 @@
 ### `engine/ai/ai_scenarios.py`
 
 - 做什么：ai_scenarios.py — AI 挂载层：2 个真实场景端到端演示（阶段 6 验收）
-- 端口：未声明 `PORTS`
+- 输入端口：`text: str（场景 1/2 的输入是**写死的示例文本**，不接受外部参数）`
+- 输出端口：`scenario1_argument_conflict: dict（controller 的返回，含 boundary）`、`scenario2_discipline_modeling: tuple(dict, dict)（wall_pipeline / dung 的返回，含 boundary）`
 - 可独立运行：是（自带自测）
 
 ### `engine/ai/freeze_tool_schema.py`

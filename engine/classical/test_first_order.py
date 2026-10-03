@@ -90,6 +90,29 @@ check("残缺公式 → parse_error",
 check("缺 query → query_pending",
       run({'facts': ['人(苏格拉底)']})['verdict'] == 'query_pending')
 
+# ── 无前提查询 + 否定结合力（语义穷举对拍抓出来的两个真 bug，防复发）
+# 崩因一：`entail()` 把"前提为空"交给命题引擎的 validity 模式，而它对空前提返回
+#   `premises_pending`；旧代码"不是 valid 就当 not_entailed" ⇒ `P(a) → P(a)`、排中律
+#   这类查询全被判成 not_entailed（假否定）。改法：空前提改问"查询是不是重言式"，
+#   且任何没判出真假的判词一律如实上报，不折成 not_entailed。
+# 崩因二：`¬` 的操作数按 min_prec=4 解析，而 ∧ 的优先级正是 4 ⇒ `¬P(x) ∧ Q(x)`
+#   被解析成 `¬(P(x) ∧ Q(x))`。
+check("无前提的重言式该 entailed：P(a) → P(a)",
+      run({'universe': ['a'], 'facts': [], 'rules': [],
+           'query': 'P(a) → P(a)'})['verdict'] == 'entailed')
+check("无前提的排中律该 entailed：P(a) ∨ ¬P(a)",
+      run({'universe': ['a'], 'facts': [], 'rules': [],
+           'query': 'P(a) ∨ ¬P(a)'})['verdict'] == 'entailed')
+check("¬ 绑得紧：无前提 (¬P(a) ∧ Q(a)) → ¬P(a) 是重言式，该 entailed",
+      run({'universe': ['a'], 'facts': [], 'rules': [],
+           'query': '(¬P(a) ∧ Q(a)) → ¬P(a)'})['verdict'] == 'entailed')
+check("无前提的非重言式仍该 not_entailed：P(a)",
+      run({'universe': ['a'], 'facts': [], 'rules': [],
+           'query': 'P(a)'})['verdict'] == 'not_entailed')
+check("¬ 绑得紧的反面：¬(P(a) ∧ Q(a)) → ¬P(a) 不是重言式，该 not_entailed",
+      run({'universe': ['a'], 'facts': [], 'rules': [],
+           'query': '¬(P(a) ∧ Q(a)) → ¬P(a)'})['verdict'] == 'not_entailed')
+
 print("=" * 60)
-print(f"结果: {PASS}/11 通过")
-raise SystemExit(0 if PASS == 11 else 1)
+print(f"结果: {PASS}/16 通过")
+raise SystemExit(0 if PASS == 16 else 1)

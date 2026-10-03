@@ -79,7 +79,10 @@ def _parse_impl(tokens, pos, min_prec):
             raise _ParseError("缺右括号")
         pos += 1
     elif tok == '¬':
-        node, pos = _parse_impl(tokens, pos + 1, 4)  # ¬ 优先级最高
+        # ¬ 的**操作数**必须比任何二元联结词都紧：min_prec 要 > max(_PRECEDENCE)
+        # （∧ 是 4，所以传 5）。原先传 4，于是 `¬P ∧ Q` 被解析成 `¬(P ∧ Q)`——
+        # 注释写着"优先级最高"，实现却把后面的 ∧ 吞了（语义穷举对拍抓出来的）。
+        node, pos = _parse_impl(tokens, pos + 1, 5)
         node = ('¬', node)
     elif tok in _CONNECTIVES:
         raise _ParseError(f"联结词 '{tok}' 缺左操作数")

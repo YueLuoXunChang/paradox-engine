@@ -60,16 +60,16 @@
 | `monadic_fol` | classical | 独立复算（初筛） | 疑似独立复算：命中 oracle、对拍、已知答案、穷举 | `test_monadic_fol.py`、`test_fol_crosscheck.py` | ✅ |
 | `mtmp` | skeleton | 独立复算（初筛） | 疑似独立复算：命中 交叉 | `test_mtmp.py` | ✅ |
 | `mu_calculus` | cold | 跨构件互验 | 引用了同仓构件 model_check；疑似独立复算：命中 oracle、互验、参考实现、反向 BFS | `test_mu_calculus.py`、`test_bisimulation.py` | ✅ |
-| `nd_propositional` | classical | 独立复算（初筛） | 疑似独立复算：命中 oracle、另写、对拍、已知答案 | `test_nd_propositional.py`、`test_classical_crosscheck.py` | ✅ |
+| `nd_propositional` | classical | 独立复算（初筛） | 疑似独立复算：命中 Oracle、oracle、另写、对拍 | `test_nd_propositional.py`、`test_classical_crosscheck.py` | ✅ |
 | `observer_bypass` | mechanisms | 只有性质/接口测试 | 用例集：期望值直接写死 3 条（能挡回归，**不构成独立验证方**） | `test_observer_bypass.py` | ✅ |
 | `paradox_annotate` | mechanisms | 只有性质/接口测试 | 用例集：期望值直接写死 5 条（能挡回归，**不构成独立验证方**） | `test_paradox_annotate.py` | ✅ |
 | `paradox_measure` | mechanisms | 只有性质/接口测试 | 用例集：期望值直接写死 21 条（能挡回归，**不构成独立验证方**） | `test_paradox_measure.py`、`test_fuzz.py`、`test_robustness.py` | ✅ |
 | `presburger` | classical | 跨构件互验 | 引用了同仓构件 decidability_map；疑似独立复算：命中 已知答案 | `test_presburger.py` | ✅ |
-| `propositional` | classical | 独立复算（初筛） | 疑似独立复算：命中 oracle、另写、另算、对拍 | `test_propositional.py`、`test_classical_crosscheck.py`、`test_agm_revision.py`、`test_relevance_logic.py` | ✅ |
+| `propositional` | classical | 独立复算（初筛） | 疑似独立复算：命中 Oracle、oracle、另写、另算 | `test_propositional.py`、`test_classical_crosscheck.py`、`test_agm_revision.py`、`test_relevance_logic.py` | ✅ |
 | `recursion_theorem` | classical | 只有性质/接口测试 | 用例集：期望值直接写死 5 条（能挡回归，**不构成独立验证方**） | `test_recursion_theorem.py` | ✅ |
 | `relevance_logic` | cold | 跨构件互验 | 引用了同仓构件 propositional | `test_relevance_logic.py` | ✅ |
 | `repl` | engine | 只有性质/接口测试 | 用例集：期望值直接写死 6 条（能挡回归，**不构成独立验证方**） | `test_repl.py` | ✅ |
-| `resolution` | classical | 独立复算（初筛） | 疑似独立复算：命中 oracle、另写、对拍、已知答案 | `test_resolution.py`、`test_classical_crosscheck.py` | ✅ |
+| `resolution` | classical | 独立复算（初筛） | 疑似独立复算：命中 Oracle、oracle、另写、对拍 | `test_resolution.py`、`test_classical_crosscheck.py` | ✅ |
 | `review_marks` | scenarios | 跨构件互验 | 引用了同仓构件 cli | `test_review_marks.py`、`test_session.py` | ✅ |
 | `scenarios` | scenarios | 独立复算（初筛） | 疑似独立复算：命中 交叉 | `test_scenarios.py`、`test_controller.py`、`test_session.py`、`test_corpus_stats.py`、`test_cli.py`、`test_docs_consistency.py`、`test_fuzz.py`、`test_review_packet.py` | ✅ |
 | `selfref_fixpoint` | mechanisms | 只有性质/接口测试 | 用例集：期望值直接写死 9 条（能挡回归，**不构成独立验证方**） | `test_selfref_fixpoint.py` | ✅ |

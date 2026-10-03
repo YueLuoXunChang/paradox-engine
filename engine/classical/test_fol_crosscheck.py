@@ -292,6 +292,25 @@ check('first_order 与 oracle B 精确一致（判了 %d 例，含 %d 个真蕴�
 check('first_order 的蕴含判定不是恒真/恒假（两侧都出现过）',
       0 < n_ent_b < TRIALS_B, n_ent_b)
 
+print()
+print('=' * 70)
+print('三·补、无前提的查询（旧实现在这里会假否定）')
+# 这条是**补课**：上一版随机抽样没覆盖到"前提为空 + 结论普遍有效"这一类，
+# 于是 first_order 把命题引擎的 `premises_pending` 折成 not_entailed 的 bug
+# 一直没被看见。现在把这一类**固定下来**，当成对拍的一部分。
+_NO_PREM = [('P(a) → P(a)', True), ('P(a) ∨ ¬P(a)', True),
+            ('(¬P(a) ∧ Q(a)) → ¬P(a)', True), ('P(a)', False),
+            ('¬(P(a) ∧ Q(a)) → ¬P(a)', False)]
+_bad_np = []
+for _q, _expect in _NO_PREM:
+    _r = FO.run({'universe': ['a'], 'facts': [], 'rules': [], 'query': _q})
+    if (_r['verdict'] == 'entailed') != _expect:
+        _bad_np.append((_q, _r['verdict'], _expect))
+check('无前提查询与期望一致（普遍有效的 entailed、其余 not_entailed）',
+      _bad_np == [], _bad_np[:2])
+check('这一类样例确实跑到了（%d 条，不是空跑）' % len(_NO_PREM),
+      len(_NO_PREM) >= 4)
+
 # ══════════════════════════════════════════════════════════════
 # 五、equality_tableau ↔ oracle C（说 valid/invalid 时必须一致）
 # ══════════════════════════════════════════════════════════════
@@ -341,5 +360,5 @@ check('变异 C：把等词蕴含判据反了后，与正版在 a=b, P(a) ⊨ P(
 
 print()
 print('=' * 70)
-print(f'结果: {PASS}/19 通过')
-raise SystemExit(0 if PASS == 19 else 1)
+print(f'结果: {PASS}/21 通过')
+raise SystemExit(0 if PASS == 21 else 1)
