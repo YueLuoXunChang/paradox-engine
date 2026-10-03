@@ -113,42 +113,42 @@ def _build_recursive(transform):
     由于 Python 源码自指用引号技巧，这里构造的是：
         e 运行时打印 f(自身模板) 并 exec 之（对行为等价变换 = 运行原逻辑）。
     """
-    # 实际可构造且可验证的版本：e 打印自身源码，并执行 transform 后的自己
-    # 对行为等价变换，exec(f(s)) 效果 = 运行自己（打印源码）→ 可验证。
-    inner = (
-        '# -*- coding: utf-8 -*-\n'
-        'import sys as _s\n'
-        '_src = open(_s.argv[0], encoding="utf-8").read()\n'
-        'print("--- 自指程序 e 的源码 ---")\n'
-        'print(_src)\n'
-        'print("--- 变换 f(e) 执行结果 ---")\n'
-    )
-    # transform 作用于"自身源码"在运行时完成；此处构造壳程序
-    src = (
-        '# -*- coding: utf-8 -*-\n'
-        'import sys as _s\n'
-        '# 递归定理形态：本程序运行时读自己的源码 src，\n'
-        '# 应用变换 f（transform 由调用方定义），再 exec 变换结果。\n'
-        '_src = open(_s.argv[0], encoding="utf-8").read()\n'
-        '_TRANSFORM_APPLIED = _apply(_src)\n'
-        'print("--- 应用变换 f 后执行 ---")\n'
-        'exec(_TRANSFORM_APPLIED)\n'
-    )
-    # 简化：为可验证，把 transform 作为模块级函数注入
-    # 直接构造一个"读自己源码 → transform → 打印"的程序
+    # 工程版：e 运行时读**自己的源码**，交给内联的 f，报变换结果。
+    #
+    # 为什么不 exec 变换后的自己：`exec(f(s))` 会在 `__name__ == "__main__"` 的
+    # 语境里把整个 main 块再跑一遍 → **无限自嵌套**。所以这里做的是
+    # "拿到自己的源码 → 交给 f → 报结果"，思想同一（φ_e = φ_{f(e)}），
+    # 但不假装能安全地执行变换结果。
+    #
+    # 为什么 f 要**内联**进源码：旧版把 `_TRANSFORM` 写成自由名字、指望调用方注入，
+    # 结果产出的程序一跑就 `NameError`（对拍实跑抓出来的）。任意可调用对象没法通用
+    # 序列化，所以内联默认变换（行为等价：加一行注释），自定义 f 在构件侧试算。
     prog = (
         '# -*- coding: utf-8 -*-\n'
         'import sys as _s\n'
+        '\n'
+        '\n'
+        'def _TRANSFORM(code):\n'
+        '    """默认变换 f：在源码末尾加一行注释（行为等价）。"""\n'
+        "    return code + '\\n# [transform] 已应用：此注释由变换 f 添加\\n'\n"
+        '\n'
+        '\n'
         'def _apply(code):\n'
-        '    f = _TRANSFORM\n'
-        '    return f(code)\n'
+        '    return _TRANSFORM(code)\n'
+        '\n'
+        '\n'
         'if __name__ == "__main__":\n'
         '    _src = open(_s.argv[0], encoding="utf-8").read()\n'
         '    _res = _apply(_src)\n'
-        '    print("recursive-theorem demo: 程序 e 拿到自己的源码并交给 f")\n'
-        '    print("f 返回长度:", len(_res))\n'
+        '    print("--- 自指程序 e 的源码 ---")\n'
+        '    print(_src)\n'
+        '    print("--- 变换 f(e) 的结果 ---")\n'
+        '    print("源码 %d 字符 → f(e) %d 字符（差 %d，来自 f 加的那行注释）"\n'
+        '          % (len(_src), len(_res), len(_res) - len(_src)))\n'
     )
-    return prog, inner
+    # 第二个返回值原先是一段构造完就被丢掉的死代码（`inner`），
+    # 这里显式返回 None，并把"没用的中间产物"这件事写出来，免得再被当成接口。
+    return prog, None
 
 
 def run(inputs):
@@ -184,16 +184,19 @@ def run(inputs):
                 'boundary': 'recursive 模式需 transform（可调用，'
                             '程序变换 f(code)->code）——诚实拦截'}
     program, _ = _build_recursive(transform)
-    # 应用变换示例（诚实：演示 f 作用在源码上）
+    # 应用变换示例（诚实：是在**构件侧**试算 f，不是程序跑出来的）
     f_result = transform('def demo():\n    return 42\n')
     return {'verdict': 'constructed', 'program': program,
-            'runs_like': f'程序 e 运行时读取自己的源码 → 交给变换 f → '
-                         f'执行变换结果。示例：f 加注释（行为等价），'
-                         f'f(源码) 返回 {len(f_result)} 字符',
+            'runs_like': '程序 e 运行时读**自己的源码** → 交给**源码里内联的**默认变换 f'
+                         ' → 报变换前后长度。'
+                         f'（自定义 f 无法通用序列化进源码，故程序内联默认变换；'
+                         f'本构件侧另用给定 f 试算：f(示例源码) 返回 '
+                         f'{len(f_result)} 字符）',
             'boundary': '递归定理形态工程演示：φ_e = φ_{f(e)} 的思想'
-                        '（程序能拿自己再变换）。完整自指构造验证见自测'
-                        '（quine 实跑核对）。非形式化证明；不与停机问题'
-                        '冲突（不宣称绕定理）。'}
+                        '（程序能拿自己再变换）。**不 exec 变换后的自己**——'
+                        '那会在 __main__ 语境里无限自嵌套；本件只做'
+                        '"拿到自己 → 变换 → 报结果"。'
+                        '非形式化证明；不与停机问题冲突（不宣称绕定理）。'}
 
 
 # ============================================================

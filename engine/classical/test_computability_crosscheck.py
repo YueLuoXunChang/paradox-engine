@@ -30,6 +30,7 @@ _HERE = os.path.dirname(os.path.abspath(__file__))
 _REPO = os.path.dirname(os.path.dirname(_HERE))
 sys.path.insert(0, _REPO)
 
+from engine.classical import recursion_theorem as RT   # noqa: E402
 from engine.classical import turing_machine as TM   # noqa: E402
 
 PASS = 0
@@ -233,7 +234,69 @@ check('步数上限为 0 时如实报 steps_exceeded（没有偷跑一步）',
       TM.run({'program': inc, 'input': '1',
               'steps_limit': 0})['verdict'] == 'steps_exceeded')
 
+# ══════════════════════════════════════════════════════════════
+# 四、recursion_theorem：不只看产物长得对不对，**执行它**
+# ══════════════════════════════════════════════════════════════
+# 为什么这么验：这一件产出的是**真能跑的 Python 源码**，所以"能不能跑、跑出来对不对"
+# 是硬判据——比读源码猜语义强。本批就是靠它撞出旧版 recursive 产物一跑就
+# `NameError: _TRANSFORM is not defined`（返回一个跑不起来的产物，而 runs_like
+# 却描述成能跑的行为）。
 print()
 print('=' * 70)
-print(f'结果: {PASS}/12 通过')
-raise SystemExit(0 if PASS == 12 else 1)
+print('四、recursion_theorem ↔ 执行产物（subprocess 实跑）')
+import re      # noqa: E402
+import subprocess   # noqa: E402
+import tempfile     # noqa: E402
+
+
+def run_source(src, timeout=25):
+    """把源码写成临时文件跑一遍，返回 (退出码, stdout, stderr)。"""
+    d = tempfile.mkdtemp(prefix='rt_check_')
+    p = os.path.join(d, 'prog.py')
+    with open(p, 'w', encoding='utf-8', newline='\n') as fh:
+        fh.write(src)
+    env = dict(os.environ, PYTHONIOENCODING='utf-8')
+    r = subprocess.run([sys.executable, '-B', p], capture_output=True,
+                       text=True, encoding='utf-8', errors='replace',
+                       timeout=timeout, env=env, cwd=d)
+    return r.returncode, r.stdout or '', r.stderr or ''
+
+
+PAYLOAD = '好，自指'
+_pq = RT.run({'mode': 'quine', 'payload': PAYLOAD})['program']
+rc_q, out_q, err_q = run_source(_pq)
+check('quine 产物能跑（退出码 0）', rc_q == 0, err_q[-120:])
+check('quine 产物真把 payload 打出来了',
+      PAYLOAD in out_q, out_q[:80])
+# 自复制链：产物 → 打印出一段"程序源码" → 那段源码跑起来又打印 payload 源码 → 再跑打印 payload
+_blocks = re.split(r'--- 程序源码 ---|--- 运行输出 ---', out_q)
+printed_src = _blocks[1].strip('\n') if len(_blocks) > 2 else ''
+rc_p, out_p, err_p = run_source(printed_src)
+check('产物打印出的那段"程序源码"自己也能跑（退出码 0）', rc_p == 0,
+      err_p[-120:])
+payload_src = out_p.strip('\n')
+rc_pp, out_pp, _e = run_source(payload_src + '\n') if payload_src else (1, '', '')
+check('自复制链走通：产物 → 打印出的源码 → 再跑出 payload',
+      'msg = ' in payload_src and 'print(msg)' in payload_src
+      and out_pp.strip() == PAYLOAD, (payload_src[:40], out_pp[:40]))
+check('同一份产物跑两次输出相同（确定性）',
+      run_source(_pq)[1] == out_q)
+
+_pr = RT.run({'mode': 'recursive'})['program']
+rc_r, out_r, err_r = run_source(_pr)
+check('recursive 产物能跑（**旧版一跑就 NameError**，这是回归）',
+      rc_r == 0 and 'NameError' not in err_r, err_r[-140:])
+check('recursive 产物确实拿到了**自己的源码**（递归定理的核心动作）',
+      _pr.rstrip('\n') in out_r)
+_m = re.search(r'源码 (\d+) 字符 → f\(e\) (\d+) 字符', out_r)
+check('recursive 产物报出变换前后长度，且 f 真的改了东西（长度差 > 0）',
+      bool(_m) and int(_m.group(2)) > int(_m.group(1)),
+      _m.group(0) if _m else out_r[-80:])
+check('recursive 的 runs_like 描述的是**实际行为**（内联默认变换、不 exec）',
+      '内联' in RT.run({'mode': 'recursive'})['runs_like']
+      and '不 exec' in RT.run({'mode': 'recursive'})['boundary'])
+
+print()
+print('=' * 70)
+print(f'结果: {PASS}/21 通过')
+raise SystemExit(0 if PASS == 21 else 1)

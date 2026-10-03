@@ -93,6 +93,33 @@ check("边界声明：不宣称绕停机/不可判定",
        or '停机' in run({'mode': 'quine'})['boundary']),
       run({'mode': 'quine'})['boundary'])
 
+# ── 产物必须**真能跑**（跨构件对拍实跑抓出来的：旧版 recursive 产物一跑
+#    就 `NameError: _TRANSFORM is not defined`——返回跑不起来的产物，
+#    而 runs_like 却把它描述成能跑的行为）
+
+
+def _run_artifact(src):
+    d = tempfile.mkdtemp(prefix='rt_test_')
+    p = os.path.join(d, 'prog.py')
+    with open(p, 'w', encoding='utf-8', newline='\n') as fh:
+        fh.write(src)
+    env = dict(os.environ, PYTHONIOENCODING='utf-8')
+    r = subprocess.run([sys.executable, '-B', p], capture_output=True,
+                       text=True, encoding='utf-8', errors='replace',
+                       timeout=25, env=env, cwd=d)
+    return r.returncode, r.stdout or '', r.stderr or ''
+
+
+_rc_q, _out_q, _err_q = _run_artifact(run({'mode': 'quine',
+                                           'payload': '自证'})['program'])
+check("quine 产物实跑退出码 0，且打出 payload",
+      _rc_q == 0 and '自证' in _out_q, _err_q[-120:])
+_rc_r, _out_r, _err_r = _run_artifact(run({'mode': 'recursive'})['program'])
+check("recursive 产物实跑退出码 0（**旧版 NameError**，这是防复发）",
+      _rc_r == 0 and 'NameError' not in _err_r, _err_r[-140:])
+check("recursive 产物真拿到了自己的源码（递归定理的核心动作）",
+      run({'mode': 'recursive'})['program'].rstrip('\n') in _out_r)
+
 print("=" * 60)
-print(f"结果: {PASS}/16 通过")
-raise SystemExit(0 if PASS == 16 else 1)
+print(f"结果: {PASS}/19 通过")
+raise SystemExit(0 if PASS == 19 else 1)

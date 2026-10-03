@@ -57,12 +57,14 @@ def check(label, cond, detail=''):
 #   ③ `test_modal_family_crosscheck.py`（模态求值 / 有限路径 LTL / CTL 定点三个独立求值器）
 #      落地后，`ltl`、`modal` 升档（`model_check` 原本已在"独立复算"）→ **18 件变 16 件**；
 #   ④ `test_computability_crosscheck.py`（照形式定义另写图灵机模拟器）落地后，
-#      `turing_machine` 升档 → **16 件变 15 件**。
+#      `turing_machine` 升档 → **16 件变 15 件**；
+#   ⑤ 同一份文件的 recursion_theorem 段（**执行产物**：quine 自复制链 ·
+#      recursive 拿到自己源码）落地后，`recursion_theorem` 升档 → **15 件变 14 件**。
 KNOWN_NO_INDEPENDENT = {
     'ai_scenarios', 'converge_check',                     # 无测试引用
     'boundary_paradox', 'freeze_tool_schema',
     'lambda_calculus',
-    'observer_bypass', 'paradox_annotate', 'paradox_measure', 'recursion_theorem',
+    'observer_bypass', 'paradox_annotate', 'paradox_measure',
     'repl', 'selfref_fixpoint', 'stlc', 'tools', 'truth_revision',
     'wall_pipeline',                                      # 只有用例集/性质断言
 }
