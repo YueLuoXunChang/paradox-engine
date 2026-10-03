@@ -245,7 +245,11 @@ def fmt_lit(lit):
         return '¬' + fmt_lit(lit[1])
     if lit[0] == 'atom':
         return lit[1] + '(' + ','.join(fmt_term(a) for a in lit[2]) + ')'
-    return lit[1]  # atom0
+    if lit[0] == 'atom0':
+        return lit[1]
+    # 走到这儿说明子句里混进了非字面量——报明白错，别让它炸成
+    # `TypeError: can only concatenate str (not "tuple") to str` 那种看不懂的堆栈
+    raise _ParseError('不是字面量，无法显示：%r' % (lit[0],))
 
 
 # ============================================================
@@ -370,7 +374,12 @@ def _elim_implications(node):
 
 
 def _push_negation(node, negate=False):
-    """¬ 内移（negate=True 表示外面有 ¬）。"""
+    """¬ 内移（negate=True 表示外面有 ¬）。
+
+    本函数对**整个联结词集**是全函数：`→`/`↔` 也会被改写掉，
+    不认识的结构**直接报错**而不是原样返回——原先的静默返回会让
+    `¬(A ↔ B)` 这类节点一路活到子句化，最后变成"伪字面量"塞进子句。
+    """
     if negate:
         k = node[0]
         if k == '¬':
@@ -381,23 +390,40 @@ def _push_negation(node, negate=False):
         if k == '∨':
             return ('∧', _push_negation(node[1], True),
                     _push_negation(node[2], True))
+        if k == '→':                     # ¬(A→B) ≡ A ∧ ¬B
+            return ('∧', _push_negation(node[1], False),
+                    _push_negation(node[2], True))
+        if k == '↔':                     # ¬(A↔B) ≡ (A ∧ ¬B) ∨ (¬A ∧ B)
+            return ('∨',
+                    ('∧', _push_negation(node[1], False),
+                     _push_negation(node[2], True)),
+                    ('∧', _push_negation(node[1], True),
+                     _push_negation(node[2], False)))
         if k == '∀':
             return ('∃', node[1], _push_negation(node[2], True))
         if k == '∃':
             return ('∀', node[1], _push_negation(node[2], True))
-        if k == 'atom':
+        if k in ('atom', 'atom0'):
             return ('¬', node)
-        if k == 'atom0':
-            return ('¬', node)
-        return node
+        raise _ParseError('¬ 内移失败：不认识的结构 %r' % (k,))
     k = node[0]
     if k == '¬':
         return _push_negation(node[1], True)
     if k in ('∧', '∨'):
         return (k, _push_negation(node[1]), _push_negation(node[2]))
+    if k == '→':                         # A → B ≡ ¬A ∨ B
+        return ('∨', _push_negation(node[1], True),
+                _push_negation(node[2], False))
+    if k == '↔':                         # A ↔ B ≡ (A→B) ∧ (B→A)
+        return ('∧', ('∨', _push_negation(node[1], True),
+                      _push_negation(node[2], False)),
+                ('∨', _push_negation(node[2], True),
+                 _push_negation(node[1], False)))
     if k in ('∀', '∃'):
         return (k, node[1], _push_negation(node[2]))
-    return node
+    if k in ('atom', 'atom0'):
+        return node
+    raise _ParseError('¬ 内移失败：不认识的结构 %r' % (k,))
 
 
 def _clausify_rec(node, outer_skolems):
@@ -429,10 +455,17 @@ def _clausify_rec(node, outer_skolems):
         c2, s2 = _clausify_rec(node[2], outer_skolems)
         return c1 + c2, s1 + s2
     if k == '∨':
-        # 析取：把两边变子句后合并成单个子句
+        # 三步走：① ¬ 推到原子层（含 → ↔ 的等价改写）；
+        #        ② 分配律乘开转 CNF；
+        #        ③ 剩下必须是"字面量的析取"——不是就**报错**，不塞伪字面量。
+        node2 = _push_negation(node)
+        cnf = _to_cnf(node2)
+        if cnf[0] != '∨':
+            return _clausify_rec(cnf, outer_skolems)
         lits = []
-        _collect_disjuncts(node, lits)
-        return [lits], []
+        if _collect_literals(cnf, lits):
+            return [lits], []
+        raise _ParseError('子句化失败：析取里出现非字面量 %r' % (cnf[0],))
     if k == 'atom' or k == 'atom0':
         return [[node]], []
     raise _ParseError(f"子句化失败：未知节点 {k}")
@@ -466,8 +499,63 @@ def _subst_term(t, var, rep):
     return t
 
 
+def _is_literal(node):
+    """是不是**真字面量**：原子，或原子/复合字面量上的一层 ¬。"""
+    if node[0] in ('atom', 'atom0'):
+        return True
+    if node[0] == '¬':
+        return _is_literal(node[1])
+    return False
+
+
+def _collect_literals(node, out):
+    """析取树 → 字面量列表；**碰到非字面量就返回 False**，不往子句里塞。
+
+    原先叫 `_collect_disjuncts`，它把任何不是 `∨` 的东西都当字面量收下——
+    `¬(A ↔ B)` 这种复合就这么变成了"伪字面量"，最后在显示时炸成 TypeError。
+    """
+    if node[0] == '∨':
+        return (_collect_literals(node[1], out)
+                and _collect_literals(node[2], out))
+    if not _is_literal(node):
+        return False
+    out.append(node)
+    return True
+
+
+def _distribute_cnf(left, right):
+    """把两棵 CNF 用分配律乘开：`(A₁∧A₂) ∨ B → (A₁∨B) ∧ (A₂∨B)`。"""
+    if left[0] == '∧':
+        return ('∧', _distribute_cnf(left[1], right),
+                _distribute_cnf(left[2], right))
+    if right[0] == '∧':
+        return ('∧', _distribute_cnf(left, right[1]),
+                _distribute_cnf(left, right[2]))
+    return ('∨', left, right)
+
+
+def _to_cnf(node):
+    """把（已消蕴含、已推否定的）公式转成 CNF 树。
+
+    - `∧` 原样递归；
+    - `∨` 先递归求两边的 CNF，再用**分配律**乘开；
+    - 字面量原样返回。
+
+    **必须有这一步**：少了它，`(Q↔Q) → P` 推完否定后仍是"含 ∧ 的析取"——
+    先前的版本会原地打转（死递归），更早的版本则把复合项当字面量静默塞进子句。
+    窄一层的"只把直接子节点是 ∧ 的提出来"也不够：`∨(A, ∨(B, ∧(C,D)))`
+    这种藏着 ∧ 的形状会被漏过去，于是子句化报错。
+    """
+    k = node[0]
+    if k == '∧':
+        return ('∧', _to_cnf(node[1]), _to_cnf(node[2]))
+    if k == '∨':
+        return _distribute_cnf(_to_cnf(node[1]), _to_cnf(node[2]))
+    return node
+
+
 def _collect_disjuncts(node, lits):
-    """析取树 → 字面量列表。"""
+    """旧名保留：只用于「已经确认全是字面量」的树（兼容老调用点）。"""
     if node[0] == '∨':
         _collect_disjuncts(node[1], lits)
         _collect_disjuncts(node[2], lits)

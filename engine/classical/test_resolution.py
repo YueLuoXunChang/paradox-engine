@@ -77,6 +77,26 @@ check("缺结论 → conclusion_pending",
 check("解析错误 → parse_error",
       run({'premises': ['∀x('], 'conclusion': 'P'})['verdict'] == 'parse_error')
 
+# ── 用例8：等值号与否定下的子句化（跨构件随机对拍查出来的真 bug，防复发）
+# 崩因：`((Q ↔ Q) → P)` 消掉蕴含后是 `¬(Q↔Q) ∨ P`，旧版把 `¬(Q↔Q)` 当"字面量"
+# 塞进子句 → 显示时 `TypeError`；改法＝推否定 + **分配律转 CNF** + 严格认字面量。
+# 这三条钉住的正是"等值号在否定/析取下"这一族输入。
+check("等值号恒真式作前提：((Q ↔ Q) → P) ⊢ P 应 proved（曾经直接崩）",
+      run({'premises': ['((Q ↔ Q) → P)'], 'conclusion': 'P'})['verdict']
+      == 'proved')
+check("等值号参与推理：P ↔ Q, P ⊢ Q",
+      run({'premises': ['P ↔ Q', 'P'], 'conclusion': 'Q'})['verdict']
+      == 'proved')
+check("否定包着等值号：¬(P ↔ Q), P ⊢ ¬Q",
+      run({'premises': ['¬(P ↔ Q)', 'P'], 'conclusion': '¬Q'})['verdict']
+      == 'proved')
+check("恒真式前提推不出无关结论：Q ↔ Q ⊬ Q",
+      run({'premises': ['Q ↔ Q'], 'conclusion': 'Q'})['verdict']
+      == 'not_proved')
+check("子句里不会再混进伪字面量（显示层拿到非字面量会报明白错）",
+      'TypeError' not in str(run({'premises': ['((Q ↔ Q) → P)'],
+                                  'conclusion': 'P'})))
+
 print("=" * 60)
-print(f"结果: {PASS}/10 通过")
-raise SystemExit(0 if PASS == 10 else 1)
+print(f"结果: {PASS}/15 通过")
+raise SystemExit(0 if PASS == 15 else 1)

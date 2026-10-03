@@ -11,18 +11,19 @@
 
 共 **12** 件：ai_scenarios、freeze_tool_schema、ltl、modal、model_check、monadic_fol、belnap_four、intuitionistic_logic、clue_suggester、corpus_stats、review_marks、mtmp
 
-## 三、③ 验证轴（随机对拍 / 独立互验 / 变异接受 三样皆无）
+## 三、③ 验证轴（口径：**验证方登记**，不是本件自己扫的）
 
-共 **35** 件（占 49 件构件）：
+- 口径来源：验证方登记 engine/_verifier_audit.py（AST 扫 import ＋ 人工签字）
+- 处于"未验状态"的构件 **21** 件（只有性质·接口测试 19 件 ＋ 无测试引用 2 件）：
 
 ```
-ai_scenarios、freeze_tool_schema、tools、decidability_map、equality_tableau、first_order
-lambda_calculus、ltl、modal、model_check、monadic_fol、nd_propositional
-presburger、propositional、recursion_theorem、resolution、stlc、turing_machine
-default_logic、interval_algebra、many_valued、relevance_logic、classifier、clue_suggester
-session、boundary_paradox、converge_check、observer_bypass、paradox_annotate、paradox_measure
-selfref_fixpoint、wall_pipeline、corpus_stats、review_marks、scenarios
+ai_scenarios、boundary_paradox、converge_check、equality_tableau、first_order、freeze_tool_schema
+lambda_calculus、ltl、modal、monadic_fol、observer_bypass、paradox_annotate
+paradox_measure、recursion_theorem、repl、selfref_fixpoint、stlc、tools
+truth_revision、turing_machine、wall_pipeline
 ```
+
+**旁证**（关键词扫描，**不参与口径**，只作参考）：随机对拍 5 件 · 独立互验字样 16 件 · 变异字样 2 件；三样都扫不到的是 33 件——**与上面那个数不同是正常的**，差异来自判据不同（关键词 vs AST），以登记为准。
 
 ## 四、④ 契约轴（PORTS / boundary 缺口）
 

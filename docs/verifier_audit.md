@@ -19,8 +19,8 @@
 |:--|--:|:--|
 | 外部验证方 | **3** | 有**外部/第三方**实现当验证方（人工登记，命中词须在测试里出现） |
 | 跨构件互验 | **13** | 同仓**另一个构件**参与互验（AST 扫 import 判出来的） |
-| 独立复算（初筛） | **12** | 测试里有**独立复算**的痕迹（关键词初筛） |
-| 只有性质/接口测试 | **21** | 只有性质/接口断言（PORTS · boundary · 单调/恒等 · 拒绝路径）——**待人工确认** |
+| 独立复算（初筛） | **14** | 测试里有**独立复算**的痕迹（关键词初筛） |
+| 只有性质/接口测试 | **19** | 只有性质/接口断言（PORTS · boundary · 单调/恒等 · 拒绝路径）——**待人工确认** |
 | 无测试引用 | **2** | 没有测试文件引用它——**待人工确认** |
 | 合计 | **51** | 构件总数（扫盘口径，与 `docs/components.md` 同源） |
 
@@ -60,16 +60,16 @@
 | `monadic_fol` | classical | 只有性质/接口测试 | 只有接口/性质断言（无独立验证方） | `test_monadic_fol.py` | ✅ |
 | `mtmp` | skeleton | 独立复算（初筛） | 疑似独立复算：命中 交叉 | `test_mtmp.py` | ✅ |
 | `mu_calculus` | cold | 跨构件互验 | 引用了同仓构件 model_check；疑似独立复算：命中 oracle、互验、参考实现、反向 BFS | `test_mu_calculus.py`、`test_bisimulation.py` | ✅ |
-| `nd_propositional` | classical | 只有性质/接口测试 | 用例集：期望值直接写死 11 条（能挡回归，**不构成独立验证方**） | `test_nd_propositional.py` | ✅ |
+| `nd_propositional` | classical | 独立复算（初筛） | 疑似独立复算：命中 oracle、另写、对拍、已知答案 | `test_nd_propositional.py`、`test_classical_crosscheck.py` | ✅ |
 | `observer_bypass` | mechanisms | 只有性质/接口测试 | 用例集：期望值直接写死 3 条（能挡回归，**不构成独立验证方**） | `test_observer_bypass.py` | ✅ |
 | `paradox_annotate` | mechanisms | 只有性质/接口测试 | 用例集：期望值直接写死 5 条（能挡回归，**不构成独立验证方**） | `test_paradox_annotate.py` | ✅ |
 | `paradox_measure` | mechanisms | 只有性质/接口测试 | 用例集：期望值直接写死 21 条（能挡回归，**不构成独立验证方**） | `test_paradox_measure.py`、`test_fuzz.py`、`test_robustness.py` | ✅ |
 | `presburger` | classical | 跨构件互验 | 引用了同仓构件 decidability_map；疑似独立复算：命中 已知答案 | `test_presburger.py` | ✅ |
-| `propositional` | classical | 独立复算（初筛） | 疑似独立复算：命中 另算、真值表 | `test_propositional.py`、`test_agm_revision.py`、`test_relevance_logic.py` | ✅ |
+| `propositional` | classical | 独立复算（初筛） | 疑似独立复算：命中 oracle、另写、另算、对拍 | `test_propositional.py`、`test_classical_crosscheck.py`、`test_agm_revision.py`、`test_relevance_logic.py` | ✅ |
 | `recursion_theorem` | classical | 只有性质/接口测试 | 用例集：期望值直接写死 5 条（能挡回归，**不构成独立验证方**） | `test_recursion_theorem.py` | ✅ |
 | `relevance_logic` | cold | 跨构件互验 | 引用了同仓构件 propositional | `test_relevance_logic.py` | ✅ |
 | `repl` | engine | 只有性质/接口测试 | 用例集：期望值直接写死 6 条（能挡回归，**不构成独立验证方**） | `test_repl.py` | ✅ |
-| `resolution` | classical | 只有性质/接口测试 | 用例集：期望值直接写死 1 条（能挡回归，**不构成独立验证方**） | `test_resolution.py` | ✅ |
+| `resolution` | classical | 独立复算（初筛） | 疑似独立复算：命中 oracle、另写、对拍、已知答案 | `test_resolution.py`、`test_classical_crosscheck.py` | ✅ |
 | `review_marks` | scenarios | 跨构件互验 | 引用了同仓构件 cli | `test_review_marks.py`、`test_session.py` | ✅ |
 | `scenarios` | scenarios | 独立复算（初筛） | 疑似独立复算：命中 交叉 | `test_scenarios.py`、`test_controller.py`、`test_session.py`、`test_corpus_stats.py`、`test_cli.py`、`test_docs_consistency.py`、`test_fuzz.py`、`test_review_packet.py` | ✅ |
 | `selfref_fixpoint` | mechanisms | 只有性质/接口测试 | 用例集：期望值直接写死 9 条（能挡回归，**不构成独立验证方**） | `test_selfref_fixpoint.py` | ✅ |
@@ -102,13 +102,11 @@
 | `ltl` | classical | 只有性质/接口测试 | 用例集：期望值直接写死 4 条（能挡回归，**不构成独立验证方**） |
 | `modal` | classical | 只有性质/接口测试 | 用例集：期望值直接写死 12 条（能挡回归，**不构成独立验证方**） |
 | `monadic_fol` | classical | 只有性质/接口测试 | 只有接口/性质断言（无独立验证方） |
-| `nd_propositional` | classical | 只有性质/接口测试 | 用例集：期望值直接写死 11 条（能挡回归，**不构成独立验证方**） |
 | `observer_bypass` | mechanisms | 只有性质/接口测试 | 用例集：期望值直接写死 3 条（能挡回归，**不构成独立验证方**） |
 | `paradox_annotate` | mechanisms | 只有性质/接口测试 | 用例集：期望值直接写死 5 条（能挡回归，**不构成独立验证方**） |
 | `paradox_measure` | mechanisms | 只有性质/接口测试 | 用例集：期望值直接写死 21 条（能挡回归，**不构成独立验证方**） |
 | `recursion_theorem` | classical | 只有性质/接口测试 | 用例集：期望值直接写死 5 条（能挡回归，**不构成独立验证方**） |
 | `repl` | engine | 只有性质/接口测试 | 用例集：期望值直接写死 6 条（能挡回归，**不构成独立验证方**） |
-| `resolution` | classical | 只有性质/接口测试 | 用例集：期望值直接写死 1 条（能挡回归，**不构成独立验证方**） |
 | `selfref_fixpoint` | mechanisms | 只有性质/接口测试 | 用例集：期望值直接写死 9 条（能挡回归，**不构成独立验证方**） |
 | `stlc` | classical | 只有性质/接口测试 | 用例集：期望值直接写死 2 条（能挡回归，**不构成独立验证方**） |
 | `tools` | ai | 只有性质/接口测试 | 用例集：期望值直接写死 57 条（能挡回归，**不构成独立验证方**） |

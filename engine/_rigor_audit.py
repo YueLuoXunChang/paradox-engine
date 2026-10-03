@@ -158,6 +158,37 @@ def audit():
     return rows, problems
 
 
+def registry_weak():
+    """③ 验证轴的**权威口径**：读验证方登记（`engine/_verifier_audit.py`）。
+
+    为什么不在这儿自己扫关键词：同一件事两把尺子，数一定对不上——
+    本件第一版就是关键词扫描报 35 件，而登记（AST 扫 import ＋ 人工签字的外部验证方）
+    报 23 件。**两个数并存等于没有口径**，所以这里直接读登记，关键词扫描降级成旁证。
+
+    返回 {'weak': [...], 'breakdown': {...}, 'source': '...'}；读不到就如实返回空并标原因。
+    """
+    import importlib.util
+    p = os.path.join(HERE, '_verifier_audit.py')
+    try:
+        sp = importlib.util.spec_from_file_location('_va_for_rigor', p)
+        va = importlib.util.module_from_spec(sp)
+        sp.loader.exec_module(va)
+        rows, _problems = va.audit()
+    except Exception as exc:  # noqa: BLE001——登记本身坏了要如实说，不能假装没这回事
+        return {'weak': [], 'breakdown': {'property_only': 0, 'untested': 0,
+                                          'error': str(exc)[:60]},
+                'source': '读登记失败：%s' % str(exc)[:60]}
+    weak, bd = [], {}
+    for r in rows:
+        if r['state'] in ('property_only', 'untested'):
+            weak.append(r['comp'])
+            bd[r['state']] = bd.get(r['state'], 0) + 1
+    bd.setdefault('property_only', 0)
+    bd.setdefault('untested', 0)
+    return {'weak': sorted(weak), 'breakdown': bd,
+            'source': '验证方登记 engine/_verifier_audit.py（AST 扫 import ＋ 人工签字）'}
+
+
 def stats(rows):
     """其余三条轴的统计（只报数）。"""
     nested_free = []
@@ -168,6 +199,7 @@ def stats(rows):
             nested_free.append(r['comp'])
     weak = [r['comp'] for r in rows
             if not (r['rand'] or r['indep'] or r['mut'])]
+    reg = registry_weak()
     return {
         'n_components': len(rows),
         'ports_gap': [r['comp'] for r in rows if r.get('ports_gap')],
@@ -177,7 +209,14 @@ def stats(rows):
         'thr_pinned_n': sum(len(r['thr_pinned']) for r in rows),
         'thr_declared_n': sum(len(r['thr_declared']) for r in rows),
         'nested_no_bound': nested_free,
-        'weak_verification': weak,
+        # ③ 轴**以验证方登记为准**（AST 口径）；关键词扫描降级成"旁证"，不参与口径
+        'weak_verification': reg['weak'],
+        'weak_breakdown': reg['breakdown'],
+        'weak_source': reg['source'],
+        'supplementary': {'rand': [r['comp'] for r in rows if r['rand']],
+                          'indep': [r['comp'] for r in rows if r['indep']],
+                          'mut': [r['comp'] for r in rows if r['mut']],
+                          'keyword_weak': weak},
     }
 
 
@@ -203,15 +242,26 @@ def render(rows, problems, st):
     L.append('共 **%d** 件：%s' % (len(st['nested_no_bound']),
                                    '、'.join(st['nested_no_bound']) or '无'))
     L.append('')
-    L.append('## 三、③ 验证轴（随机对拍 / 独立互验 / 变异接受 三样皆无）')
+    L.append('## 三、③ 验证轴（口径：**验证方登记**，不是本件自己扫的）')
     L.append('')
-    L.append('共 **%d** 件（占 %d 件构件）：' %
-             (len(st['weak_verification']), st['n_components']))
+    L.append('- 口径来源：%s' % st['weak_source'])
+    L.append('- 处于"未验状态"的构件 **%d** 件（只有性质·接口测试 %d 件 ＋ 无测试引用 %d 件）：'
+             % (len(st['weak_verification']),
+                st['weak_breakdown'].get('property_only', 0),
+                st['weak_breakdown'].get('untested', 0)))
     L.append('')
     L.append('```')
     for i in range(0, len(st['weak_verification']), 6):
         L.append('、'.join(st['weak_verification'][i:i + 6]))
     L.append('```')
+    L.append('')
+    sup = st['supplementary']
+    L.append('**旁证**（关键词扫描，**不参与口径**，只作参考）：'
+             '随机对拍 %d 件 · 独立互验字样 %d 件 · 变异字样 %d 件；'
+             '三样都扫不到的是 %d 件——**与上面那个数不同是正常的**，'
+             '差异来自判据不同（关键词 vs AST），以登记为准。'
+             % (len(sup['rand']), len(sup['indep']), len(sup['mut']),
+                len(sup['keyword_weak'])))
     L.append('')
     L.append('## 四、④ 契约轴（PORTS / boundary 缺口）')
     L.append('')
@@ -249,7 +299,7 @@ def main(argv):
     print('① 判据：阈值钉住 %d · 声明为参数 %d · 未钉未声明 %d'
           % (st['thr_pinned_n'], st['thr_declared_n'], len(problems)))
     print('② 算法：嵌套循环无上限声明 %d 件' % len(st['nested_no_bound']))
-    print('③ 验证：三样皆无 %d 件' % len(st['weak_verification']))
+    print('③ 验证：未验状态 %d 件（口径＝验证方登记）' % len(st['weak_verification']))
     print('④ 契约：缺 PORTS %d 件 · 缺 boundary %d 件'
           % (len(st['ports_gap']), len(st['boundary_gap'])))
     if problems:

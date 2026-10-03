@@ -49,12 +49,15 @@ def check(label, cond, detail=''):
 
 
 # ── 登记表：**没有独立验证方**的件，逐个签字（新增一件就得改这里）
+# 2026-10-02 更新：`test_classical_crosscheck.py`（跨构件随机对拍 + 本文件另写的暴力 oracle）
+# 落地后，命题逻辑层两条搜索型路径升到"独立复算"档——
+# `nd_propositional` 与 `resolution` 从此**不在**这份名单里（21 件，原 23 件）。
 KNOWN_NO_INDEPENDENT = {
     'ai_scenarios', 'converge_check',                     # 无测试引用
     'boundary_paradox', 'equality_tableau', 'first_order', 'freeze_tool_schema',
-    'lambda_calculus', 'ltl', 'modal', 'monadic_fol', 'nd_propositional',
+    'lambda_calculus', 'ltl', 'modal', 'monadic_fol',
     'observer_bypass', 'paradox_annotate', 'paradox_measure', 'recursion_theorem',
-    'repl', 'resolution', 'selfref_fixpoint', 'stlc', 'tools', 'truth_revision',
+    'repl', 'selfref_fixpoint', 'stlc', 'tools', 'truth_revision',
     'turing_machine', 'wall_pipeline',                    # 只有用例集/性质断言
 }
 # 点名了**外部验证方**的件（登记在审计器里，命中词必须出现在对应测试文件中）
@@ -102,7 +105,7 @@ check('只自证/没测的清单 == 登记表（双向；多登记少登记都�
 check('登记表里的名字都是真构件（没有过期条目）',
       KNOWN_NO_INDEPENDENT <= {r['comp'] for r in rows},
       sorted(KNOWN_NO_INDEPENDENT - {r['comp'] for r in rows}))
-check('这 23 件在产物第三节里逐个列出来了',
+check('这份"只自证/没测"名单在产物第三节里逐个列出来了',
       all(('`%s`' % c) in text.split('## 三')[1] for c in KNOWN_NO_INDEPENDENT))
 check('"只有性质/接口测试"的证据会点明"不构成独立验证方"',
       '不构成独立验证方' in text)

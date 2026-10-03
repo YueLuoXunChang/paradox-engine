@@ -42,6 +42,11 @@ PORTS = {
 }
 
 _MAX_DEFAULT = 60
+# 搜索节点预算（护栏）：只限证明步数不够——步数 60 时分支仍可指数爆炸。
+# 实测 `(¬R ∨ ¬P) ⊢ Q` 会把搜索撑到跑不完（跨构件随机对拍撞出来的）。
+# 耗尽即返回 closed=False ⇒ 判词 search_limit（诚实：没搜完，不是"不可证"）。
+_MAX_NODES = 50000
+_NODES = [0]        # 剩余节点数（模块级计数，search_proof 每次进入重置）
 
 
 class _ParseError(ValueError):
@@ -179,12 +184,14 @@ def _match(node, pattern):
 
 def search_proof(premises, goal, system='classical', max_steps=None):
     """反向证明搜索。返回 (proved: bool, steps: list, closed: bool)。
-    closed=False 表示达到步数上限（诚实：未找到≠不可证）。"""
+    closed=False 表示达到步数上限或**搜索节点预算耗尽**（诚实：未找到≠不可证）。"""
     max_steps = max_steps or _MAX_DEFAULT
     prem_atoms = {p if isinstance(p, tuple) else p
                   for p in premises}  # premises 已解析
     # 反向搜索：从 goal 出发，用引入规则反向、消去规则前向（受限）
     steps = []
+    # 每次进入都重置节点预算（模块级计数：本件是同步单线程调用）
+    _NODES[0] = _MAX_NODES
     # 简单完备策略（命题可判——反向分解总能决定）：
     proved, steps, closed = _search(goal, set(premises), system,
                                     max_steps, 0, steps)
@@ -194,7 +201,7 @@ def search_proof(premises, goal, system='classical', max_steps=None):
 def _search(goal, hyps, system, max_steps, depth, steps):
     """反向搜索：goal 能否在 hyps（已知为真的公式集）下证出。
 
-    策略（命题完备）：
+    策略（可靠但不完备——见下）：
     1. goal 在 hyps → axiom 闭合；
     2. goal = A→B → →引入：hyps+{A} 下证 B；
     3. goal = A∧B → ∧引入：分别证 A、B；
@@ -203,7 +210,19 @@ def _search(goal, hyps, system, max_steps, depth, steps):
     6. 从 hyps 里找可消去的前提前向推新事实（→消去/∧消去/∨消去/↔）；
        新事实加入 hyps 再试 goal；
     7. ¬¬ 消去（classical）：goal 形如 A 且 hyps 有 ¬¬A → 得 A。
+
+    **节点预算**：只限证明步数是不够的——步数上限 60 时分支数仍可指数爆炸，
+    实测 `(¬R ∨ ¬P) ⊢ Q` 这类目标会把搜索撑到跑不完（跨构件对拍撞出来的）。
+    所以每次递归都扣一个节点，扣完就返回 closed=False（⇒ 判词 search_limit）。
+
+    **可靠性 vs 完备性**（口径，别读错）：本搜索**可靠**——说 `proved` 就真证出来了；
+    但**不完备**——规则集里没有 `↔` 的引入规则，所以 `((Q ↔ Q) → P) ⊢ P`
+    这类式子会报 `not_proved`（"这套规则下没搜到"），而不是"无效"。
+    判词 `not_proved` 一律不等于"结论不成立"。
     """
+    _NODES[0] -= 1
+    if _NODES[0] <= 0:
+        return False, steps, False
     if depth > max_steps:
         return False, steps, False
 
