@@ -14,12 +14,11 @@
 ## 三、③ 验证轴（口径：**验证方登记**，不是本件自己扫的）
 
 - 口径来源：验证方登记 engine/_verifier_audit.py（AST 扫 import ＋ 人工签字）
-- 处于"未验状态"的构件 **13** 件（只有性质·接口测试 11 件 ＋ 无测试引用 2 件）：
+- 处于"未验状态"的构件 **12** 件（只有性质·接口测试 10 件 ＋ 无测试引用 2 件）：
 
 ```
 ai_scenarios、boundary_paradox、converge_check、freeze_tool_schema、observer_bypass、paradox_annotate
-paradox_measure、repl、selfref_fixpoint、stlc、tools、truth_revision
-wall_pipeline
+paradox_measure、selfref_fixpoint、stlc、tools、truth_revision、wall_pipeline
 ```
 
 **旁证**（关键词扫描，**不参与口径**，只作参考）：随机对拍 5 件 · 独立互验字样 21 件 · 变异字样 2 件；三样都扫不到的是 28 件——**与上面那个数不同是正常的**，差异来自判据不同（关键词 vs AST），以登记为准。

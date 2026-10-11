@@ -77,6 +77,7 @@ _QUIT_WORDS = ('/quit', '/exit', '/q', '/bye')
 _HELP = [
     '可用命令（普通文字＝材料，斜杠开头＝命令）：',
     '  /session 文件        打开/切换会话台账（之后每段材料都会记账）',
+    '  /reset              清空当前会话台账（**文件保留**，只是从零开始记）',
     '  /state              当前状态汇总（轮次/题型分布/墙清单/信念集）',
     '  /overview           批次汇总（按引擎自己的标签分组计数）',
     '  /brief [文件]       一页简报（状态/欠什么/复核到哪/下一步）',
@@ -116,17 +117,33 @@ def _cli():
 
 
 def _capture(argv):
-    """跑一次 CLI，把这轮的输出抓成行（交互台不重写业务逻辑，只搬运输出）。"""
+    """跑一次 CLI，把这轮的输出抓成行（交互台不重写业务逻辑，只搬运输出）。
+
+    踩过：argv 若命令行不认（用法错），argparse 会**抛 SystemExit**——
+    不接住的话整个交互台会带着 usage 直接退出（本该只回一行错）。
+    所以这里接住 SystemExit，并把 argparse 写在 **stderr** 的用法提示一并收进来。
+    """
     cli = _cli()
     buf = io.StringIO()
-    old = sys.stdout
+    ebuf = io.StringIO()
+    old, eold = sys.stdout, sys.stderr
     try:
         sys.stdout = buf
-        rc = cli.main(argv)
+        sys.stderr = ebuf
+        try:
+            rc = cli.main(argv)
+        except SystemExit as exc:
+            rc = exc.code if isinstance(exc.code, int) else 2
     finally:
         sys.stdout = old
+        sys.stderr = eold
     text = buf.getvalue().rstrip('\n')
-    return rc, (text.split('\n') if text else [])
+    lines = text.split('\n') if text else []
+    if rc not in (0, 1):
+        err = ebuf.getvalue().rstrip('\n')
+        if err:
+            lines = lines + ['［%s］' % _ln for _ln in err.split('\n')]
+    return rc, lines
 
 
 def _need_session(state):

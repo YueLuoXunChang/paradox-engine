@@ -62,12 +62,14 @@ def check(label, cond, detail=''):
 #      recursive 拿到自己源码）落地后，`recursion_theorem` 升档 → **15 件变 14 件**；
 #   ⑥ 同一份文件的 lambda_calculus 段（**自写捕获避免归约器** + de Bruijn 比 α-等价：
 #      七条已知项 · SKK=I · Ω 发散 · Church 数 · 阶乘）落地后，
-#      `lambda_calculus` 升档 → **14 件变 13 件**。
+#      `lambda_calculus` 升档 → **14 件变 13 件**；
+#   ⑦ `test_entry_parity.py`（**两个入口对照**：REPL ↔ CLI 逐行一致 · 帮助清单双向 ·
+#      argv 必须命令行认得）落地后，`repl` 升档 → **13 件变 12 件**。
 KNOWN_NO_INDEPENDENT = {
     'ai_scenarios', 'converge_check',                     # 无测试引用
     'boundary_paradox', 'freeze_tool_schema',
     'observer_bypass', 'paradox_annotate', 'paradox_measure',
-    'repl', 'selfref_fixpoint', 'stlc', 'tools', 'truth_revision',
+    'selfref_fixpoint', 'stlc', 'tools', 'truth_revision',
     'wall_pipeline',                                      # 只有用例集/性质断言
 }
 # 点名了**外部验证方**的件（登记在审计器里，命中词必须出现在对应测试文件中）
