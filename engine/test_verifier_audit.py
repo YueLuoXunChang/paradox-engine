@@ -68,11 +68,13 @@ def check(label, cond, detail=''):
 #   ⑧ `test_revision_crosscheck.py`（**AGM 公设当 oracle** + 自写修正序列模拟器）
 #      落地后，`truth_revision` 升档 → **12 件变 11 件**。
 #      （`agm_revision` 不用动：它 import 命题引擎，本来就在"跨构件互验"档。）
+#   ⑨ `test_selfref_crosscheck.py`（**仿射映射解析预测** + 布尔系统**函数图全局分析**）
+#      落地后，`selfref_fixpoint` 升档 → **11 件变 10 件**。
 KNOWN_NO_INDEPENDENT = {
     'ai_scenarios', 'converge_check',                     # 无测试引用
     'boundary_paradox', 'freeze_tool_schema',
     'observer_bypass', 'paradox_annotate', 'paradox_measure',
-    'selfref_fixpoint', 'stlc', 'tools',
+    'stlc', 'tools',
     'wall_pipeline',                                      # 只有用例集/性质断言
 }
 # 点名了**外部验证方**的件（登记在审计器里，命中词必须出现在对应测试文件中）
