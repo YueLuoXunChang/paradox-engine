@@ -48,8 +48,15 @@ print("=" * 60)
 ra = run({'mode': 'revise', 'beliefs': ['P→Q', 'P'], 'new_info': 'Q'})
 check("A1 一致 → consistent（直接扩张）", ra['verdict'] == 'consistent', ra)
 check("A2 无信念被放弃", ra['dropped'] == [], ra)
-check("A3 旧信念全保留", ra['kept'] == ['P→Q', 'P'], ra)
-check("A4 边界声明 AGM 扩张操作", '扩张' in ra['boundary'], ra['boundary'])
+check("A3 旧信念全保留", set(['P→Q', 'P']) <= set(ra['kept']), ra)
+# 口径修正（2026-10-02，跨构件对拍查出来的）：
+#   `kept` 是**修正后的信念集**，两条路必须同口径——旧版 consistent 路只回旧信念、
+#   不带 φ，于是 AGM **成功公理** K*φ ⊨ φ 在返回的 kept 上不成立
+#   （旧 P + 新 Q 时 kept 里没有 Q）。现在两条路都含 φ。
+check("A3b 成功公理在返回集上成立：新信息 φ ∈ kept（扩张路也要含）",
+      'Q' in ra['kept'], ra['kept'])
+check("A4 边界声明 AGM 扩张操作 + kept 含 φ", '扩张' in ra['boundary']
+      and '含新信息' in ra['boundary'], ra['boundary'])
 
 # ── 用例B：不一致 → 最小放弃收缩（AGM 修正）
 rb = run({'mode': 'revise', 'beliefs': ['P→Q', 'P'], 'new_info': '¬Q'})
@@ -163,5 +170,5 @@ check("I4 mode 缺省走 revise（beliefs+new_info 即可）",
       == 'consistent')
 
 print("=" * 60)
-print(f"结果: {PASS}/48 通过")
-raise SystemExit(0 if PASS == 48 else 1)
+print(f"结果: {PASS}/49 通过")
+raise SystemExit(0 if PASS == 49 else 1)

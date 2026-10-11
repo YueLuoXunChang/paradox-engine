@@ -23,6 +23,12 @@ agm_revision.py — AGM 信念修正 · 非单调推理构件（第 3 层冷门 
     - 非单调：新信息可**撤销**旧结论（黑天鹅撤销"所有天鹅白"）——
       AI 学习、科研假设修正的现实形态。
 
+**撞名提示（同名不同物，别混）**：本件是 AGM 的**信念**修正
+（belief revision：信念集 + 新信息 + 最小放弃 + 优先级）；
+同层的 `truth_revision` 是 Gupta-Belnap 的**真值**修正
+（revision theory of truth：自指句的真值序列，稳定/周期/不稳定）。
+两者都叫"修正"，理论来源与问题完全不同。
+
 诚实边界：
     - 一致性判定复用经典命题逻辑（须给可判定的命题式）——自然语言
       需要先结构化（诚实：不做通用 NLP 抽取）；
@@ -233,10 +239,16 @@ def run(inputs):
 
     # ① 一致性：B ∪ {φ} 一致 → 直接扩张（无需放弃）
     if state0 == 'yes':
-        return {'verdict': 'consistent', 'kept': list(beliefs),
+        # kept 的口径必须与 ② 一致：**修正后的信念集（含 φ）**。
+        # 旧版这里只回旧信念、不带 φ —— 同一个字段两条路两种含义，
+        # 而且 AGM **成功公理** K*φ ⊨ φ 在返回的 kept 上不成立
+        # （跨构件对拍用真值表查出来的：旧 P + 新 Q 时 kept 里没有 Q）。
+        _kept = list(beliefs) + ([] if new_info in beliefs else [new_info])
+        return {'verdict': 'consistent', 'kept': _kept,
                 'dropped': [], 'conclusions': [],
                 'boundary': f'B∪{{{new_info}}} 一致 → 直接扩张（无信念被'
-                            '放弃）。AGM 扩张操作。'}
+                            '放弃）。kept = 旧信念 ∪ {φ}（**含新信息**，'
+                            '成功公理在返回集上成立）。AGM 扩张操作。'}
 
     # ② 不一致 → 最小放弃收缩 + 加入 φ（AGM 修正 B'=(B-α)+φ）
     drops_list, tested, unknown_reason = _minimal_drops(

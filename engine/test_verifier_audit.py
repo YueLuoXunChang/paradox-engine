@@ -64,12 +64,15 @@ def check(label, cond, detail=''):
 #      七条已知项 · SKK=I · Ω 发散 · Church 数 · 阶乘）落地后，
 #      `lambda_calculus` 升档 → **14 件变 13 件**；
 #   ⑦ `test_entry_parity.py`（**两个入口对照**：REPL ↔ CLI 逐行一致 · 帮助清单双向 ·
-#      argv 必须命令行认得）落地后，`repl` 升档 → **13 件变 12 件**。
+#      argv 必须命令行认得）落地后，`repl` 升档 → **13 件变 12 件**；
+#   ⑧ `test_revision_crosscheck.py`（**AGM 公设当 oracle** + 自写修正序列模拟器）
+#      落地后，`truth_revision` 升档 → **12 件变 11 件**。
+#      （`agm_revision` 不用动：它 import 命题引擎，本来就在"跨构件互验"档。）
 KNOWN_NO_INDEPENDENT = {
     'ai_scenarios', 'converge_check',                     # 无测试引用
     'boundary_paradox', 'freeze_tool_schema',
     'observer_bypass', 'paradox_annotate', 'paradox_measure',
-    'selfref_fixpoint', 'stlc', 'tools', 'truth_revision',
+    'selfref_fixpoint', 'stlc', 'tools',
     'wall_pipeline',                                      # 只有用例集/性质断言
 }
 # 点名了**外部验证方**的件（登记在审计器里，命中词必须出现在对应测试文件中）
