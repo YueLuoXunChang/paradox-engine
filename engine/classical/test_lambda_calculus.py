@@ -90,6 +90,17 @@ check("factorial 超范围 → parse_error",
 check("steps_limit 给 0 就是 0 步：报 step_limit，不偷换默认",
       run({'expr': '(\\x.x) y', 'steps_limit': 0})['verdict'] == 'step_limit')
 
+# ── 两条核心不变量（跨构件对拍里验过，这里钉住防复发）
+# 捕获避免：替换进 λ 体时，若被绑定名出现在替换项的自由变量里，必须先 α-改名。
+# 不做的话 (\x.\y.x) y 会把自由的 y 吞成绑定的 → 算出来是 λy.y，语义全变。
+check("捕获避免：(\\x.\\y.x) y 的范式里自由 y 没被吞掉（绑定名被改名为 y1）",
+      'y1' in (run({'mode': 'beta_normal',
+                    'expr': '(\\x.\\y.x) y'})['normal_form'] or ''))
+check("组合子化简：S K K = I（组合子演算的经典等式）",
+      run({'mode': 'beta_normal',
+           'expr': '((\\f.\\g.\\x.(f x)(g x)) (\\x.\\y.x) (\\x.\\y.x))'}
+          )['normal_form'] in ('λx.x', '(\\x.x)'))
+
 print("=" * 60)
-print(f"结果: {PASS}/17 通过")
-raise SystemExit(0 if PASS == 17 else 1)
+print(f"结果: {PASS}/19 通过")
+raise SystemExit(0 if PASS == 19 else 1)

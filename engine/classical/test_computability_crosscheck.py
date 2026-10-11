@@ -30,6 +30,7 @@ _HERE = os.path.dirname(os.path.abspath(__file__))
 _REPO = os.path.dirname(os.path.dirname(_HERE))
 sys.path.insert(0, _REPO)
 
+from engine.classical import lambda_calculus as LC   # noqa: E402
 from engine.classical import recursion_theorem as RT   # noqa: E402
 from engine.classical import turing_machine as TM   # noqa: E402
 
@@ -296,7 +297,231 @@ check('recursive 的 runs_like 描述的是**实际行为**（内联默认变换
       '内联' in RT.run({'mode': 'recursive'})['runs_like']
       and '不 exec' in RT.run({'mode': 'recursive'})['boundary'])
 
+# ══════════════════════════════════════════════════════════════
+# 五、lambda_calculus ↔ oracle L：自己写一份归约器
+# ══════════════════════════════════════════════════════════════
+# 要点三条（每一条都容易写错、也就容易对不上）：
+#   ① **捕获避免**：替换进 λ 体时，若被绑定名出现在替换项的**自由变量**里，
+#      必须先 α-改名，否则自由变量会被"吞"进绑定里；
+#   ② **最左最外**（normal order）：范式唯一，所以两边算出来的范式必须 α-等价；
+#   ③ 比范式**不能比字符串**——换名、括号写法都可能不同，要转到 **de Bruijn** 再比。
 print()
 print('=' * 70)
-print(f'结果: {PASS}/21 通过')
-raise SystemExit(0 if PASS == 21 else 1)
+print('五、lambda_calculus ↔ oracle L（自写捕获避免归约器，按 α-等价比较）')
+_TOK = re.compile(r'\\|λ|[.()]|[A-Za-z_][A-Za-z0-9_]*')
+
+
+def lam_parse(s):
+    toks = _TOK.findall(s)
+    pos = [0]
+
+    def peek():
+        return toks[pos[0]] if pos[0] < len(toks) else None
+
+    def take():
+        t = peek()
+        pos[0] += 1
+        return t
+
+    def parse_atom():
+        t = take()
+        if t in ('\\', 'λ'):
+            var = take()
+            if take() != '.':
+                raise ValueError('λ 缺 .')
+            return ('lam', var, parse_term())
+        if t == '(':
+            inner = parse_term()
+            if take() != ')':
+                raise ValueError('缺右括号')
+            return inner
+        return ('var', t)
+
+    def parse_term():
+        t = parse_atom()
+        while peek() is not None and peek() not in (')', '.'):
+            t = ('app', t, parse_atom())
+        return t
+
+    out = parse_term()
+    if pos[0] != len(toks):
+        raise ValueError('多余内容 %r' % toks[pos[0]:])
+    return out
+
+
+def free_vars(t):
+    if t[0] == 'var':
+        return {t[1]}
+    if t[0] == 'lam':
+        return free_vars(t[2]) - {t[1]}
+    return free_vars(t[1]) | free_vars(t[2])
+
+
+def rename(t, old, new):
+    """α-改名：把绑定名 old 换成 new（调用方保证 new 不撞自由变量）。"""
+    if t[0] == 'var':
+        return ('var', new) if t[1] == old else t
+    if t[0] == 'lam':
+        if t[1] == old:
+            return ('lam', new, t[2])
+        return ('lam', t[1], rename(t[2], old, new))
+    return ('app', rename(t[1], old, new), rename(t[2], old, new))
+
+
+def subst(t, var, rep, capture_avoid=True):
+    """t[var := rep]；capture_avoid=False 时**故意不改名**（变异用）。"""
+    if t[0] == 'var':
+        return rep if t[1] == var else t
+    if t[0] == 'app':
+        return ('app', subst(t[1], var, rep, capture_avoid),
+                subst(t[2], var, rep, capture_avoid))
+    _k, x, body = t
+    if x == var:
+        return t
+    if capture_avoid and x in free_vars(rep):
+        used = free_vars(rep) | free_vars(body) | {var}
+        i = 1
+        while '%s%d' % (x, i) in used:
+            i += 1
+        x2 = '%s%d' % (x, i)
+        return ('lam', x2, subst(rename(body, x, x2), var, rep, capture_avoid))
+    return ('lam', x, subst(body, var, rep, capture_avoid))
+
+
+def step_once(t, capture_avoid=True):
+    """最左最外找一步 β-收缩；没有可收缩的就返回 None。"""
+    if t[0] == 'app':
+        f, a = t[1], t[2]
+        if f[0] == 'lam':
+            return subst(f[2], f[1], a, capture_avoid)
+        nf = step_once(f, capture_avoid)
+        if nf is not None:
+            return ('app', nf, a)
+        na = step_once(a, capture_avoid)
+        return ('app', f, na) if na is not None else None
+    if t[0] == 'lam':
+        nb = step_once(t[2], capture_avoid)
+        return ('lam', t[1], nb) if nb is not None else None
+    return None
+
+
+def normalize_mine(t, limit=200, capture_avoid=True):
+    for i in range(limit):
+        nx = step_once(t, capture_avoid)
+        if nx is None:
+            return 'normalized', t
+        t = nx
+    return 'step_limit', t
+
+
+def debruijn(t, env=()):
+    """去名字：α-等价 ⟺ de Bruijn 形式相等（自由变量仍留名）。"""
+    if t[0] == 'var':
+        return ('b', env.index(t[1])) if t[1] in env else ('f', t[1])
+    if t[0] == 'lam':
+        return ('l', debruijn(t[2], (t[1],) + env))
+    return ('a', debruijn(t[1], env), debruijn(t[2], env))
+
+
+def canon_of(term_str, capture_avoid=True, limit=200):
+    """表达式字符串 → (判词, de Bruijn 范式)。"""
+    v, t = normalize_mine(lam_parse(term_str), limit, capture_avoid)
+    return v, debruijn(t)
+
+
+I_TERM = r'(\x.x)'
+K_TERM = r'(\x.\y.x)'
+S_TERM = r'(\f.\g.\x.(f x)(g x))'
+_SKK = '(%s %s %s)' % (S_TERM, K_TERM, K_TERM)
+_KNOWN = [
+    (r'(\x.x) y', 'y'),
+    (r'(\x.\y.x) a b', 'a'),
+    (r'(\x.\y.y) a b', 'b'),
+    (r'(\x.(x x)) (\y.y)', r'(\z.z)'),
+    (_SKK, r'(\x.x)'),
+    (r'(\x.\y.x) y', r'(\y1.y)'),
+    (r'(\f.\x.f (f x)) (\y.y)', r'(\x.x)'),
+]
+_mis_lam = []
+for _src, _want in _KNOWN:
+    _v, _mine = canon_of(_src)
+    _wv, _want_db = canon_of(_want)
+    if _mine != _want_db:
+        _mis_lam.append((_src, _mine, _want_db))
+check('七条已知项：oracle L 算出的范式与手算目标 α-等价', _mis_lam == [],
+      _mis_lam[:1])
+_mis_lc = []
+for _src, _want in _KNOWN:
+    _wv, _want_db = canon_of(_want)
+    _r = LC.run({'mode': 'beta_normal', 'expr': _src})
+    if _r['verdict'] != 'normalized':
+        _mis_lc.append((_src, _r['verdict']))
+        continue
+    _v2, _got = canon_of(_r['normal_form'] or '')
+    if _got != _want_db:
+        _mis_lc.append((_src, _r['normal_form'], _want))
+check('lambda_calculus ↔ oracle L：七条已知项的范式 α-等价', _mis_lc == [],
+      _mis_lc[:2])
+_r_cap = LC.run({'mode': 'beta_normal', 'expr': r'(\x.\y.x) y'})
+check('捕获避免真的做了：(\\x.\\y.x) y 的范式里自由 y **没被吞掉**（绑定名改成 y1）',
+      _r_cap['verdict'] == 'normalized' and 'y1' in (_r_cap['normal_form'] or ''),
+      _r_cap['normal_form'])
+check('SKK = I（组合子化简，两边都算到 λx.x）',
+      canon_of(_SKK)[1] == canon_of(I_TERM)[1]
+      and canon_of(LC.run({'mode': 'beta_normal',
+                           'expr': _SKK})['normal_form'])[1]
+      == canon_of(I_TERM)[1])
+check('发散项 Ω 两边都**不假装收敛**：构件报 step_limit，oracle L 同样用尽步数',
+      LC.run({'mode': 'beta_normal',
+              'expr': r'(\x.x x)(\x.x x)'})['verdict'] == 'step_limit'
+      and normalize_mine(lam_parse(r'(\x.x x)(\x.x x)'), 200)[0]
+      == 'step_limit')
+check('默认 mode 就是 beta_normal（同一套语义，不是两套）',
+      LC.run({'expr': r'(\x.x) y'})['normal_form']
+      == LC.run({'mode': 'beta_normal', 'expr': r'(\x.x) y'})['normal_form'])
+
+# Church 数：构件的 church 模式是"取 n，应用 succ，报 n+1"——
+# 用**自己的** succ 编码与解码再算一遍，比的是同一件事：succ(n) 到底是几。
+SUCC_MINE = lam_parse(r'(\n.\f.\x.f (n f x))')
+
+
+def decode_church(t):
+    if t[0] != 'lam' or t[2][0] != 'lam':
+        return None
+    inner = t[2][2]
+    k = 0
+    while inner[0] == 'app' and inner[1] == ('var', 'f'):
+        k += 1
+        inner = inner[2]
+    return k if inner == ('var', 'x') else None
+
+
+def church_mine(n):
+    body = ('var', 'x')
+    for _ in range(n):
+        body = ('app', ('var', 'f'), body)
+    return ('lam', 'f', ('lam', 'x', body))
+
+
+_mis_ch = []
+for _n in range(0, 6):
+    _v3, _t = normalize_mine(('app', SUCC_MINE, church_mine(_n)))
+    _mine_n = decode_church(_t)
+    _got_n = LC.run({'mode': 'church', 'church_arg': _n})['church_number']
+    if _mine_n != _got_n or _mine_n != _n + 1:
+        _mis_ch.append((_n, _mine_n, _got_n))
+check('Church 数：n=0..5 上，构件的 σ(n) 与我自写编码算出的 n+1 一致',
+      _mis_ch == [], _mis_ch[:2])
+import math   # noqa: E402
+check('factorial：n=0..6 的阶乘值与独立算术一致',
+      all(LC.run({'mode': 'factorial', 'fact_n': _n})['factorial_value']
+          == math.factorial(_n) for _n in range(0, 7)))
+check('变异接受：把 oracle L 的**捕获避免**去掉后，捕获那一例立刻对不上'
+      '（证明这条对拍真在盯这件事）',
+      canon_of(r'(\x.\y.x) y', capture_avoid=False)[1]
+      != canon_of(r'(\x.\y.x) y', capture_avoid=True)[1])
+
+print()
+print('=' * 70)
+print(f'结果: {PASS}/30 通过')
+raise SystemExit(0 if PASS == 30 else 1)

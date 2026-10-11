@@ -59,11 +59,13 @@ def check(label, cond, detail=''):
 #   ④ `test_computability_crosscheck.py`（照形式定义另写图灵机模拟器）落地后，
 #      `turing_machine` 升档 → **16 件变 15 件**；
 #   ⑤ 同一份文件的 recursion_theorem 段（**执行产物**：quine 自复制链 ·
-#      recursive 拿到自己源码）落地后，`recursion_theorem` 升档 → **15 件变 14 件**。
+#      recursive 拿到自己源码）落地后，`recursion_theorem` 升档 → **15 件变 14 件**；
+#   ⑥ 同一份文件的 lambda_calculus 段（**自写捕获避免归约器** + de Bruijn 比 α-等价：
+#      七条已知项 · SKK=I · Ω 发散 · Church 数 · 阶乘）落地后，
+#      `lambda_calculus` 升档 → **14 件变 13 件**。
 KNOWN_NO_INDEPENDENT = {
     'ai_scenarios', 'converge_check',                     # 无测试引用
     'boundary_paradox', 'freeze_tool_schema',
-    'lambda_calculus',
     'observer_bypass', 'paradox_annotate', 'paradox_measure',
     'repl', 'selfref_fixpoint', 'stlc', 'tools', 'truth_revision',
     'wall_pipeline',                                      # 只有用例集/性质断言
