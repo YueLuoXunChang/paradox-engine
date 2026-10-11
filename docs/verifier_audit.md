@@ -19,8 +19,8 @@
 |:--|--:|:--|
 | 外部验证方 | **3** | 有**外部/第三方**实现当验证方（人工登记，命中词须在测试里出现） |
 | 跨构件互验 | **13** | 同仓**另一个构件**参与互验（AST 扫 import 判出来的） |
-| 独立复算（初筛） | **25** | 测试里有**独立复算**的痕迹（关键词初筛） |
-| 只有性质/接口测试 | **8** | 只有性质/接口断言（PORTS · boundary · 单调/恒等 · 拒绝路径）——**待人工确认** |
+| 独立复算（初筛） | **26** | 测试里有**独立复算**的痕迹（关键词初筛） |
+| 只有性质/接口测试 | **7** | 只有性质/接口断言（PORTS · boundary · 单调/恒等 · 拒绝路径）——**待人工确认** |
 | 无测试引用 | **2** | 没有测试文件引用它——**待人工确认** |
 | 合计 | **51** | 构件总数（扫盘口径，与 `docs/components.md` 同源） |
 
@@ -74,7 +74,7 @@
 | `scenarios` | scenarios | 独立复算（初筛） | 疑似独立复算：命中 交叉 | `test_scenarios.py`、`test_controller.py`、`test_session.py`、`test_corpus_stats.py`、`test_cli.py`、`test_docs_consistency.py`、`test_fuzz.py`、`test_review_packet.py` | ✅ |
 | `selfref_fixpoint` | mechanisms | 独立复算（初筛） | 疑似独立复算：命中 oracle、互验 | `test_selfref_fixpoint.py`、`test_selfref_crosscheck.py` | ✅ |
 | `session` | control | 跨构件互验 | 引用了同仓构件 agm_revision、classifier、controller、review_marks、scenarios、wall_pipeline | `test_session.py`、`test_ledger_traceable.py` | ✅ |
-| `stlc` | classical | 只有性质/接口测试 | 用例集：期望值直接写死 2 条（能挡回归，**不构成独立验证方**） | `test_stlc.py` | ✅ |
+| `stlc` | classical | 独立复算（初筛） | 疑似独立复算：命中 oracle、互验、对拍、手算 | `test_stlc.py`、`test_stlc_crosscheck.py` | ✅ |
 | `tools` | ai | 只有性质/接口测试 | 用例集：期望值直接写死 57 条（能挡回归，**不构成独立验证方**） | `test_tools.py`、`test_tool_contract.py`、`test_capability_matrix.py`、`test_cli.py`、`test_docs_consistency.py`、`test_fuzz.py`、`test_glossary.py`、`test_robustness.py` | ✅ |
 | `truth_revision` | cold | 独立复算（初筛） | 疑似独立复算：命中 oracle、互验、对拍、真值表 | `test_truth_revision.py`、`test_revision_crosscheck.py` | ✅ |
 | `turing_machine` | classical | 独立复算（初筛） | 疑似独立复算：命中 oracle、互验、另写、对拍 | `test_turing_machine.py`、`test_computability_crosscheck.py` | ✅ |
@@ -99,7 +99,6 @@
 | `observer_bypass` | mechanisms | 只有性质/接口测试 | 用例集：期望值直接写死 3 条（能挡回归，**不构成独立验证方**） |
 | `paradox_annotate` | mechanisms | 只有性质/接口测试 | 用例集：期望值直接写死 5 条（能挡回归，**不构成独立验证方**） |
 | `paradox_measure` | mechanisms | 只有性质/接口测试 | 用例集：期望值直接写死 21 条（能挡回归，**不构成独立验证方**） |
-| `stlc` | classical | 只有性质/接口测试 | 用例集：期望值直接写死 2 条（能挡回归，**不构成独立验证方**） |
 | `tools` | ai | 只有性质/接口测试 | 用例集：期望值直接写死 57 条（能挡回归，**不构成独立验证方**） |
 | `wall_pipeline` | mechanisms | 只有性质/接口测试 | 用例集：期望值直接写死 114 条（能挡回归，**不构成独立验证方**） |
 

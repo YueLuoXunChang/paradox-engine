@@ -77,9 +77,28 @@ check("缺项 → expr_pending",
       run({})['verdict'] == 'expr_pending')
 check("残缺项 → parse_error 或 type_error（诚实）",
       run({'expr': 'λx:A.'})['verdict'] in ('parse_error', 'type_error'))
-check("未声明变量 → type_error",
-      run({'expr': '(λx:A.x) y'})['verdict'] in ('type_error', 'parse_error'))
+check("未声明变量 → type_error（**不再容忍 parse_error**："
+      "参数带括号的解析 bug 已修，这条该干净地判类型错）",
+      run({'expr': '(λx:A.x) y'})['verdict'] == 'type_error')
+
+# ── 三个解析 bug 的回归（跨构件对拍撞出来的，2026-10-02）
+# ① 分词器把 `→` 当 2 个单位前进（Unicode 索引）→ 标注里写不出箭头类型；
+# ② `t in '.:(),→'` 是字符串包含判断，而 `'('` 在这个串里 →
+#    "参数以括号开头"的应用解析中断；
+# ③ `parse_type` 切词时括号没与原子分开 → 构件自己打印的 (A→A) 写法抄回
+#    expected 反而判类型错。
+check("① 标注里能写箭头类型：λf:A→A.f → ((A→A)→(A→A))",
+      run({'expr': 'λf:A→A.f'})['verdict'] == 'typed'
+      and run({'expr': 'λf:A→A.f'})['inferred'] == '((A→A)→(A→A))',
+      run({'expr': 'λf:A→A.f'}))
+check("② 参数可以以括号开头：(λx:A.x) (λx:A.x) 是类型错（不是解析错）",
+      run({'expr': '(λx:A.x) (λx:A.x)'})['verdict'] == 'type_error',
+      run({'expr': '(λx:A.x) (λx:A.x)'}))
+check("③ 括号写法与不带的等价（构件自己就打印括号写法，用户会照抄）",
+      run({'expr': 'λx:A.x', 'expected': '(A→A)'})['verdict'] == 'typed'
+      and run({'expr': 'λx:A.x', 'expected': 'A→A'})['verdict'] == 'typed'
+      and run({'expr': 'λx:A.x', 'expected': '((A→A))'})['verdict'] == 'typed')
 
 print("=" * 60)
-print(f"结果: {PASS}/15 通过")
-raise SystemExit(0 if PASS == 15 else 1)
+print(f"结果: {PASS}/18 通过")
+raise SystemExit(0 if PASS == 18 else 1)

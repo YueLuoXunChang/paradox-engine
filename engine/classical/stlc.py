@@ -55,7 +55,12 @@ class _ParseError(ValueError):
 
 def parse_type(s):
     """类型串 → AST。'A→B→C' = A→(B→C)。"""
-    toks = s.replace('→', ' → ').split()
+    # 括号必须与原子**分开**再切词：旧写法只给 `→` 加空格，于是 `(A→A)`
+    # 切成了 ['(A','→','A)']——解析成"原子 (A 箭头 A)"这种怪类型，
+    # **不报错但必然与推断出的 (A→A) 对不上**，于是 `expected='(A→A)'` 判类型错
+    # （而构件自己打印类型用的正是括号写法，用户照抄就中招）。
+    toks = (s.replace('→', ' → ').replace('(', ' ( ')
+            .replace(')', ' ) ').split())
     if not toks:
         raise _ParseError("空类型")
 
@@ -110,7 +115,11 @@ def _tokenize(s):
             i += 1
         elif s.startswith('→', i):
             toks.append('→')
-            i += 2
+            # `→` 在 Python 字符串里是**一个字符**（U+2192），不是两个字节。
+            # 旧写法 `i += 2` 会连它后面那个字符一起吞掉——于是 `A→A` 切成
+            # ['A','→']，`λf:A→A.f` 报"类型原子非法 'None'"，
+            # **标注里根本写不出箭头类型**（跨构件对拍查出来的）。
+            i += 1
         else:
             j = i
             while j < n and s[j] not in 'λ.:(), ' and s[j] != '→' \
@@ -192,7 +201,11 @@ def parse_expr(s):
             if next_tok() != ')':
                 raise _ParseError("缺右括号")
             return inner
-        if t in '.:(),→':
+        # 注意：这里必须用**元组**比较，不能用 `t in '.:(),→'`——
+        # 那是字符串包含判断，而 `'('` **正好在这个字符串里**，
+        # 于是"参数以括号开头"的应用会被当成结构性符号而中断解析
+        # （`(λx:A.x) (λx:A.x)` 报"多余内容"就是这条）。
+        if t in (':', ',', '.', ')', '→'):
             raise _ParseError(f"意外符号 '{t}'")
         next_tok()
         return ('var', t)
@@ -203,13 +216,10 @@ def parse_expr(s):
             t = peek()
             if t is None or t == ')':
                 break
-            if t in '.:(),→':
+            if t in (':', ',', '.', '→'):   # 结构符号（**不含 '('**，括号能起项）
                 break
-            if t == 'λ' or t == '(' or t not in '.:(),→':
-                arg = parse_atom()
-                first = ('app', first, arg)
-            else:
-                break
+            arg = parse_atom()
+            first = ('app', first, arg)
         return first
 
     node = parse_application()
