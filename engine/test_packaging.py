@@ -111,7 +111,7 @@ _dirs = set()
 for dp, dn, fn in os.walk(_HERE):
     dn[:] = [d for d in dn if d not in ('__pycache__', 'build')]
     if any(f.endswith('.py') for f in fn):
-        rel = os.path.relpath(dp, _REPO).replace('\\', '.')
+        rel = os.path.relpath(dp, _REPO).replace(os.sep, '.')
         _dirs.add(rel)
 check("engine 下每个含 .py 的目录都在 packages 里",
       _dirs <= declared, f"漏: {sorted(_dirs - declared)}")

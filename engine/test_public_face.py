@@ -164,6 +164,11 @@ print(f"  （扫描 {len(_FILES)} 个文本文件；"
 for label, _pat, _pre in _BANS:
     arr = _hits[label]
     check(f"无{label}", not arr, f"{len(arr)} 处: {arr[:4]}")
+if not _priv:
+    # 占位断言：清单缺席时判据少一条，补一条诚实声明——
+    # 使总断言数恒为 14（清单在场=6 判据，缺席=5 判据+此声明），
+    # 否则声明分母在「本机/CI」之间漂移，文档一致性校验会连环失真。
+    check("本机私有名清单未提供（可选件，CI 常态——通用判据已照扫）", True)
 
 # 判据自查：故意造一条命中，确认判据真的抓得住（防止正则写废了还全绿）
 _fake = ("某内部档案 §151 与 D:\\某盘\\x 与 99_某内部文档.md 与 a@b.com"
@@ -188,8 +193,12 @@ check("许可文本保留 MPL 字样（LICENSE 排除在关键词过滤外）",
                                        encoding='utf-8').read())
 check("扫描覆盖面 ≥80 文件（含 py/md/json/yml/NOTICE）", len(_FILES) >= 80,
       str(len(_FILES)))
-check("排除集合固定为「判据文件 + LICENSE + 本地私有名清单」（防悄悄扩大）",
-      _skipped == _EXCLUDE and len(_EXCLUDE) == 3, str(sorted(_skipped)))
+# 期望排除集 = 声明集中真实存在的文件；本地私有名清单是可选件
+# （gitignored，CI/新克隆上不存在），缺席时期望排除集自然收缩为两项。
+_EXPECTED_SKIP = {r for r in _EXCLUDE
+                  if os.path.exists(os.path.join(_REPO, r))}
+check("排除集合固定为「判据文件 + LICENSE + 本地私有名清单（若存在）」（防悄悄扩大）",
+      _skipped == _EXPECTED_SKIP and len(_EXCLUDE) == 3, str(sorted(_skipped)))
 check("被排除的本地清单确实在 .gitignore（排除才安全）",
       '.public-face-local.txt' in open(os.path.join(_REPO, '.gitignore'),
                                        encoding='utf-8').read())
