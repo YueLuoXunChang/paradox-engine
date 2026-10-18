@@ -7,7 +7,8 @@ verify_install.py — 安装路径端到端验证（README 声称的用法，真
     可能与源码仓里跑测试**完全不是一回事**——测过才知道。第一次做这个验证就抓到
     三个真问题（见下），所以把它固化成可复现脚本，并接进 CI。
 
-它做什么（全离线，不需要网络）：
+它做什么（全离线，不需要网络；唯一例外：Python 3.12+ 环境若缺
+setuptools 构建后端，会先补装一次）：
     ① 构建 wheel（`pip wheel --no-deps --no-build-isolation`）；
     ② 建临时 venv，`pip install --no-index --no-deps` 装这个 wheel；
     ③ 真跑安装后的 console 命令：--text / --json / --file / --tools；
@@ -106,6 +107,14 @@ def main(argv=None):
     try:
         # ① 构建 wheel（--no-build-isolation：不联网取构建依赖）
         print('① 构建 wheel')
+        # --no-build-isolation 要求当前环境自带 setuptools（构建后端）。
+        # Python 3.12+ 官方发行版/官方镜像不再预装 setuptools——缺则补装一次
+        # （本机已有则零开销、维持全离线；实测 CI 3.12 曾因此挂掉）。
+        import importlib.util
+        if importlib.util.find_spec('setuptools') is None:
+            r0 = _run([py, '-m', 'pip', 'install', '--quiet', 'setuptools'])
+            _step('构建后端 setuptools 就绪（缺失，已补装）', r0.returncode == 0,
+                  r0.stdout.strip().splitlines()[-1] if r0.stdout else '')
         r = _run([py, '-m', 'pip', 'wheel', _HERE, '--no-deps',
                   '--no-build-isolation', '-w', dist], cwd=tmp)
         whls = ([f for f in os.listdir(dist) if f.endswith('.whl')]
