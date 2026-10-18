@@ -1,8 +1,9 @@
 # paradox-engine · The Paradox Engine
 
-> The smallest engine that treats "contradiction" as a first-class research object.
-> Stance: **diagnose only, never decide** — measure it, annotate it, report it,
-> and leave the judgment to whoever uses it.
+> A runnable, layered logic architecture kept as an archival record —
+> classical logic as the ground floor, undecidable contradictions as the
+> research object. Stance: **diagnose only, never decide** — measure it,
+> annotate it, report it, and leave the judgment to whoever uses it.
 >
 > [![tests](https://github.com/YueLuoXunChang/paradox-engine/actions/workflows/test.yml/badge.svg)](https://github.com/YueLuoXunChang/paradox-engine/actions/workflows/test.yml)
 > [![license](https://img.shields.io/badge/license-MPL--2.0-blue.svg)](LICENSE)
@@ -11,37 +12,74 @@
 > 
 > 🌐 **中文**：[README.md](README.md)
 
-**paradox-engine** is a small, focused prototype engine for paradox /
-contradiction detection, built from carefully selected core mechanisms of the
-"Luoluo Logic System" (落落逻辑体系, original work by YueLuoXunChang / 月落寻常).
-This repository is an **independent open-source container**: it contains only
-the parts the author chose to make public, fully separated from the full body
-of the system (documentation library and complete mechanism library).
+**paradox-engine** is the public archival container of the "Luoluo Logic
+System" (落落逻辑体系, original work by YueLuoXunChang / 月落寻常): selected
+core mechanisms from that system, built out as a **pure-Python,
+zero-dependency, layered logic architecture**. This repository is an
+independent container, fully separated from the full body of the system
+(complete documentation and mechanism libraries); it holds only the parts
+the author chose to make public.
 
-> **What it is, in one sentence for a stranger**: a pure-Python toolbox of
-> logic utilities — feed it a contradictory argument, a self-referential
-> sentence, or conflicting requirements, and it will not argue for you or
-> eliminate the contradiction. Instead it tells you: how sharp the paradox
-> is (μ), what type it is, whether it can stably exist, and which positions
-> can stand up to attack — every answer with its evidence, fully auditable.
-> What classical logic can decide, it decides first (propositional /
-> first-order / temporal / modal / lambda-calculus / types). What cannot be
-> decided (self-reference and paradox) goes through a "wall pipeline" that
-> returns a five-way diagnosis (decidable / benign self-reference /
-> resonance-band self-reference / divergent wall / creatable). Zero
-> third-party dependencies; `python demo.py` walks through all eighteen
-> capabilities in about two minutes.
+**What it is, in one sentence for a stranger**: a toolbox of logic
+utilities — feed it a contradictory argument, a self-referential sentence,
+or conflicting requirements, and it will not argue for you or eliminate the
+contradiction. Instead it tells you: how sharp the paradox is (μ), what type
+it is, whether it can stably exist, and which positions can stand up to
+attack — every answer with its evidence, fully auditable. What classical
+logic can decide, it decides first; what cannot be decided (self-reference
+and paradox) goes through a "wall pipeline" that returns a five-way
+diagnosis (decidable / benign self-reference / resonance-band
+self-reference / divergent wall / creatable). Zero third-party dependencies;
+`python demo.py` walks through all nineteen capabilities in about two
+minutes.
+
+## 0. Why "paradox-engine"?
+
+The repository is named after the most distinctive **original** part of the
+architecture. Following this repository's own bookkeeping discipline:
+
+- **Original** (from the system itself, no external source to cite):
+  the Layer-0 MT-MP-TL skeleton (points / threads / topology), the
+  control orchestration (12 problem types / complexity grading / 36-key
+  routing / five-step pipeline), the Layer-2 paradox machinery (μ measure /
+  annotation cards / wall pipeline), and the "diagnose, never decide"
+  stance;
+- **Common ground / borrowed** (external work, source cited per file):
+  Layer 1 classical logic (common ground that everyone has) and Layer 3
+  exotic logics (Belnap / Dung / AGM / relevance / intuitionistic,
+  recorded in the borrowed zone).
+
+The name follows the paradox layer, because the wall pipeline (measure →
+annotate → tunnel → create) is what distinguishes this architecture from
+"yet another logic library". But the body of the repository is a
+**complete, layered logic architecture** — paradox handling is its
+signature layer, not its whole.
+
+No version numbers, no promotion. The positioning is **archival**: turning
+the system's core claims into artifacts that can be run, tested, and
+audited. This repository is fully separated from the full body of the
+"Luoluo Logic System" and holds only the parts the author chose to make
+public.
 
 ---
 
-## 1. What this project claims (30 seconds)
+## 1. The layered architecture
 
-| The usual way | paradox-engine's way |
-|---|---|
-| Eliminate contradictions, avoid them, pretend they do not exist | **Contradiction first**: admit it exists |
-| Argue about whether something "counts" as a paradox | **Measure it**: paradox strength μ ∈ [0,1], one number |
-| Give conclusions without process | **White-box**: every conclusion carries its evidence |
-| Silently make decisions for the user | **Diagnose only**: leave judgment to the user |
+```
+Ctrl      engine brain      classification / complexity / routing / 5-step pipeline
+AI mount  tooling           engine functions = AI-callable tools (function-calling)
+Layer 3   Exotic logics      Belnap / Dung / AGM / relevance / intuitionistic (borrowed)
+Layer 2   Paradox / genesis  measure μ · annotation · wall pipeline (the original layer)
+Layer 1   Classical logic    propositional / first-order / temporal / modal / λ / TM / types
+Layer 0   MT-MP-TL skeleton  points / threads / topologies / operations (own skeleton)
+```
+
+Four recurring commitments:
+
+- **Contradiction first**: admit it exists, do not pretend it does not;
+- **Measure it**: paradox strength μ ∈ [0,1], one number, no arguing;
+- **White-box**: every conclusion carries its evidence;
+- **Diagnose only**: leave judgment to the user.
 
 One sentence: **we do not solve paradoxes — we turn them into measurable,
 annotatable, traceable objects.**
@@ -337,17 +375,35 @@ when a real pain point appears).
   text files to CRLF; an invariant test enforces it (`test_packaging.py`);
 - Windows consoles: the CLI, the demo and **every component self-test** carry a
   console self-heal (they set the output stream to UTF-8), so
-  `python engine/<layer>/<name>.py` just works — no `PYTHONIOENCODING` needed.
+  `python engine/<layer>/<name>.py` just works — no `PYTHONIOENCODING` needed;
+- **Unfinished, honestly**: human re-check of the scenario library stands at
+  4/25 (machine comparison passes 25/25; until the human re-check finishes,
+  no misclassification rate is reported — see `--stats`); stage-7 items
+  (wall-pipeline branches B/C, multi-turn state, Web/API/LLM integration —
+  pending authorization) are not built; nor are the deepening points of the
+  three future postures (auto-extracting conflicts, auto-building
+  topologies, live LLM integration — see docs/ROADMAP.md §6.1). No real
+  pain point, no forced feature.
+- **Scope and boundaries**: the full body of the system (Luoluo Logic System:
+  complete mechanism library and documentation library) is not in this
+  repository — only the parts the author chose to make public; this project
+  does not claim to settle any philosophical/logical dispute, and does not
+  claim to bypass the Turing halting problem or Gödel incompleteness (those
+  are theorems). It does two things: decides what classical logic can decide;
+  and for what cannot be decided — measure, annotate, report honestly, and
+  leave judgment to the user.
 
-- Pure Python standard library, zero third-party dependencies;
-- The full body of the system (Luoluo Logic System: complete mechanism
-  library and documentation library) is **not in this repository**; only the
-  parts the author chose to make public live here;
-- This project **does not claim to settle any philosophical/logical dispute**,
-  and does not claim to bypass the Turing halting problem or Gödel
-  incompleteness (those are theorems). It does two things: decides what
-  classical logic can decide; and for what cannot be decided — measure,
-  annotate, report honestly, and leave judgment to the user.
+### Update notice (no overpromising)
+
+- This repository **will be updated from time to time**: new selected
+  content (mechanisms, docs, demos) will be added as the author's sorting
+  progresses, with no timetable;
+- Most of the body of the system (the complete mechanism and documentation
+  libraries) **is not yet public**; later on, more logic architecture and
+  mechanisms **may** be published in new repositories — whether, when, and
+  how much are all undecided; what is published at the time is what counts;
+- To follow changes, watch this repository. No groups, no channels, no
+  other announcement outlets — an archival repository stays quiet.
 
 ---
 
@@ -358,11 +414,11 @@ when a real pain point appears).
   the author from that system and authorized to be public; the full body of
   the system (complete documentation and mechanism libraries) is not in this
   repository.
-- **AI collaboration note**: the engineering implementation in this
-  repository (code, tests, docs, demo choreography) was produced in
-  collaboration between the author and an AI — the AI did the implementation
-  and assembly; the concepts, design direction, trade-offs, and final
-  decisions were led by the author. The layered claims (layer 1: classical
+- **Heavy AI assistance — said plainly**: the engineering implementation in
+  this repository (code, tests, docs, demo choreography) was done **mostly
+  by an AI**; the concepts and design direction come from the author
+  (Luoluo), who made the trade-offs and final decisions. The AI did most of
+  the work; the author steered. The layered claims (layer 1: classical
   logic decides what it can; layer 2: contradiction as first-class citizen;
   diagnose-only-never-decide) are the author's original direction.
 - **Borrowed material**: classical consensus reused in the code (e.g. Belnap
