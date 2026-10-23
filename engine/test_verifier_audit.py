@@ -80,11 +80,10 @@ KNOWN_NO_INDEPENDENT = {
     # ⑫（2026-10-02）两个零测试件补测试：ai_scenarios → 只有性质（仍在未验名单）；
     #   converge_check 用"按定义直算 + 手算"验（Lipschitz 差商 / q_T=|a|^T / 有限步数）
     #   → 升到独立复算，← 它已从下面这段名单里移出。
-    'boundary_paradox', 'freeze_tool_schema',
+    'freeze_tool_schema',
     # ⑬（2026-10-02）`test_measure_crosscheck.py` 按定义直算四分支（mu1 闭式 /
     #   mu3 差 / mu4 熵 + P8 边界）· `test_annotate_crosscheck.py` 12 组合全枚举分级
     #   → `paradox_measure` / `paradox_annotate` 升到独立复算（未验 7→5）
-    'observer_bypass',
     'tools',                                              # 只有用例集/性质断言
 }
 # 点名了**外部验证方**的件（登记在审计器里，命中词必须出现在对应测试文件中）
