@@ -19,8 +19,8 @@
 |:--|--:|:--|
 | 外部验证方 | **3** | 有**外部/第三方**实现当验证方（人工登记，命中词须在测试里出现） |
 | 跨构件互验 | **13** | 同仓**另一个构件**参与互验（AST 扫 import 判出来的） |
-| 独立复算（初筛） | **28** | 测试里有**独立复算**的痕迹（关键词初筛） |
-| 只有性质/接口测试 | **7** | 只有性质/接口断言（PORTS · boundary · 单调/恒等 · 拒绝路径）——**待人工确认** |
+| 独立复算（初筛） | **30** | 测试里有**独立复算**的痕迹（关键词初筛） |
+| 只有性质/接口测试 | **5** | 只有性质/接口断言（PORTS · boundary · 单调/恒等 · 拒绝路径）——**待人工确认** |
 | 无测试引用 | **0** | 没有测试文件引用它——**待人工确认** |
 | 合计 | **51** | 构件总数（扫盘口径，与 `docs/components.md` 同源） |
 
@@ -62,8 +62,8 @@
 | `mu_calculus` | cold | 跨构件互验 | 引用了同仓构件 model_check；疑似独立复算：命中 oracle、互验、参考实现、反向 BFS | `test_mu_calculus.py`、`test_bisimulation.py` | ✅ |
 | `nd_propositional` | classical | 独立复算（初筛） | 疑似独立复算：命中 Oracle、oracle、另写、对拍 | `test_nd_propositional.py`、`test_classical_crosscheck.py` | ✅ |
 | `observer_bypass` | mechanisms | 只有性质/接口测试 | 用例集：期望值直接写死 3 条（能挡回归，**不构成独立验证方**） | `test_observer_bypass.py` | ✅ |
-| `paradox_annotate` | mechanisms | 只有性质/接口测试 | 用例集：期望值直接写死 5 条（能挡回归，**不构成独立验证方**） | `test_paradox_annotate.py` | ✅ |
-| `paradox_measure` | mechanisms | 只有性质/接口测试 | 用例集：期望值直接写死 21 条（能挡回归，**不构成独立验证方**） | `test_paradox_measure.py`、`test_fuzz.py`、`test_robustness.py` | ✅ |
+| `paradox_annotate` | mechanisms | 独立复算（初筛） | 疑似独立复算：命中 定义直算、按定义、按定义直算、穷举 | `test_paradox_annotate.py`、`test_annotate_crosscheck.py` | ✅ |
+| `paradox_measure` | mechanisms | 独立复算（初筛） | 疑似独立复算：命中 定义直算、按定义、按定义直算 | `test_paradox_measure.py`、`test_measure_crosscheck.py`、`test_fuzz.py`、`test_robustness.py` | ✅ |
 | `presburger` | classical | 跨构件互验 | 引用了同仓构件 decidability_map；疑似独立复算：命中 已知答案 | `test_presburger.py` | ✅ |
 | `propositional` | classical | 独立复算（初筛） | 疑似独立复算：命中 Oracle、oracle、另写、另算 | `test_propositional.py`、`test_classical_crosscheck.py`、`test_agm_revision.py`、`test_relevance_logic.py` | ✅ |
 | `recursion_theorem` | classical | 独立复算（初筛） | 疑似独立复算：命中 oracle、互验、另写、对拍 | `test_recursion_theorem.py`、`test_computability_crosscheck.py` | ✅ |
@@ -96,8 +96,6 @@
 | `boundary_paradox` | mechanisms | 只有性质/接口测试 | 用例集：期望值直接写死 5 条（能挡回归，**不构成独立验证方**） |
 | `freeze_tool_schema` | ai | 只有性质/接口测试 | 只有接口/性质断言（无独立验证方） |
 | `observer_bypass` | mechanisms | 只有性质/接口测试 | 用例集：期望值直接写死 3 条（能挡回归，**不构成独立验证方**） |
-| `paradox_annotate` | mechanisms | 只有性质/接口测试 | 用例集：期望值直接写死 5 条（能挡回归，**不构成独立验证方**） |
-| `paradox_measure` | mechanisms | 只有性质/接口测试 | 用例集：期望值直接写死 21 条（能挡回归，**不构成独立验证方**） |
 | `tools` | ai | 只有性质/接口测试 | 用例集：期望值直接写死 57 条（能挡回归，**不构成独立验证方**） |
 
 > **口径提醒**：`只有性质/接口测试` 是"关键词初筛 ＋ 结构判据"的结果，**不是终判**——

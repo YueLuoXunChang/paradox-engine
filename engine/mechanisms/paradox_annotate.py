@@ -15,6 +15,9 @@ paradox_annotate.py — 悖论注解机制（核心机制）
         可消除: 无法消除 → 保持或升级一级
     Annotation = (ID, LV, POS, SRC, CT, EF, ST, AN)  8字段
         ID = 悖论_P-{级别}_{序号:03d}
+    paradox 的子键：A / notA **必须有**；pos / src / effect / note / coexist
+    可选——卡片里的 POS/SRC/EF/AN 就取自它们，**不填就不编**（只诊断不决策）。
+    注意：顶层 source/impact/eliminable 只**决定分级**，不改卡片内容。
 """
 
 BOUNDARY = ('悖论注解（8 字段卡 + P-A/B/C 分级，来源：体系内部机制口径）：'

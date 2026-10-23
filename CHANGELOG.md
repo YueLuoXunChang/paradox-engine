@@ -330,6 +330,31 @@
 - 登记表：`converge_check` 升到"独立复算"档 → **未验状态 8 → 7**；
   无测试引用 **2 → 0**；断言 **2227 → 2255**，测试文件 **78 → 80**。
 
+### 测度/注解族补上**按定义直算**验证：四分支公式逐点核 + 分级 12 组合穷举
+
+- `paradox_measure`（μ 四分支）与 `paradox_annotate`（8 字段卡）此前都只有"用例集"
+  （期望值写死的几条）。本批补**独立验证方**：
+  - `engine/mechanisms/test_measure_crosscheck.py`（14 条）：照着模块文档的四条公式
+    **自己算一遍**再比——mu1 `1−|wA−wNotA|/(wA+wNotA+ε)` 八个权重点逐点一致；
+    mu2=1；mu3 `|τ1−τ2|` 四点一致且缺参数如实 `input_pending`；
+    mu4 `H(p)/log2`（p=wA/(Σ+ε)）五点一致，并钉住模块 docstring 记着的
+    **P8 边界**（p→1 时 μ→0，不许残留 ~1e-8 噪声）；`choose_branch` 的
+    **8 种组合全枚举**（优先级 mu2>mu3>mu4>mu1）；μ∈[0,1] 随机 40 点不变式。
+  - `engine/mechanisms/test_annotate_crosscheck.py`（15 条）：分级规则
+    （来源→A/B/C、global 升级、不可消除再升级、A 是顶）**3×2×2 = 12 种组合全枚举**，
+    用自己实现的规则逐条比对；8 字段卡（填满子键则齐）；ID 格式 `悖论_P-{级}_{序号:03d}`
+    （seq=7→007、123→123）。
+- **两条口径探明并写进 docstring**（此前只在实现里）：
+  ① 卡片 POS/SRC/EF/AN 取自 `paradox` 的**子键**（pos/src/effect/note），
+     **不填就不编**（"只诊断不决策"）；顶层 `source/impact/eliminable` 只**决定分级**；
+  ② `mu3` 必须给 `tau_L1/tau_L2`（缺则 `input_pending`）。
+- **④ 契约补齐**：`PORTS.in` 原来漏了 mu3 的 `tau_L1/tau_L2`、也没说 `paradox` 的子键
+  ——已补齐（值保持简洁形式，说明进 docstring：PORTS 值**以 `?` 结尾才表示可选**，
+  长描述会被 schema 生成器当成必填）。同步更新了 `tools.py` 与 `test_tools.py` 里
+  写死旧 schema 的期望（tau_L1/tau_L2 进 properties，required 仍只有 mode）。
+- 验证方登记：两件都升到"独立复算"档 → **未验状态 7 → 5**；
+  断言 **2255 → 2284**，测试文件 **80 → 82**。
+
 ## 2026-09-23
 
 ### 新增：验证方登记（每件产物点名验证方）——把"只有自证"这件事摆到明面上

@@ -63,10 +63,12 @@ check("每工具 properties 为 dict",
           for t in tl))
 
 # ── 用例2：schema 与 PORTS 一致性（抽查 3 工具）
+# 2026-10-02：PORTS 补了 mu3 要的 tau_L1/tau_L2（④ 轴），schema 字段随之扩大；
+# required 仍只有 mode（tau 是 mu3 才要的可选参数）。
 pm = next(t for t in tl if t['function']['name'] == 'paradox_measure')
-check("paradox_measure schema 字段 = mode/wA/wNotA",
+check("paradox_measure schema 字段 = mode/wA/wNotA/tau_L1/tau_L2",
       set(pm['function']['parameters']['properties']) ==
-      {'mode', 'wA', 'wNotA'}, str(pm))
+      {'mode', 'wA', 'wNotA', 'tau_L1', 'tau_L2'}, str(pm))
 check("mode 必填", pm['function']['parameters']['required'] == ['mode'],
       str(pm))
 dg = next(t for t in tl if t['function']['name'] == 'dung_framework')

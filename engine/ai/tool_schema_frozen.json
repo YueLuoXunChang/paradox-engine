@@ -694,6 +694,14 @@
         "required": true,
         "type": "string"
       },
+      "tau_L1": {
+        "required": false,
+        "type": "number"
+      },
+      "tau_L2": {
+        "required": false,
+        "type": "number"
+      },
       "wA": {
         "required": false,
         "type": "number"

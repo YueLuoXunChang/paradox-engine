@@ -10,6 +10,8 @@ paradox_measure.py — 悖论测度 μ（核心机制）
 统一接口：
     def run(inputs: dict) -> dict
     输入:  {proposition, mode, wA, wNotA, tau_L1, tau_L2}
+            —— mu3 层级型**必须**给 tau_L1/tau_L2（缺则 input_pending）；
+               mu1/mu4 用 wA/wNotA；mu2 自指不需要额外参数。
     输出:  {mu, branch}
 
 四分支：
@@ -35,7 +37,8 @@ BOUNDARY = ('悖论强度测度 μ∈[0,1]（第 2 层旗舰构件，来源：�
 
 
 PORTS = {
-    'in': {'mode': 'str', 'wA': 'float?', 'wNotA': 'float?'},
+        'in': {'mode': 'str', 'wA': 'float?', 'wNotA': 'float?',
+           'tau_L1': 'float?', 'tau_L2': 'float?'},
     # 2026-09-20 对齐实际返回：原来只写了 mu/branch，漏了
     # verdict/proposition/error/boundary——PORTS 是对外声明，少写就是文档说谎
     'out': {'verdict': 'str', 'mu': 'float', 'branch': 'str',

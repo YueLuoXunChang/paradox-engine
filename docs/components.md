@@ -204,7 +204,7 @@
 ### `engine/mechanisms/paradox_measure.py`
 
 - 做什么：paradox_measure.py — 悖论测度 μ（核心机制）
-- 输入端口：`mode: str`、`wA: float?`、`wNotA: float?`
+- 输入端口：`mode: str`、`wA: float?`、`wNotA: float?`、`tau_L1: float?`、`tau_L2: float?`
 - 输出端口：`verdict: str`、`mu: float`、`branch: str`、`proposition: dict?`、`error: str?`、`boundary: str`
 - 可独立运行：是（自带自测）
 

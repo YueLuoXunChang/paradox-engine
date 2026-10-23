@@ -304,9 +304,11 @@ if __name__ == '__main__':
           f"{list(tl[0]['function']['parameters']['properties'])[:3]}…")
 
     # 2) schema 结构与 PORTS 一致：properties 覆盖 PORTS 字段
+    # 2026-10-02：PORTS 补了 mu3 要的 tau_L1/tau_L2（④ 轴：对外声明不全），
+    # 故这里的期望集合同步扩大——**required 仍只有 mode**（tau 是 mu3 才要的可选参数）。
     pm = next(t for t in tl if t['function']['name'] == 'paradox_measure')
     assert set(pm['function']['parameters']['properties']) == \
-        {'mode', 'wA', 'wNotA'}, pm
+        {'mode', 'wA', 'wNotA', 'tau_L1', 'tau_L2'}, pm
     assert pm['function']['parameters']['required'] == ['mode'], pm
     ct = next(t for t in tl if t['function']['name'] == 'controller')
     assert set(ct['function']['parameters']['properties']) == \
