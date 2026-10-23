@@ -76,15 +76,10 @@ def check(label, cond, detail=''):
 #      可选步如实 skip · 判词可达性逐个点名）落地后，`wall_pipeline` 升档
 #      → **9 件变 8 件**。
 KNOWN_NO_INDEPENDENT = {
-    'ai_scenarios',                                       # 有契约测试，但只是接口/结构
-    # ⑫（2026-10-02）两个零测试件补测试：ai_scenarios → 只有性质（仍在未验名单）；
-    #   converge_check 用"按定义直算 + 手算"验（Lipschitz 差商 / q_T=|a|^T / 有限步数）
-    #   → 升到独立复算，← 它已从下面这段名单里移出。
-    'freeze_tool_schema',
-    # ⑬（2026-10-02）`test_measure_crosscheck.py` 按定义直算四分支（mu1 闭式 /
-    #   mu3 差 / mu4 熵 + P8 边界）· `test_annotate_crosscheck.py` 12 组合全枚举分级
-    #   → `paradox_measure` / `paradox_annotate` 升到独立复算（未验 7→5）
-    'tools',                                              # 只有用例集/性质断言
+    # 2026-10-02 §253：`tools`（清单↔命令行 41 条逐条核 + 快照变异接受）与
+    #   `freeze_tool_schema`（删一条后 check() 逐条核出差异并点名）已升到独立复算。
+    #   只剩 `ai_scenarios`：它是演示脚本，只有契约/接线测试——**诚实**留在未验名单。
+    'ai_scenarios',
 }
 # 点名了**外部验证方**的件（登记在审计器里，命中词必须出现在对应测试文件中）
 KNOWN_EXTERNAL = {'criticality', 'growth_guard', 'bisimulation'}
