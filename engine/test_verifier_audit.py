@@ -76,7 +76,10 @@ def check(label, cond, detail=''):
 #      可选步如实 skip · 判词可达性逐个点名）落地后，`wall_pipeline` 升档
 #      → **9 件变 8 件**。
 KNOWN_NO_INDEPENDENT = {
-    'ai_scenarios', 'converge_check',                     # 无测试引用
+    'ai_scenarios',                                       # 有契约测试，但只是接口/结构
+    # ⑫（2026-10-02）两个零测试件补测试：ai_scenarios → 只有性质（仍在未验名单）；
+    #   converge_check 用"按定义直算 + 手算"验（Lipschitz 差商 / q_T=|a|^T / 有限步数）
+    #   → 升到独立复算，← 它已从下面这段名单里移出。
     'boundary_paradox', 'freeze_tool_schema',
     'observer_bypass', 'paradox_annotate', 'paradox_measure',
     'tools',                                              # 只有用例集/性质断言

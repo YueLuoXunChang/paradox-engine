@@ -136,17 +136,49 @@
       }
     },
     "converge_check": {
+      "L_est": {
+        "required": true,
+        "type": "string"
+      },
+      "T": {
+        "required": true,
+        "type": "string"
+      },
       "branch": {
         "required": false,
         "type": "string"
       },
       "err_fn": {
         "required": true,
-        "type": "object"
+        "type": "string"
       },
       "f": {
         "required": true,
-        "type": "object"
+        "type": "string"
+      },
+      "max_steps": {
+        "required": true,
+        "type": "string"
+      },
+      "samples": {
+        "required": true,
+        "type": "string"
+      },
+      "samples_e": {
+        "required": true,
+        "type": "string"
+      },
+      "samples_x": {
+        "required": true,
+        "type": "string"
+      },
+      "steps": {
+        "required": true,
+        "type": "string"
+      },
+      "tol": {
+        "required": true,
+        "type": "string"
       },
       "x0": {
         "required": false,

@@ -19,9 +19,9 @@
 |:--|--:|:--|
 | 外部验证方 | **3** | 有**外部/第三方**实现当验证方（人工登记，命中词须在测试里出现） |
 | 跨构件互验 | **13** | 同仓**另一个构件**参与互验（AST 扫 import 判出来的） |
-| 独立复算（初筛） | **27** | 测试里有**独立复算**的痕迹（关键词初筛） |
-| 只有性质/接口测试 | **6** | 只有性质/接口断言（PORTS · boundary · 单调/恒等 · 拒绝路径）——**待人工确认** |
-| 无测试引用 | **2** | 没有测试文件引用它——**待人工确认** |
+| 独立复算（初筛） | **28** | 测试里有**独立复算**的痕迹（关键词初筛） |
+| 只有性质/接口测试 | **7** | 只有性质/接口断言（PORTS · boundary · 单调/恒等 · 拒绝路径）——**待人工确认** |
+| 无测试引用 | **0** | 没有测试文件引用它——**待人工确认** |
 | 合计 | **51** | 构件总数（扫盘口径，与 `docs/components.md` 同源） |
 
 ## 二、逐件登记
@@ -29,7 +29,7 @@
 | 构件 | 层 | 状态 | 验证方/证据 | 被哪个测试文件引用 | 自带自测 |
 |:--|:--|:--|:--|:--|:--|
 | `agm_revision` | cold | 跨构件互验 | 引用了同仓构件 propositional；疑似独立复算：命中 oracle、互验、另算、对拍 | `test_agm_revision.py`、`test_default_logic.py`、`test_revision_crosscheck.py`、`test_session.py` | ✅ |
-| `ai_scenarios` | ai | 无测试引用 | 没有任何测试文件引用它 | — | ✅ |
+| `ai_scenarios` | ai | 只有性质/接口测试 | 用例集：期望值直接写死 5 条（能挡回归，**不构成独立验证方**） | `test_ai_scenarios.py` | ✅ |
 | `asp` | cold | 跨构件互验 | 引用了同仓构件 dung_framework；疑似独立复算：命中 另写、对拍、按定义、第三条路 | `test_asp.py` | ✅ |
 | `belnap_four` | cold | 独立复算（初筛） | 疑似独立复算：命中 真值表 | `test_belnap_four.py` | ✅ |
 | `bisimulation` | cold | 外部验证方 | 外部：外部协作者另写的分区细化实现；引用了同仓构件 mu_calculus；疑似独立复算：命中 oracle、互验、参考实现、定义直算 | `test_bisimulation.py` | ✅ |
@@ -38,7 +38,7 @@
 | `cli` | engine | 跨构件互验 | 引用了同仓构件 scenarios、tools | `test_cli.py`、`test_review_marks.py`、`test_doc_commands.py`、`test_doc_examples_live.py`、`test_workshop_flow.py` | ✅ |
 | `clue_suggester` | control | 跨构件互验 | 引用了同仓构件 classifier | `test_clue_suggester.py` | ✅ |
 | `controller` | control | 跨构件互验 | 引用了同仓构件 classifier、scenarios；疑似独立复算：命中 交叉 | `test_controller.py`、`test_classifier.py`、`test_session.py`、`test_capability_matrix.py`、`test_fuzz.py`、`test_robustness.py` | ✅ |
-| `converge_check` | mechanisms | 无测试引用 | 没有任何测试文件引用它 | — | ✅ |
+| `converge_check` | mechanisms | 独立复算（初筛） | 疑似独立复算：命中 定义直算、手算、按定义、按定义直算 | `test_converge_check.py` | ✅ |
 | `corpus_stats` | scenarios | 跨构件互验 | 引用了同仓构件 scenarios | `test_corpus_stats.py` | ✅ |
 | `counterpoint_gen` | mechanisms | 独立复算（初筛） | 疑似独立复算：命中 交叉 | `test_counterpoint_gen.py` | ✅ |
 | `criticality` | mechanisms | 外部验证方 | 外部：外部协作者另写的 oracle 夹具；疑似独立复算：命中 oracle、互验、另写、对拍 | `test_criticality.py` | ✅ |
@@ -92,9 +92,8 @@
 
 | 构件 | 层 | 状态 | 现在有什么 |
 |:--|:--|:--|:--|
-| `ai_scenarios` | ai | 无测试引用 | 没有任何测试文件引用它 |
+| `ai_scenarios` | ai | 只有性质/接口测试 | 用例集：期望值直接写死 5 条（能挡回归，**不构成独立验证方**） |
 | `boundary_paradox` | mechanisms | 只有性质/接口测试 | 用例集：期望值直接写死 5 条（能挡回归，**不构成独立验证方**） |
-| `converge_check` | mechanisms | 无测试引用 | 没有任何测试文件引用它 |
 | `freeze_tool_schema` | ai | 只有性质/接口测试 | 只有接口/性质断言（无独立验证方） |
 | `observer_bypass` | mechanisms | 只有性质/接口测试 | 用例集：期望值直接写死 3 条（能挡回归，**不构成独立验证方**） |
 | `paradox_annotate` | mechanisms | 只有性质/接口测试 | 用例集：期望值直接写死 5 条（能挡回归，**不构成独立验证方**） |

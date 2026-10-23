@@ -162,7 +162,7 @@
 ### `engine/mechanisms/converge_check.py`
 
 - 做什么：converge_check.py — 收敛判定四分支（核心机制）
-- 输入端口：`branch: str?`、`f: callable`、`err_fn: callable`、`x0: float?`
+- 输入端口：`branch: str?`、`f: callable（**二元** f(x, e) -> 新 x；状态是 (x, e) 一对）`、`err_fn: callable（**一元** err_fn(x) -> 误差；到可接受集的距离）`、`x0: float?`、`samples: list?（分支1 要；数值样本列表）`、`samples_x: list?（分支1 纯 x 方向样本，**[(x, e), …]** 二元组列表）`、`samples_e: list?（分支1 纯 e 方向样本，**[(x, e), …]** 二元组列表）`、`L_est: float?（分支1 可传已知 Lipschitz 估计，省重算）`、`max_steps: int?（分支2 上限，默认 1000）`、`tol: float?（分支2 容差，默认 1e-6）`、`steps: int?（分支3/4 观察步数，默认 1000/200）`、`T: int?（分支4 振荡周期，默认 2）`
 - 输出端口：`verdict: str`、`converges: bool`、`rate: any`、`detail: dict`、`branch: str?`、`boundary: str`
 - 可独立运行：是（自带自测）
 

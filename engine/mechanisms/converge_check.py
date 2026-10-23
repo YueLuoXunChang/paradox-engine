@@ -25,8 +25,20 @@ BOUNDARY = ('收敛判定（第 2 层机制，来源：体系内部机制口径�
 
 
 PORTS = {
-    'in': {'branch': 'str?', 'f': 'callable', 'err_fn': 'callable',
-           'x0': 'float?'},
+    'in': {'branch': 'str?',
+           # 2026-10-02 补齐口径（④ 轴）：**可调用的形状也是契约**——
+           # 旧版只写 'callable'，照它写 f(x) 会直接 TypeError（实测踩过）。
+           'f': 'callable（**二元** f(x, e) -> 新 x；状态是 (x, e) 一对）',
+           'err_fn': 'callable（**一元** err_fn(x) -> 误差；到可接受集的距离）',
+           'x0': 'float?',
+           'samples': 'list?（分支1 要；数值样本列表）',
+           'samples_x': 'list?（分支1 纯 x 方向样本，**[(x, e), …]** 二元组列表）',
+           'samples_e': 'list?（分支1 纯 e 方向样本，**[(x, e), …]** 二元组列表）',
+           'L_est': 'float?（分支1 可传已知 Lipschitz 估计，省重算）',
+           'max_steps': 'int?（分支2 上限，默认 1000）',
+           'tol': 'float?（分支2 容差，默认 1e-6）',
+           'steps': 'int?（分支3/4 观察步数，默认 1000/200）',
+           'T': 'int?（分支4 振荡周期，默认 2）'},
     # 2026-09-20 对齐实际返回：补上 branch/boundary（各分支都会带）
     'out': {'verdict': 'str', 'converges': 'bool', 'rate': 'any',
             'detail': 'dict', 'branch': 'str?', 'boundary': 'str'},
