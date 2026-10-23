@@ -37,6 +37,13 @@ Dung 语义（1995）：
         arguments: list[str]——论证集（至少 1 个）
         attacks: list[(a, b)]——a attacks b（a 反对 b）
         max_arguments: int——枚举上限（默认 12）
+复杂度声明（② 轴）：语义枚举按论证数**指数级**（preferred/stable 要搜子集），
+因此有 `max_arguments` 上限（默认 12，超限如实 `size_limit`）；
+**两个标准图量是线性的**：连通分量（联合查找）与度中心性都是 **O(n + m)**。
+    components：把攻击边当无向边连出来的**连通分量**（诊断用：这场辩论分成几个
+                互不相干的群）；degree_centrality：每个论证的出入度之和与
+                归一化中心性（degree/(n−1)），读作「争议中心」。
+
     输出:
         verdict: str——'evaluated'|'input_pending'|'size_limit'
         grounded: list——grounded 扩展（唯一）
@@ -52,7 +59,9 @@ PORTS = {
            'max_arguments': 'int?'},
     'out': {'verdict': 'str', 'grounded': 'list', 'preferred': 'list',
             'stable': 'list', 'admissible_examples': 'list',
-            'conflict_pairs': 'list', 'boundary': 'str'},
+                'conflict_pairs': 'list', 'boundary': 'str',
+                # 2026-10-02 ② 轴：补两个**标准图量**（诊断用，不改语义）
+                'components': 'list', 'degree_centrality': 'dict'},
 }
 
 
@@ -60,9 +69,51 @@ def _out(verdict, why, **kw):
     """统一返回形状：PORTS 声明的字段一个不少——早退分支也不许缺键
     （2026-09-20 修：早退分支原先漏了 stable，按 PORTS 读会拿到 None）。"""
     out = {'verdict': verdict, 'grounded': [], 'preferred': [], 'stable': [],
-           'admissible_examples': [], 'conflict_pairs': [], 'boundary': why}
+           'admissible_examples': [], 'conflict_pairs': [], 'boundary': why,
+           'components': [], 'degree_centrality': {}}
     out.update(kw)
     return out
+
+
+def _components(args, attacks):
+    """连通分量（把攻击边当**无向边**连）——联合查找，O(n + m)。
+
+    为什么它有意义：Dung 语义在**互不相干的子辩论**之间是可分解的，
+    但只看 grounded/preferred 读不出「这场辩论其实分成几个群」。
+    """
+    parent = {a: a for a in args}
+
+    def find(x):
+        while parent[x] != x:
+            parent[x] = parent[parent[x]]
+            x = parent[x]
+        return x
+
+    for a, b in attacks:
+        ra, rb = find(a), find(b)
+        if ra != rb:
+            parent[ra] = rb
+    groups = {}
+    for a in args:
+        groups.setdefault(find(a), []).append(a)
+    return sorted((sorted(v) for v in groups.values()),
+                  key=lambda g: (-len(g), g[0]))
+
+
+def _degree_centrality(args, attacks):
+    """度中心性：degree = 出入度之和（每条攻击边给两端各 +1）；
+    centrality = degree/(n-1)（n>1；n=1 取 0.0）。O(n + m)。
+
+    读法：degree 高的论证是「争议中心」（被围攻或到处开战）。
+    """
+    deg = {a: 0 for a in args}
+    for a, b in attacks:
+        deg[a] += 1
+        deg[b] += 1
+    n = len(args)
+    return {a: {'degree': deg[a],
+                'centrality': round(deg[a] / (n - 1), 6) if n > 1 else 0.0}
+            for a in args}
 
 
 def _attacked_by(a, attacks):
@@ -253,18 +304,22 @@ def run(inputs):
         if len(examples) >= 3:
             break
 
-    return {'verdict': 'evaluated', 'grounded': grounded,
-            'preferred': preferred, 'stable': stable,
-            'admissible_examples': examples,
-            'conflict_pairs': conflict_pairs,
-            'boundary': 'Dung 论证框架（外部共识，借鉴区）。grounded/preferred/'
-                        'stable 是立场建议（哪些论证可站），不是判决'
-                        '谁对（只诊断不决策）。攻击图由使用者/上层给出。'
-                        + ('**本框架没有 stable 扩展**（奇环或自攻这类冲突场'
-                           '本来就没有稳定立场）——这是语义结果，不是算不动。'
-                           if not stable else
-                           'stable 扩展是"把集外每个论证都攻击到"的无冲突集，'
-                           '有 stable 时它一定是 preferred（反之不然）。')}
+    # 2026-10-02：主返回**收编到 _out()**——原先它自己拼 dict，PORTS 加键时
+    # 早退分支会补、主路却漏（这类"两条路两个形状"正是 _out 要防的）。
+    return _out(
+        'evaluated',
+        'Dung 论证框架（外部共识，借鉴区）。grounded/preferred/'
+        'stable 是立场建议（哪些论证可站），不是判决'
+        '谁对（只诊断不决策）。攻击图由使用者/上层给出。'
+        + ('**本框架没有 stable 扩展**（奇环或自攻这类冲突场'
+           '本来就没有稳定立场）——这是语义结果，不是算不动。'
+           if not stable else
+           'stable 扩展是把集外每个论证都攻击到的无冲突集，'
+           '有 stable 时它一定是 preferred（反之不然）。'),
+        grounded=grounded, preferred=preferred, stable=stable,
+        admissible_examples=examples, conflict_pairs=conflict_pairs,
+        components=_components(args, attacks),
+        degree_centrality=_degree_centrality(args, attacks))
 
 
 # ============================================================

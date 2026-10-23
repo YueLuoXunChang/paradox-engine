@@ -45,7 +45,7 @@
 | `decidability_map` | classical | 独立复算（初筛） | 疑似独立复算：命中 已知答案 | `test_decidability_map.py`、`test_presburger.py` | ✅ |
 | `default_logic` | cold | 跨构件互验 | 引用了同仓构件 agm_revision；疑似独立复算：命中 真值表、穷尽 | `test_default_logic.py` | ✅ |
 | `description_logic` | cold | 独立复算（初筛） | 疑似独立复算：命中 另写、对拍、穷举、逐条核 | `test_description_logic.py` | ✅ |
-| `dung_framework` | cold | 独立复算（初筛） | 疑似独立复算：命中 另写、对拍、按定义、第三条路 | `test_dung_framework.py`、`test_asp.py` | ✅ |
+| `dung_framework` | cold | 独立复算（初筛） | 疑似独立复算：命中 另写、对拍、按定义、第三条路 | `test_dung_framework.py`、`test_asp.py`、`test_dung_metrics.py` | ✅ |
 | `equality_tableau` | classical | 独立复算（初筛） | 疑似独立复算：命中 oracle、对拍、已知答案、穷举 | `test_equality_tableau.py`、`test_fol_crosscheck.py` | ✅ |
 | `first_order` | classical | 独立复算（初筛） | 疑似独立复算：命中 oracle、对拍、已知答案、穷举 | `test_first_order.py`、`test_fol_crosscheck.py` | ✅ |
 | `freeze_tool_schema` | ai | 独立复算（初筛） | 疑似独立复算：命中 互验、逐条核 | `test_ai_wiring_crosscheck.py`、`test_tool_contract.py` | ✅ |

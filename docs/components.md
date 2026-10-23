@@ -270,7 +270,7 @@
 
 - 做什么：输入论证集 + 攻击关系图 → 输出站得住的立场集（grounded 唯一 /
 - 输入端口：`arguments: list?`、`attacks: list?`、`max_arguments: int?`
-- 输出端口：`verdict: str`、`grounded: list`、`preferred: list`、`stable: list`、`admissible_examples: list`、`conflict_pairs: list`、`boundary: str`
+- 输出端口：`verdict: str`、`grounded: list`、`preferred: list`、`stable: list`、`admissible_examples: list`、`conflict_pairs: list`、`boundary: str`、`components: list`、`degree_centrality: dict`
 - 可独立运行：是（自带自测）
 
 ### `engine/cold/interval_algebra.py`
