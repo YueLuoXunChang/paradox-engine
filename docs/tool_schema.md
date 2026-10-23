@@ -26,7 +26,7 @@ paradox-engine --call presburger --args '{"formula": "2*x = 4"}' --json
 |---|---|---|
 | `paradox_measure` | `mode*`:string `wA`:number `wNotA`:number | 悖论强度测度：矛盾多尖锐 → μ∈[0,1]（四分支，mu2 自指直判） |
 | `paradox_annotate` | `eliminable`:boolean `impact`:string `paradox`:object `seq`:integer `source`:string | 悖论注解：给矛盾生成 8 字段卡 + P-A/B/C 分级 |
-| `converge_check` | `branch`:string `err_fn*`:object `f*`:object `x0`:number | 收敛判定：递归修正序列收不收敛（压缩/有限步/渐进/振荡） |
+| `converge_check` | `L_est*`:string `T*`:string `branch`:string `err_fn*`:string `f*`:string `max_steps*`:string `samples*`:string `samples_e*`:string `samples_x*`:string `steps*`:string `tol*`:string `x0`:number | 收敛判定：递归修正序列收不收敛（压缩/有限步/渐进/振荡） |
 | `selfref_fixpoint` | `f`:object `max_steps`:integer `mode`:string `sentence`:string `state0`:string `tol`:number | 自指检测：递归修正三态（不动点/共振带/发散/说谎者每步翻转） |
 | `boundary_paradox` | `domain`:string `inside`:string `mode`:string `outside`:string `recursive_layer`:integer `wall_name`:string | 边界悖论判定：墙=边界（张力/划设即撤销/重生路径） |
 | `observer_bypass` | `detect`:object `main_events`:array `use_advice`:boolean | 悖论全程自反旁路：主链不停，旁路观察+注解+注入 |
