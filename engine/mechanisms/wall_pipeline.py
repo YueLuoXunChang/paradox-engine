@@ -30,7 +30,19 @@ wall_pipeline.py — 撞墙处理管线 A 编排构件（第 2 层，组合件�
     - "共振带自指" ≠ 判定了真值——判振荡模式；
     - 管线能走多远依赖输入给了什么（缺文本走不了创生）——诚实标注每步
       状态（run/pending/skip）；
-    - 不宣称绕停机/哥德尔——真墙也是合法输出。
+    - 不宣称绕停机/哥德尔——真墙也是合法输出；
+    - **2.3 钻墙只在"识别到内置自指句"时才跑**（`_selfref_sentence` 命中
+      「不可证 / 这句话是假的 / 本句为假 / 本句为真 / 这句话是真的」之一）；
+      识别不到就**如实 skip**，判词落到"可创生 / 未落入自指谱系"这些诚实分支
+      ——**不拿默认函数顶替**（旧版这里默认跑一个翻转函数，于是任何普通输入
+      都被报成 `resonance_selfref`：兜底枝在、兜底值在说谎）；
+    - 判词可达性（谁做谁核）：`input_pending` / `creatable` /
+      `decidable_elsewhere` / `resonance_selfref` / `structural_wall` /
+      `benign_selfref` 六种实测可达；**`divergent_wall` 目前无内置句可达**
+      （三条内置句只给 liar_cycle / fixed_point / annotated_pa）——
+      它是"声明了但接不上"的一格，将来加发散型内置句时同步开；
+    - 两套关键词口径都从本文件常量取（能映射到内置句 ⇒ 宽口径"有自指味"
+      也必为真），注解卡的 src 走宽口径，**判词只由内置句驱动**。
 """
 
 PORTS = {
@@ -62,6 +74,31 @@ except ImportError:
     from boundary_paradox import run as boundary_run  # noqa: E402,F401
     from observer_bypass import run as bypass_run  # noqa: E402,F401
     from counterpoint_gen import run as counterpoint_run  # noqa: E402,F401
+
+
+# 自指文本识别（**一套口径，两处共用**）：
+#   · `_SENTENCE_HINTS`：能映射到**内置自指句**的具体说法（能真跑修正序列）；
+#   · `_SELFREF_HINTS`：只是"有自指味道"的宽口径，仅用于给注解卡定 src。
+#   旧版两处各写一套关键词，且 2.3 在"没匹配到"时**默认拿翻转函数顶替**——
+#   于是任何普通输入都被报成"共振带自指"（兜底枝在，兜底值在说谎）。
+#   现在两处都从下面这两个常量取，判词只由"识别到的内置句"驱动。
+_SENTENCE_HINTS = (('godel', '不可证'), ('liar', '这句话是假的'),
+                   ('liar', '本句为假'), ('truth_teller', '本句为真'),
+                   ('truth_teller', '这句话是真的'))
+_SELFREF_HINTS = ('这句话', '本句', '自己', '不可证', '假')
+
+
+def _selfref_sentence(wall):
+    """wall 文本 → 内置自指句键；识别不到返回 None（**不猜、不顶替**）。"""
+    for key, val in _SENTENCE_HINTS:
+        if val in wall:
+            return key
+    return None
+
+
+def _looks_selfref(wall):
+    """宽口径：文本有没有自指味道（**只用于注解卡的 src 标注，不参与判词**）。"""
+    return bool(wall) and any(k in wall for k in _SELFREF_HINTS)
 
 
 def run(inputs):
@@ -97,8 +134,7 @@ def run(inputs):
                              'branch': s1.get('mode', 'mu2')}})
 
     # ── 2.2 注解墙：给悖论对象一张卡
-    is_selfref = wall is not None and any(
-        k in wall for k in ('这句话', '本句', '自己', '不可证', '假'))
+    is_selfref = _looks_selfref(wall)
     src = 'axiom' if is_selfref else 'runtime'
     s2 = annotate_run({'paradox': {'A': wall or thesis,
                                    'notA': f'¬({antithesis or wall})',
@@ -114,23 +150,24 @@ def run(inputs):
 
     # ── 2.3 钻墙：递归修正×自指检测
     if wall:
-        sentence = None
-        for key, val in (('godel', '不可证'), ('liar', '这句话是假的'),
-                         ('liar', '本句为假'), ('truth_teller', '本句为真'),
-                         ('truth_teller', '这句话是真的')):
-            if val in wall:
-                sentence = key
-                break
-        s3 = fixpoint_run({'mode': 'sentence', 'sentence': sentence}
-                          if sentence else
-                          {'mode': 'iterate',
-                           'f': lambda x: not x if isinstance(x, bool)
-                           else 1 - x, 'state0': False})
-        fv = s3.get('verdict')
-        steps.append({'step': '2.3 钻墙', 'status': 'run',
-                      'detail': {'verdict': fv,
-                                 'period': s3.get('detail', {}).get(
-                                     'period')}})
+        sentence = _selfref_sentence(wall)
+        if sentence:
+            s3 = fixpoint_run({'mode': 'sentence', 'sentence': sentence})
+            fv = s3.get('verdict')
+            steps.append({'step': '2.3 钻墙', 'status': 'run',
+                          'detail': {'verdict': fv, 'sentence': sentence,
+                                     'period': s3.get('detail', {}).get(
+                                         'period')}})
+        else:
+            # **没识别到自指文本就不钻**。旧版在这里默认拿一个"翻转函数"
+            # （lambda x: not x）跑一遍——那必然给出周期 2，于是**任何普通输入
+            # 都被报成 `resonance_selfref`（共振带自指）**：
+            # 兜底枝在，但**兜底值在说谎**（把普通输入说成悖论型自指）。
+            # 现在如实 skip，让判词落到"可创生 / 未落入自指谱系"这些诚实分支。
+            fv = 'skip（无自指文本）'
+            steps.append({'step': '2.3 钻墙', 'status': 'skip',
+                          'detail': {'verdict': 'skip——未识别到自指文本'
+                                                '（不拿默认函数顶替）'}})
     else:
         fv = 'skip（无自指文本）'
         steps.append({'step': '2.3 钻墙', 'status': 'skip',

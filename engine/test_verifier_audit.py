@@ -71,12 +71,15 @@ def check(label, cond, detail=''):
 #   ⑨ `test_selfref_crosscheck.py`（**仿射映射解析预测** + 布尔系统**函数图全局分析**）
 #      落地后，`selfref_fixpoint` 升档 → **11 件变 10 件**；
 #   ⑩ `test_stlc_crosscheck.py`（**类型保持/进展两条定理当判据** + 自写保留标注的归约器）
-#      落地后，`stlc` 升档 → **10 件变 9 件**。
+#      落地后，`stlc` 升档 → **10 件变 9 件**；
+#   ⑪ `test_wall_fallback.py`（**兜底枝纪律**：兜底不落空 · 兜底不说谎 ·
+#      可选步如实 skip · 判词可达性逐个点名）落地后，`wall_pipeline` 升档
+#      → **9 件变 8 件**。
 KNOWN_NO_INDEPENDENT = {
     'ai_scenarios', 'converge_check',                     # 无测试引用
     'boundary_paradox', 'freeze_tool_schema',
     'observer_bypass', 'paradox_annotate', 'paradox_measure',
-    'tools', 'wall_pipeline',                             # 只有用例集/性质断言
+    'tools',                                              # 只有用例集/性质断言
 }
 # 点名了**外部验证方**的件（登记在审计器里，命中词必须出现在对应测试文件中）
 KNOWN_EXTERNAL = {'criticality', 'growth_guard', 'bisimulation'}
