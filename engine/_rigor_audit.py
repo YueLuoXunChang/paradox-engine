@@ -195,14 +195,80 @@ def registry_weak():
             'source': '验证方登记 engine/_verifier_audit.py（AST 扫 import ＋ 人工签字）'}
 
 
+# ── ② 轴判据（2026-10-02 重写：旧版把"连续两个循环"也当嵌套）──────────
+# 声明词：要的是**复杂度/量级**声明，不是"有护栏"（MAX/步数 只是护栏）。
+CLAIM_WORDS = ('复杂度', 'O(', '最坏', '指数', '多项式', '线性', '平方')
+
+
+def _nested_loops(src):
+    """真嵌套：返回 [(外层行号, 外层迭代对象原文, 内层行号)]（缩进递增才认）。"""
+    lines = src.split('\n')
+    out = []
+    for i, l in enumerate(lines):
+        m = re.match(r'^(\s*)for\s+(.+?):\s*$', l)
+        if not m:
+            continue
+        ind = len(m.group(1))
+        for j in range(i + 1, len(lines)):
+            l2 = lines[j]
+            if not l2.strip():
+                continue
+            if (len(l2) - len(l2.lstrip())) <= ind:
+                break
+            m2 = re.match(r'^\s*for\s+(.+?):\s*$', l2)
+            if m2:
+                out.append((i + 1, m.group(2).strip(), j + 1))
+                break
+    return out
+
+
+def _static_header(header):
+    """外层遍历的是**常量结构**（全大写名 / 字面量）→ 非算法件。"""
+    if re.search(r'\b[A-Z][A-Z0-9_]{2,}\b', header):
+        return True
+    if re.search(r'\(\s*(True|False|-?\d)', header):
+        return True
+    if re.search(r'\[\s*["\']', header):
+        return True
+    return False
+
+
+def _claim_kind(src):
+    """模块 docstring 的自我声明档位。
+
+    'complexity' —— 有**量级**声明（复杂度/O()/指数/线性…）——最好；
+    'bound'      —— 只声明了**上限/护栏**（这是 ② 轴也认的那种，如"原子数上限 10"）；
+    'none'       —— 两者都无（真欠账）。
+    """
+    # 不锚行首：文件开头是编码注释，`^` 永远匹配不到文档串（踩过）
+    m = re.search('"""(.*?)"""', src, re.S)
+    doc = m.group(1) if m else ''
+    if any(w in doc for w in CLAIM_WORDS):
+        return 'complexity'
+    if any(w in doc for w in BOUND_WORDS):
+        return 'bound'
+    return 'none'
+
+
 def stats(rows):
     """其余三条轴的统计（只报数）。"""
-    nested_free = []
+    nested_free, nested_static, nested_total = [], [], 0
+    nested_bound = []
     for r in rows:
         src = _read(os.path.join(HERE, r['layer'], '%s.py' % r['comp']))
-        nested = len(re.findall(r'for .*:\n(?:.*\n){0,12}?\s+for ', src))
-        if nested and not any(w in src for w in BOUND_WORDS):
+        pairs = _nested_loops(src)
+        nested_total += len(pairs)
+        if not pairs:
+            continue
+        algo = [p for p in pairs if not _static_header(p[1])]
+        if not algo:
+            nested_static.append(r['comp'])
+            continue
+        kind = _claim_kind(src)
+        if kind == 'none':
             nested_free.append(r['comp'])
+        elif kind == 'bound':
+            nested_bound.append(r['comp'])
     weak = [r['comp'] for r in rows
             if not (r['rand'] or r['indep'] or r['mut'])]
     reg = registry_weak()
@@ -215,6 +281,9 @@ def stats(rows):
         'thr_pinned_n': sum(len(r['thr_pinned']) for r in rows),
         'thr_declared_n': sum(len(r['thr_declared']) for r in rows),
         'nested_no_bound': nested_free,
+        'nested_static': nested_static,
+        'nested_bound': nested_bound,
+        'nested_total': nested_total,
         # ③ 轴**以验证方登记为准**（AST 口径）；关键词扫描降级成"旁证"，不参与口径
         'weak_verification': reg['weak'],
         'weak_breakdown': reg['breakdown'],
@@ -243,10 +312,18 @@ def render(rows, problems, st):
         for p in problems:
             L.append('- ❌ %s' % p)
     L.append('')
-    L.append('## 二、② 算法轴（有嵌套循环、无上限或复杂度声明）')
+    L.append('## 二、② 算法轴（输入相关的**嵌套循环**、无**复杂度/量级**声明）')
     L.append('')
-    L.append('共 **%d** 件：%s' % (len(st['nested_no_bound']),
-                                   '、'.join(st['nested_no_bound']) or '无'))
+    L.append('- **真算法件**（嵌套循环的规模随输入变）**两者都无** %d 件：%s'
+             % (len(st['nested_no_bound']),
+                '、'.join(st['nested_no_bound']) or '无'))
+    L.append('- 真算法件里**只声明了上限/护栏**（没给量级）%d 件：%s'
+             % (len(st['nested_bound']),
+                '、'.join(st['nested_bound']) or '无'))
+    L.append('- 非算法件（嵌套循环只遍历**常量结构**，规模固定）%d 件%s'
+             % (len(st['nested_static']),
+                ('：' + '、'.join(st['nested_static']))
+                if st['nested_static'] else ''))
     L.append('')
     L.append('## 三、③ 验证轴（口径：**验证方登记**，不是本件自己扫的）')
     L.append('')
@@ -307,7 +384,10 @@ def main(argv):
         print('已写出：%s' % os.path.relpath(REPORT, REPO))
     print('① 判据：阈值钉住 %d · 声明为参数 %d · 未钉未声明 %d'
           % (st['thr_pinned_n'], st['thr_declared_n'], len(problems)))
-    print('② 算法：嵌套循环无上限声明 %d 件' % len(st['nested_no_bound']))
+    print('② 算法：输入相关嵌套循环里 '
+          '**两者都无 %d 件** · 只有上限/护栏 %d 件 · 非算法件 %d 件'
+          % (len(st['nested_no_bound']), len(st['nested_bound']),
+             len(st['nested_static'])))
     print('③ 验证：未验状态 %d 件（口径＝验证方登记）' % len(st['weak_verification']))
     print('④ 契约：缺 PORTS %d 件 · 缺 boundary %d 件'
           % (len(st['ports_gap']), len(st['boundary_gap'])))

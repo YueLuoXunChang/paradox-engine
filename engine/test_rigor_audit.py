@@ -108,5 +108,30 @@ check('--check 打印了四条轴的口径', '① 判据' in out.getvalue()
       and '④ 契约' in out.getvalue())
 
 print('=' * 70)
-print(f'结果: {PASS}/26 通过')
-raise SystemExit(0 if PASS == 26 else 1)
+# ── ② 轴判据（2026-10-02 重写后锁定）
+# 旧判据只看"12 行内又出现 for"，把**连续**两个循环也当嵌套 → 12 件里 4-5 件误报。
+_RA = __import__('engine._rigor_audit', fromlist=['x'])
+_consec = "for a in xs:" + chr(10) + "    pass" + chr(10) + "for b in ys:" + chr(10) + "    pass"
+_nest = "for a in xs:" + chr(10) + "    for b in ys:" + chr(10) + "        pass"
+check('② 判据：连续两个循环**不算**嵌套（旧版误报的根因）',
+      _RA._nested_loops(_consec) == [], _RA._nested_loops(_consec))
+check('② 判据：真嵌套（缩进递增）能认出来',
+      len(_RA._nested_loops(_nest)) == 1)
+check('② 判据：外层遍历常量结构（全大写名/字面量）→ 判为非算法件',
+      _RA._static_header('key, v in VERDICTS.items()')
+      and _RA._static_header('b in (False, True)')
+      and not _RA._static_header('w in worlds'))
+check('② 判据：声明分三档（复杂度 / 只有上限 / 两者都无）',
+      _RA._claim_kind('"""\n复杂度：O(n)\n"""\n') == 'complexity'
+      and _RA._claim_kind('"""\n上限 10 步\n"""\n') == 'bound'
+      and _RA._claim_kind('"""\n什么也没说\n"""\n') == 'none')
+_rows2, _p2 = _RA.audit()
+_st2 = _RA.stats(_rows2)
+check('② 统计三档齐（both-none / bound-only / static）且两两不重叠',
+      set(_st2['nested_no_bound']) & set(_st2['nested_static']) == set()
+      and set(_st2['nested_no_bound']) & set(_st2['nested_bound']) == set()
+      and _st2['nested_total'] >= (len(_st2['nested_no_bound'])
+                                   + len(_st2['nested_bound'])))
+
+print(f'结果: {PASS}/31 通过')
+raise SystemExit(0 if PASS == 31 else 1)

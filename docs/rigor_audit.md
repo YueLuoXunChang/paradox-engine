@@ -7,9 +7,11 @@
 
 - 阈值被测试钉住 27 个 · 声明为参数 13 个 · **未钉未声明 0 个**
 
-## 二、② 算法轴（有嵌套循环、无上限或复杂度声明）
+## 二、② 算法轴（输入相关的**嵌套循环**、无**复杂度/量级**声明）
 
-共 **12** 件：ai_scenarios、freeze_tool_schema、ltl、modal、model_check、monadic_fol、belnap_four、intuitionistic_logic、clue_suggester、corpus_stats、review_marks、mtmp
+- **真算法件**（嵌套循环的规模随输入变）**两者都无** 5 件：freeze_tool_schema、modal、propositional、intuitionistic_logic、review_marks
+- 真算法件里**只声明了上限/护栏**（没给量级）10 件：nd_propositional、agm_revision、asp、default_logic、description_logic、dung_framework、interval_algebra、many_valued、relevance_logic、truth_revision
+- 非算法件（嵌套循环只遍历**常量结构**，规模固定）1 件：clue_suggester
 
 ## 三、③ 验证轴（口径：**验证方登记**，不是本件自己扫的）
 
