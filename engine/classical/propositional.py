@@ -22,6 +22,10 @@ propositional.py — 命题逻辑构件（第 1 层经典逻辑地基）
         truth_table: list 或 null
         atoms: list[str]
         boundary: str（诚实边界说明）
+
+复杂度声明（② 轴，2026-10-02 实测）：真值表按原子数 n 展开为 **2ⁿ 行**——**指数级**；
+因此**原子数上限 10**（超过直接 `size_limit`，不硬算）。实测：n=8→256 行、
+n=10→1024 行、n=12→`size_limit`。语义等价/有效性判定走同一张表，同样的界。
 """
 
 PORTS = {

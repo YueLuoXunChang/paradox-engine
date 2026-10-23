@@ -55,6 +55,10 @@ intuitionistic_logic.py — 直觉主义逻辑 · 构造性立场构件（第 3 
         countermodel: dict|None——反模型（节点/序/赋值/反例节点）
         comparison: list[dict]——两系统对照表
         boundary: str——诚实边界声明
+
+复杂度声明（② 轴）：① Kripke 求值 **O(|W|·|R|·|φ|)**（多项式）；
+② **反模型搜索是组合爆炸**——枚举 ≤ `max_worlds` 个节点的**全部**偏序与单调赋值，
+`max_worlds` 就是护栏（默认取 2^n 完备界）；超限时如实报"限内未找到"（**≠ 有效**）。
 """
 
 PORTS = {

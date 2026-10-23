@@ -133,5 +133,13 @@ check('② 统计三档齐（both-none / bound-only / static）且两两不重�
       and _st2['nested_total'] >= (len(_st2['nested_no_bound'])
                                    + len(_st2['nested_bound'])))
 
-print(f'结果: {PASS}/31 通过')
-raise SystemExit(0 if PASS == 31 else 1)
+# ② 轴：真欠账应为 0（5 件已补复杂度声明）
+_rows3, _p3 = _RA.audit()
+_st3 = _RA.stats(_rows3)
+check("② 轴：**真算法件**全部有声明（两者都无 = 0 件）",
+      _st3['nested_no_bound'] == [], _st3['nested_no_bound'])
+check("② 轴：只有上限/护栏的件被**如实单列**（不混进已声明）",
+      isinstance(_st3['nested_bound'], list))
+
+print(f'结果: {PASS}/33 通过')
+raise SystemExit(0 if PASS == 33 else 1)
