@@ -88,7 +88,7 @@ cd paradox-engine && pip install .
 # 命令行直接用
 paradox-engine --text "产品既要快又要稳"          # 中文诊断报告
 paradox-engine --text "这句话是假的" --json       # 结构化输出
-paradox-engine --scenarios                       # 场景库（25 个真实场景 + 复核状态）
+paradox-engine --scenarios                       # 场景库（28 个真实场景 + 复核状态）
 paradox-engine --scene S01                       # 跑单场景：期望 vs 实际 + 真跑白箱
 paradox-engine --text "..." --explain            # 判类依据（主型/副型得分+命中信号+路由）
 paradox-engine --review                          # 场景复核模式（逐条给依据+勾选指引）
@@ -98,8 +98,8 @@ paradox-engine --stats                           # 场景库统计（题型分�
 ### 方式 B：不装，直接跑演示
 
 ```bash
-python demo.py          # 十九步演示（①~⑲ 看完全部能力）
-python run_tests.py     # 全量回归（一条命令：37 个测试文件 / 954 项断言）
+python demo.py          # 二十步演示（①~⑳ 看完全部能力）
+python run_tests.py     # 全量回归（一条命令：87 个测试文件 / 2352 项断言）
 ```
 
 ### 命令行选项一览
@@ -188,7 +188,7 @@ PORTS 端口声明 + `__main__` 自测。正式测试为 `test_*.py` 同目录�
 | engine/mechanisms/counterpoint_gen.py | 对位创生第三态：对立交汇 → 候选+依据（同向两全/反向共振/交叉桥） | 自测5+正式21 |
 | engine/mechanisms/wall_pipeline.py | 撞墙管线 A：测墙→注解→钻墙→看墙→旁路→创生 → 五选一诊断 | 自测5+正式24 |
 
-### 第 3 层 · 冷门逻辑（按真实痛点选，外部共识归借鉴区——六件齐）
+### 第 3 层 · 冷门逻辑（按真实痛点选，外部共识归借鉴区——十三件齐）
 
 | 文件 | 一句话 | 测试 |
 |---|---|---|
@@ -319,7 +319,7 @@ PORTS 端口声明 + `__main__` 自测。正式测试为 `test_*.py` 同目录�
 
 ### 测试状态
 
-- **954 项正式断言全过**（37 个测试文件），覆盖全部
+- **2352 项正式断言全过**（87 个测试文件），覆盖全部
   机制构件与总控/场景/AI 工具层；
 - **一条命令跑全量回归**：`python run_tests.py`（发现 + 运行 + 汇总；
   任一文件失败即非零退出——CI 与本地同一入口）；
@@ -337,7 +337,7 @@ PORTS 端口声明 + `__main__` 自测。正式测试为 `test_*.py` 同目录�
 - **行尾统一 LF**（不变式测试守着）+ **控制台自愈**（CLI/demo 入口全走，
   防 GBK 控制台 UnicodeEncodeError）；
 
-### AI 挂载：29 个可调用工具
+### AI 挂载：41 个可调用工具
 
 全部引擎构件已封装为 function-calling 工具（schema 从 PORTS 自动生成，
 零手工漂移）。工具协议已冻结：契约快照 `engine/ai/tool_schema_frozen.json`
@@ -422,3 +422,102 @@ PORTS 端口声明 + `__main__` 自测。正式测试为 `test_*.py` 同目录�
 
 更多见 [CONTRIBUTING.md](CONTRIBUTING.md)（五条硬纪律 + 发布面红线 +
 自检清单）。
+
+## 十、目录结构（全量清单）
+
+> 本节合并自本地版本（2026-11-16），远端重构时未收录；内容为各层模块的逐文件说明。
+
+```
+paradox-engine/
+├── engine/
+│   ├── ai/                     ← AI 挂载（引擎函数 = function-calling 工具集）
+│   │   ├── tools.py              全量构件 schema 自动生成 + call_tool 分派
+│   │   ├── freeze_tool_schema.py 工具契约快照 + 漂移检查（防接口悄悄变）
+│   │   └── ai_scenarios.py       两真实场景端到端演示（论证矛盾/学科建模）
+│   ├── control/               ← 总控（引擎大脑：判类/复杂度/路由/五步流水线）
+│   │   ├── classifier.py        12 题型判类 + L1/L2/L3 复杂度 + ROUTE 36 键
+│   │   ├── controller.py        总控五步：判类→复杂度→切路→执行→判输出
+│   │   ├── session.py           多轮会话台账（材料逐段导入/批次汇总/复核依据/台账与简报）
+│   │   └── clue_suggester.py    结构化线索建议（按实际路由给可粘贴建议，不自动应用）
+│   ├── mechanisms/            ← 悖论机制（第 2 层：run(inputs)->dict + PORTS + 自测）
+│   │   ├── paradox_measure.py   悖论测度 μ（四分支）
+│   │   ├── paradox_annotate.py  悖论注解（8 字段卡 + P-A/B/C）
+│   │   ├── converge_check.py    收敛判定（四分支）
+│   │   ├── selfref_fixpoint.py  递归修正×自指检测（共振带三态，钻墙主力）
+│   │   ├── boundary_paradox.py  边界悖论判定（墙=边界：张力/划设即撤销/重生）
+│   │   ├── observer_bypass.py   悖论全程自反旁路（主链不停，观察+注解+注入）
+│   │   ├── counterpoint_gen.py  对位创生第三态（对立交汇 → 候选+依据）
+│   │   ├── wall_pipeline.py     撞墙管线 A（测→注→钻→看→旁→创 → 五选一诊断）
+│   │   ├── criticality.py       临界诊断（事件规模 → 是否无标度 + 三态 + 距阈值多远）
+│   │   └── growth_guard.py       增长护栏（限幅/增益调度/滞后补偿 + 截断代价与开关抖动）
+│   ├── scenarios/             ← 场景库（真实输入+期望诊断+复核——语料回馈判类器）
+│   │   ├── scenarios.py          28 场景注册表 + run_all 对照（期望 vs 实际）
+│   │   ├── corpus_stats.py       语料统计（一致率/混淆矩阵/覆盖缺口/复核进度）
+│   │   └── review_marks.py       复核落笔（结论写回场景表，只改 checked/review）
+│   ├── skeleton/              ← MT-MP-TL 骨架（第 0 层：结构表达，不掺判定）
+│   │   └── mtmp.py              点/线程/拓扑（12 形态）/操作（5 种）
+│   ├── cold/                  ← 冷门逻辑（第 3 层：按痛点选，外部共识归借鉴区）
+│   │   ├── belnap_four.py        Belnap 四值（矛盾取"两者"不爆炸）
+│   │   ├── many_valued.py        多值逻辑（三值 K3/Ł3：未知传播、重言式与三套对照）
+│   │   ├── interval_algebra.py   区间代数（事件之间的定性时序：先于/相接/重叠/包含…）
+│   │   ├── description_logic.py  描述逻辑 ALC（概念包含/本体分类：谁是谁的子类）
+│   │   ├── mu_calculus.py        模态 μ 演算（不动点：μ 最小/ν 最大，CTL 可翻成它）
+│   │   ├── asp.py                答案集程序（规则+否定即失败+约束 → 自洽结论集合）
+│   │   ├── dung_framework.py     Dung 论证框架（grounded/preferred/stable）
+│   │   ├── agm_revision.py       AGM 信念修正 + 非单调默认（旧结论可撤销）
+│   │   ├── default_logic.py      默认逻辑完整不动点（所有扩展/共同结论/立场之争）
+│   │   ├── relevance_logic.py    相干逻辑（真冲突 vs 话术冲突）
+│   │   ├── truth_revision.py     Gupta-Belnap 真值修正（修正序列振荡）
+│   │   ├── intuitionistic_logic.py 直觉主义（Kripke 求值/反模型搜索/两系统对照）
+│   │   └── bisimulation.py        双模拟检查（行为等价：最大双模拟分划 + 不等价的见证 + 商系统）
+│   └── classical/             ← 经典逻辑地基（第 1 层：判定/证明/可计算/类型）
+│       ├── propositional.py      命题逻辑（有效/反例/可满足/重言式）
+│       ├── nd_propositional.py   命题自然演绎 ND（证明树，经典/直觉主义）
+│       ├── first_order.py        一阶谓词（∀/∃ 有限论域展开）
+│       ├── monadic_fol.py        一元谓词判定（可判片段：域展开 ≤2^k，含反模型）
+│       ├── presburger.py         Presburger 算术判定（量词消元：整数上判恒真/有解）
+│       ├── model_check.py        CTL 模型检查（显式 Kripke：不变式/可达性/响应性）
+│       ├── resolution.py         一阶归结（Skolem + 合一 + 归结链）
+│       ├── equality_tableau.py   等词替换 + tableau（反例模型）
+│       ├── ltl.py                时序 LTL（G/F/X/U 沿路径判定）
+│       ├── modal.py              模态 □/◇（Kripke 语义 K/T/S4/S5）
+│       ├── lambda_calculus.py    λ 演算（β 归约 / Y 不动点）
+│       ├── turing_machine.py     图灵机（模拟 + UTM 自模拟 + 停机演示）
+│       ├── stlc.py               简单类型 λ（类型检查，拦自应用）
+│       ├── recursion_theorem.py  Kleene 递归定理（自指程序构造）
+│       └── decidability_map.py   可判定片段 + 算术层级（墙的精确地图）
+│       （每个构件配 test_*.py 正式测试 + 公式卡）
+│   ├── cli.py                 ← 命令行入口（--text/--json/--file/--tools/--repl）
+│   └── repl.py                ← 交互式诊断台（命令行薄前端：普通文字＝材料）
+├── demo.py                  ← 2 分钟上手演示（二十步）
+├── run_tests.py             ← 全量回归入口（一条命令，CI 同款）
+├── verify_install.py        ← 安装路径端到端验证（构建 wheel→venv 装→真跑命令行）
+├── pyproject.toml           ← pip 打包（paradox-engine console 命令）
+├── .github/workflows/       ← CI（跑全量回归 + 演示 + CLI 冒烟）
+├── docs/
+│   ├── components.md            构件参考（51 个构件：做什么/端口/能否自跑，自动生成）
+│   ├── mechanisms.md            分层能力总表（每构件：自测N+正式M）
+│   ├── capability_matrix.md     能力矩阵（题型×构件×**接线状态**，自动生成）
+│   ├── trigger_audit.md         触发实测（**候选集×触发集**：谁排进了管线却没真跑，自动生成）
+│   ├── verifier_audit.md        验证方登记（**每件产物点名验证方**：外部/跨构件/独立复算/只有性质，自动生成）
+│   ├── tool_schema.md           工具协议（39 工具契约表，自动生成，供调用方）
+│   ├── glossary.md              术语表（引擎自己的术语定死；中英对照）
+│   ├── ROADMAP.md               分层路线（7 阶段）
+│   └── formulas/                公式卡 ×15（第 1 层每构件一张概念说明）
+├── bench.py                 ← 性能基准（冒烟级：数量级护栏，不对外报数）
+├── README.md                ← 本文件（中英双语 + 测试状态）
+├── CONTRIBUTING.md          ← 贡献指南（五条硬纪律 + 发布面红线 + 自检清单）
+├── CODE_OF_CONDUCT.md       ← 行为准则（Contributor Covenant 2.1）
+├── SECURITY.md              ← 安全策略（私密报告通道 + 诚实攻击面范围）
+├── .editorconfig            ← 编辑器约定（LF / UTF-8 / 4 空格）
+├── .gitignore               ← 忽略构建产物与本机私有名清单（后者不进公开仓）
+├── .gitattributes           ← 全仓行尾 LF 归一（三个平台检出一致，有不变式守着）
+├── CHANGELOG.md             ← 变更日志（按日期，未发布不标版本）
+├── NOTICE                   ← 版权/署名/AI 协作声明
+└── (内容将逐步扩充——作者只放入精选后可以公开的部分)
+```
+
+每个构件文件是**自包含**的：`python engine/<层>/<名>.py` 直接跑自测；
+正式测试 `python engine/<层>/test_<名>.py`。
+
+---
