@@ -2,6 +2,10 @@ name: tests
 
 # 零第三方依赖——CI 只做一件事：跑 run_tests.py（发现 + 运行 + 汇总断言）
 # 每个测试文件自带通过线（末行「结果: N/M 通过」）；任一失败 → 退出码 1。
+#
+# 2026-11-16 修：3.9 那一腿原先跑在 ubuntu-latest（24.04）上，setup-python 直接失败
+# （3.9 已 EOL，24.04 镜像没有对应预编译件，5 秒内 setup 就挂，断言一条没跑）。
+# 改成矩阵里显式写 os：3.9 固定 ubuntu-22.04（镜像自带 3.9 工具链），3.12 用 latest。
 
 on:
   push:
@@ -10,11 +14,15 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.9", "3.12"]
+        include:
+          - os: ubuntu-22.04
+            python-version: "3.9"
+          - os: ubuntu-latest
+            python-version: "3.12"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
